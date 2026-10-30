@@ -1,0 +1,22 @@
+# --- Compilados y artefactos de build ---
+build/
+bin/
+out/
+*.class
+
+# --- Gradle ---
+.gradle/
+
+# --- IntelliJ IDEA ---
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# --- Sistema operativo ---
+.DS_Store
+Thumbs.db
+
+
+# --- Python (generadores de diagramas y PDFs) ---
+__pycache__/

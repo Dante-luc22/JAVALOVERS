@@ -1,0 +1,81 @@
+// ============================================================
+//  build.gradle  —  el "instructivo de construcción" del proyecto
+//  Gradle lee este archivo para saber cómo compilar, testear y
+//  ejecutar nuestro código. Está escrito en Groovy.
+// ============================================================
+
+plugins {
+    id 'application'   // nos deja ejecutar el programa con: gradle run
+    id 'java'          // soporte para compilar y testear Java
+}
+
+// --- Versión de Java --------------------------------------------------
+// Usamos Java 25 (la versión con la que trabaja la materia).
+// El "toolchain" hace que Gradle use exactamente ese JDK, sin importar
+// qué Java tengas instalado por defecto en tu máquina.
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+// --- De dónde bajamos las dependencias --------------------------------
+repositories {
+    mavenCentral()   // el repositorio público de librerías Java
+}
+
+// --- Librerías que usamos ---------------------------------------------
+dependencies {
+    // Librería externa de ejemplo: utilidades de texto (StringUtils, etc.).
+    implementation 'org.apache.commons:commons-lang3:3.17.0'
+
+    // Apache POI: lectura y escritura de planillas .xlsx.
+    // La usa ar.uba.fi.cb100.librerias.excel.ExcelUtils.
+    // Ojo: son ~19 MB en 16 jars. Se bajan una sola vez y quedan
+    // en la cache de Gradle.
+    implementation 'org.apache.poi:poi-ooxml:5.5.1'
+
+    // Sin estas dos líneas, POI imprime al arrancar el mensaje
+    // "ERROR Log4j API could not find a logging provider".
+    // No es un error del programa: es POI buscando un logger.
+    runtimeOnly 'org.apache.logging.log4j:log4j-to-slf4j:2.24.3'
+    runtimeOnly 'org.slf4j:slf4j-nop:2.0.16'
+
+    // Decodificador MP3 para javax.sound. La usa
+    // ar.uba.fi.cb100.librerias.sonido.ReproductorDeSonido.
+    // Es un "service provider": javax.sound lo descubre solo en tiempo de
+    // ejecución, por eso runtimeOnly y no implementation. Sin esta línea los
+    // WAV siguen funcionando; los MP3 fallan con "formato no soportado".
+    runtimeOnly 'com.googlecode.soundlibs:mp3spi:1.9.5.4'
+
+    // JUnit 5: el framework para escribir pruebas unitarias.
+    testImplementation platform('org.junit:junit-bom:5.11.3')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly    'org.junit.platform:junit-platform-launcher'
+}
+
+// --- Codificación de los fuentes --------------------------------------
+// Sin esto, en Windows javac lee los .java como windows-1252 y cualquier
+// "Í", "Ï" o "—" dentro de un String rompe la compilación con
+// "unmappable character for encoding windows-1252". Todo el material
+// está en castellano: los fuentes son UTF-8, siempre.
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+// --- Cómo correr los tests --------------------------------------------
+test {
+    useJUnitPlatform()   // decirle a Gradle que use JUnit 5
+    testLogging { events "passed", "skipped", "failed" }
+}
+
+// --- Clase principal (la que tiene el método main) --------------------
+application {
+    mainClass = 'ar.uba.fi.cb100.material.i01_intro.HolaCB100'
+
+    // Codificación de la SALIDA del programa. Compilar en UTF-8 no alcanza:
+    // desde Java 18, System.out escribe con la página de códigos de la
+    // consola de Windows (cp1252), y una terminal UTF-8 muestra "Luc�a".
+    // Con esto, todo lo que el programa imprime sale en UTF-8.
+    applicationDefaultJvmArgs = ['-Dstdout.encoding=UTF-8', '-Dstderr.encoding=UTF-8']
+}
