@@ -600,4 +600,37 @@ class GeneradorGrupoNNTest {
                 plano.get(filaSalida).getAsString().charAt(columnaSalida)
         );
     }
+
+    @Test
+    void generarConLosMismosParametrosProduceElMismoResultado() {
+        String parametros = parametrosValidos().toString();
+
+        GeneradorGrupoNN generador = new GeneradorGrupoNN();
+
+        String primero = generador.generar(parametros);
+        String segundo = generador.generar(parametros);
+        String otraInstancia = new GeneradorGrupoNN().generar(parametros);
+
+        assertEquals(primero, segundo);
+        assertEquals(primero, otraInstancia);
+    }
+
+    @Test
+    void generaPlanoSinSalidaCuandoNoSeSolicita() {
+        JsonObject parametros = parametrosValidos();
+        parametros.addProperty("conSalida", false);
+
+        GeneradorGrupoNN generador = new GeneradorGrupoNN();
+
+        JsonObject resultado = JsonParser.parseString(
+                generador.generar(parametros.toString())
+        ).getAsJsonObject();
+
+        assertTrue(resultado.has("salida"));
+        assertTrue(resultado.get("salida").isJsonNull());
+
+        for (JsonElement fila : resultado.getAsJsonArray("plano")) {
+            assertEquals(-1, fila.getAsString().indexOf('S'), "No debe haber una salida en la grilla");
+        }
+    }
 }
