@@ -126,4 +126,20 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
             );
         }
     }
+
+    /**
+     * Lee un campo y exige que su valor sea texto.
+     */
+    private String leerTexto(JsonObject json, String nombre) {
+        JsonElement campo = obtenerCampo(json, nombre);
+
+        if (!campo.isJsonPrimitive()
+                || !campo.getAsJsonPrimitive().isString()) {
+            throw new IllegalArgumentException(
+                    "El parámetro " + nombre + " debe ser texto"
+            );
+        }
+
+        return campo.getAsString();
+    }
 }
