@@ -314,4 +314,36 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         }
     }
 
+    /**
+     * Cuenta los vecinos transitables inmediatos de una celda.
+     * Solo considera movimientos arriba, abajo, izquierda y derecha.
+     */
+    private int contarVecinosTransitables(char[][] grilla, int fila, int columna) {
+        int cantidad = 0;
+
+        int[][] desplazamientos = {
+                {-1, 0},
+                {1, 0},
+                {0, -1},
+                {0, 1}
+        };
+
+        for (int[] desplazamiento : desplazamientos) {
+            int filaVecina = fila + desplazamiento[0];
+            int columnaVecina = columna + desplazamiento[1];
+
+            boolean estaDentro =
+                    filaVecina >= 0
+                            && filaVecina < grilla.length
+                            && columnaVecina >= 0
+                            && columnaVecina < grilla[0].length;
+
+            if (estaDentro && grilla[filaVecina][columnaVecina] != '#') {
+                cantidad++;
+            }
+        }
+
+        return cantidad;
+    }
+
 }
