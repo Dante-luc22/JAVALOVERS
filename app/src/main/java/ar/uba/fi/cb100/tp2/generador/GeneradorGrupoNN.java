@@ -142,4 +142,20 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
 
         return campo.getAsString();
     }
+
+    /**
+     * Lee un campo y exige que sea un booleano.
+     */
+    private boolean leerBooleano(JsonObject json, String nombre) {
+        JsonElement campo = obtenerCampo(json, nombre);
+
+        if (!campo.isJsonPrimitive()
+                || !campo.getAsJsonPrimitive().isBoolean()) {
+            throw new IllegalArgumentException(
+                    "El parámetro " + nombre + " debe ser un booleano"
+            );
+        }
+
+        return campo.getAsBoolean();
+    }
 }
