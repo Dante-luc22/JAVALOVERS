@@ -42,7 +42,10 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         // Colocar monstruos en pisos libres, lejos de la entrada.
         colocarMonstruos(grilla, entrada, parametros.monstruos(), azar);
 
-        throw new UnsupportedOperationException("Falta colocar cofres, agua y lava, y generar el JSON de salida");
+        // Colocar cofres en pisos libres
+        colocarCofres(grilla, parametros.cofres(), azar);
+
+        throw new UnsupportedOperationException("Falta colocar agua y lava, y generar el JSON de salida");
     }
 
     /**

@@ -347,4 +347,90 @@ class GeneradorGrupoNNTest {
         assertEquals('.', grilla[1][2]);
         assertEquals('E', grilla[1][1]);
     }
+
+    @Test
+    void colocaCofresSinReemplazarCeldasOcupadas() {
+        GeneradorGrupoNN generador = new GeneradorGrupoNN();
+
+        char[][] grilla = {
+                "#######".toCharArray(),
+                "#E.M..#".toCharArray(),
+                "#.#...#".toCharArray(),
+                "#....S#".toCharArray(),
+                "#######".toCharArray()
+        };
+
+        char[][] original = new char[grilla.length][];
+
+        for (int fila = 0; fila < grilla.length; fila++) {
+            original[fila] = grilla[fila].clone();
+        }
+
+        generador.colocarCofres(grilla, 4, new Random(42));
+
+        int cofres = 0;
+
+        for (int fila = 0; fila < grilla.length; fila++) {
+            for (int columna = 0; columna < grilla[fila].length; columna++) {
+
+                if (grilla[fila][columna] == 'C') {
+                    cofres++;
+
+                    assertEquals(
+                            '.',
+                            original[fila][columna],
+                            "Cada cofre debe ocupar un piso que estaba libre"
+                    );
+                }
+
+                if (original[fila][columna] != '.') {
+                    assertEquals(
+                            original[fila][columna],
+                            grilla[fila][columna],
+                            "No debe modificar celdas ocupadas ni paredes"
+                    );
+                }
+            }
+        }
+
+        assertEquals(4, cofres);
+        assertEquals('E', grilla[1][1]);
+        assertEquals('M', grilla[1][3]);
+        assertEquals('S', grilla[3][5]);
+    }
+
+    @Test
+    void rechazaCofresSinEspacioSinModificarLaGrilla() {
+        GeneradorGrupoNN generador = new GeneradorGrupoNN();
+
+        char[][] grilla = {
+                "#####".toCharArray(),
+                "#E.M#".toCharArray(),
+                "###S#".toCharArray(),
+                "#####".toCharArray(),
+                "#####".toCharArray()
+        };
+
+        char[][] original = new char[grilla.length][];
+
+        for (int fila = 0; fila < grilla.length; fila++) {
+            original[fila] = grilla[fila].clone();
+        }
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> generador.colocarCofres(
+                        grilla, 2, new Random(42)
+                )
+        );
+
+        for (int fila = 0; fila < grilla.length; fila++) {
+            assertArrayEquals(original[fila], grilla[fila]);
+        }
+
+        assertEquals('E', grilla[1][1]);
+        assertEquals('.', grilla[1][2]);
+        assertEquals('M', grilla[1][3]);
+        assertEquals('S', grilla[2][3]);
+    }
 }
