@@ -3,7 +3,7 @@ package ar.uba.fi.cb100.tp2.modelo.monstruos;
 import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 
-public abstract class Monstruo {
+public abstract class Monstruo extends Entidad {
 
     private final Posicion posicionInicial;
     private final int danio;

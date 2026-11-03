@@ -7,7 +7,7 @@ import java.util.Random;
 
 public class Errante extends Monstruo{
 
-    private final Random azar;
+    private Random azar;
 
 
     public Errante(Posicion posicionInicial, int danioInicial){
