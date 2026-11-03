@@ -1,6 +1,9 @@
 package ar.uba.fi.cb100.tp2.modelo.mundo;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -27,5 +30,28 @@ class TableroTest {
         tablero.setTerreno(centro, Terreno.AGUA);
 
         assertEquals(Terreno.AGUA, tablero.getTerreno(centro));
+    }
+
+        @Test
+    void estaDentroAceptaLosBordesYRechazaLoDeAfuera() {
+        Tablero tablero = new Tablero(3, 4);
+
+        assertTrue(tablero.estaDentro(new Posicion(1, 1)));
+        assertTrue(tablero.estaDentro(new Posicion(3, 4)));
+
+        assertFalse(tablero.estaDentro(new Posicion(0, 1)));
+        assertFalse(tablero.estaDentro(new Posicion(4, 1)));
+        assertFalse(tablero.estaDentro(new Posicion(1, 0)));
+        assertFalse(tablero.estaDentro(new Posicion(1, 5)));
+    }
+
+    @Test
+    void esTransitableEsFalsoParaParedYParaAfueraDelTablero() {
+        Tablero tablero = new Tablero(3, 3);
+        tablero.setTerreno(new Posicion(2, 2), Terreno.LAVA);
+
+        assertTrue(tablero.esTransitable(new Posicion(2, 2)));
+        assertFalse(tablero.esTransitable(new Posicion(1, 1)));
+        assertFalse(tablero.esTransitable(new Posicion(0, 2)));
     }
 }
