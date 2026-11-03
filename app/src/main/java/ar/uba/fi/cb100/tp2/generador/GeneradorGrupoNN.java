@@ -7,6 +7,8 @@ import com.google.gson.JsonParser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ArrayDeque;
+import java.util.Random;
 
 /**
  * Genera laberintos mediante backtracking con una pila explícita.
@@ -23,8 +25,11 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
                 parametros.columnas()
         );
 
+        Random azar = new Random(parametros.semilla());
+        excavar(grilla, azar);
+
         throw new UnsupportedOperationException(
-                "Grilla creada; excavación pendiente de implementar"
+                "Caminos excavados; generación pendiente de completar"
         );
     }
     /**
@@ -274,6 +279,39 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         }
 
         return vecinos;
+    }
+
+    /**
+     * Excava caminos conectados mediante backtracking con pila.
+     */
+    private void excavar(char[][] grilla, Random azar) {
+
+        ArrayDeque<Celda> pila = new ArrayDeque<>();
+
+        Celda inicio = new Celda(1, 1);
+        grilla[inicio.fila()][inicio.columna()] = '.';
+        pila.push(inicio);
+
+        while (!pila.isEmpty()) {
+            Celda actual = pila.peek();
+
+            List<Celda> vecinos = buscarVecinosSinExcavar(grilla, actual);
+
+            if (vecinos.isEmpty()) {
+                pila.pop();
+            } else {
+                Celda destino = vecinos.get(azar.nextInt(vecinos.size()));
+
+                int filaIntermedia = (actual.fila() + destino.fila()) / 2;
+                int columnaIntermedia =
+                        (actual.columna() + destino.columna()) / 2;
+
+                grilla[filaIntermedia][columnaIntermedia] = '.';
+                grilla[destino.fila()][destino.columna()] = '.';
+
+                pila.push(destino);
+            }
+        }
     }
 
 }
