@@ -4,6 +4,6 @@ package ar.uba.fi.cb100.tp2.modelo.valores;
  * Es uno de los records que pide el enunciado.
  */
 
-public record Ubicacion(int tablero, int piso, posicion posicion) {
+public record Ubicacion(int tablero, int piso, Posicion posicion) {
     
 }
