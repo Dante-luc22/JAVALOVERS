@@ -104,4 +104,26 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         }
     }
 
+    /**
+     * Lee un campo numérico y exige que sea un entero largo válido.
+     */
+    private long leerLong(JsonObject json, String nombre) {
+        JsonElement campo = obtenerCampo(json, nombre);
+
+        if (!campo.isJsonPrimitive()
+                || !campo.getAsJsonPrimitive().isNumber()) {
+            throw new IllegalArgumentException(
+                    "El parámetro " + nombre + " debe ser un número entero"
+            );
+        }
+
+        try {
+            return campo.getAsBigDecimal().longValueExact();
+        } catch (ArithmeticException | NumberFormatException e) {
+            throw new IllegalArgumentException(
+                    "El parámetro " + nombre + " debe ser un long válido",
+                    e
+            );
+        }
+    }
 }
