@@ -48,6 +48,9 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
     }
 
     /**
+     * <hr><hr>
+     * <h1>Etapa 1: Manejo de JSON y lectura de parametros iniciales.</h1>
+     * <hr><hr>
      * Lee y valida los parámetros recibidos en formato JSON antes de crear
      * el objeto Parametros. Comprueba la estructura, los campos obligatorios,
      * sus tipos y las restricciones necesarias para generar el mapa.
@@ -227,9 +230,40 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         return campo.getAsBoolean();
     }
 
-
     /**
-     * Crea una grilla con todas sus celdas como pared.
+     * <hr><hr>
+     * <h1>Etapa 2: Construcción de la geometría del laberinto.</h1>
+     * <hr><hr>
+     * Genera la estructura del mapa a partir de una grilla de paredes.
+     * Excava caminos conectados, agrega bifurcaciones y comprueba que
+     * la proporción de celdas transitables cumpla los límites establecidos.
+     *
+     * <hr>
+     * <ul>
+     *   <li>{@code crearGrilla} → Crea una grilla con todas sus celdas
+     *       inicializadas como paredes.</li>
+     *   <li>{@code buscarVecinosSinExcavar} → Busca paredes a dos celdas
+     *       de distancia en las cuatro direcciones, sin incluir el borde.</li>
+     *   <li>{@code excavar} → Abre caminos conectados desde (1, 1),
+     *       eligiendo destinos al azar y usando backtracking con una pila.</li>
+     *   <li>{@code contarVecinosTransitables} → Cuenta los vecinos inmediatos
+     *       que no son paredes, sin considerar diagonales.</li>
+     *   <li>{@code tieneBifurcacionesSuficientes} → Verifica que al menos
+     *       el 10 % de las celdas transitables interiores tenga tres o más
+     *       vecinos transitables.</li>
+     *   <li>{@code contarTransitables} → Cuenta todas las celdas
+     *       de la grilla que no son paredes.</li>
+     *   <li>{@code agregarBifurcaciones} → Abre paredes interiores al azar
+     *       para alcanzar el mínimo de bifurcaciones, sin superar el 60 %
+     *       de celdas transitables. Indica si logró el objetivo.</li>
+     *   <li>{@code tieneProporcionValida} → Comprueba que entre el 30 %
+     *       y el 60 % del total de celdas sea transitable.</li>
+     *   <li>{@code construirGrilla} → Coordina la generación y validación
+     *       del mapa, con un máximo de 100 intentos.</li>
+     * </ul>
+     * <hr>
+     * Si no se consigue una grilla válida tras los 100 intentos,
+     * se lanza {@code IllegalStateException}.
      */
     char[][] crearGrilla(int filas, int columnas) {
         char[][] grilla = new char[filas][columnas];
@@ -243,10 +277,6 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         return grilla;
     }
 
-    /**
-     * Busca destinos sin excavar a dos celdas de distancia,
-     * sin incluir el borde de la grilla.
-     */
     private List<Celda> buscarVecinosSinExcavar(char[][] grilla, Celda actual) {
 
         List<Celda> vecinos = new ArrayList<>();
@@ -276,9 +306,6 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         return vecinos;
     }
 
-    /**
-     * Excava caminos conectados mediante backtracking con pila.
-     */
     void excavar(char[][] grilla, Random azar) {
 
         ArrayDeque<Celda> pila = new ArrayDeque<>();
@@ -309,10 +336,6 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         }
     }
 
-    /**
-     * Cuenta los vecinos transitables inmediatos de una celda.
-     * Solo considera movimientos arriba, abajo, izquierda y derecha.
-     */
     private int contarVecinosTransitables(char[][] grilla, int fila, int columna) {
         int cantidad = 0;
 
@@ -341,10 +364,6 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         return cantidad;
     }
 
-    /**
-     * Comprueba que al menos el 10 % de las celdas transitables
-     * tenga tres o más vecinos transitables.
-     */
     private boolean tieneBifurcacionesSuficientes(char[][] grilla) {
         int transitables = 0;
         int bifurcaciones = 0;
@@ -364,9 +383,6 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         return transitables > 0 && bifurcaciones * 10L >= transitables;
     }
 
-    /**
-     * Cuenta todas las celdas que no son pared.
-     */
     private int contarTransitables(char[][] grilla) {
         int cantidad = 0;
 
@@ -381,12 +397,6 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         return cantidad;
     }
 
-    /**
-     * Abre paredes para alcanzar el mínimo de bifurcaciones.
-     *
-     * @return true si alcanza el objetivo; false si esta grilla
-     *         no pudo ajustarse sin superar el límite transitable
-     */
     boolean agregarBifurcaciones(char[][] grilla, Random azar) {
         int transitables = contarTransitables(grilla);
         long totalCeldas = (long) grilla.length * grilla[0].length;
@@ -428,9 +438,6 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         return true;
     }
 
-    /**
-     * Comprueba que entre el 30 % y el 60 % del plano sea transitable.
-     */
     private boolean tieneProporcionValida(char[][] grilla) {
         long transitables = contarTransitables(grilla);
         long totalCeldas = (long) grilla.length * grilla[0].length;
@@ -439,10 +446,6 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
                 && transitables * 100 <= totalCeldas * 60;
     }
 
-    /**
-     * Construye una grilla conectada con bifurcaciones
-     * y una proporción transitable válida.
-     */
     private char[][] construirGrilla(Parametros parametros, Random azar) {
         final int maxIntentos = 100;
 
