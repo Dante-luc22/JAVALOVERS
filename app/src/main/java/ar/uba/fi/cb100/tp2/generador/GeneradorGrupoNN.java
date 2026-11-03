@@ -68,4 +68,17 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         }
     }
 
+    /**
+     * Obtiene un campo obligatorio del JSON.
+     */
+    private JsonElement obtenerCampo(JsonObject json, String nombre) {
+        if (!json.has(nombre) || json.get(nombre).isJsonNull()) {
+            throw new IllegalArgumentException(
+                    "Falta el parámetro obligatorio: " + nombre
+            );
+        }
+
+        return json.get(nombre);
+    }
+
 }
