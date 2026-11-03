@@ -4,6 +4,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.util.Random;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -432,5 +434,102 @@ class GeneradorGrupoNNTest {
         assertEquals('.', grilla[1][2]);
         assertEquals('M', grilla[1][3]);
         assertEquals('S', grilla[2][3]);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"FACIL, 1, 0", "MEDIO, 2, 1", "DIFICIL, 2, 2"})
+    void colocaTerrenosSegunDificultadSinReemplazarOcupados(String dificultad, int aguaEsperada, int lavaEsperada) {
+        GeneradorGrupoNN generador = new GeneradorGrupoNN();
+
+        char[][] grilla = {
+                "#######".toCharArray(),
+                "#E....#".toCharArray(),
+                "#..M..#".toCharArray(),
+                "#..C..#".toCharArray(),
+                "#....S#".toCharArray(),
+                "#######".toCharArray()
+        };
+
+        char[][] original = new char[grilla.length][];
+
+        for (int fila = 0; fila < grilla.length; fila++) {
+            original[fila] = grilla[fila].clone();
+        }
+
+        generador.colocarAguaYLava(grilla, dificultad, new Random(42));
+
+        int agua = 0;
+        int lava = 0;
+        int transitables = 0;
+
+        for (int fila = 0; fila < grilla.length; fila++) {
+            for (int columna = 0; columna < grilla[fila].length; columna++) {
+
+                char celda = grilla[fila][columna];
+
+                if (celda != '#') {
+                    transitables++;
+                }
+
+                if (celda == '~') {
+                    agua++;
+                }
+
+                if (celda == '^') {
+                    lava++;
+                }
+
+                if (celda == '~' || celda == '^') {
+                    assertEquals(
+                            '.',
+                            original[fila][columna],
+                            "El terreno especial debe ocupar un piso libre"
+                    );
+                }
+
+                if (original[fila][columna] != '.') {
+                    assertEquals(
+                            original[fila][columna],
+                            celda,
+                            "Debe conservar paredes, entrada, salida y entidades"
+                    );
+                }
+            }
+        }
+
+        assertEquals(aguaEsperada, agua);
+        assertEquals(lavaEsperada, lava);
+        assertEquals(20, transitables);
+
+        assertTrue(
+                (agua + lava) * 100L <= transitables * 25L,
+                "Agua y lava juntas no deben superar el 25 %"
+        );
+    }
+
+    @Test
+    void noColocaTerrenosSiNoHayPisosLibres() {
+        GeneradorGrupoNN generador = new GeneradorGrupoNN();
+
+        char[][] grilla = {
+                "#######".toCharArray(),
+                "#EMCCC#".toCharArray(),
+                "#CCCCC#".toCharArray(),
+                "#CCCCC#".toCharArray(),
+                "#CCCCS#".toCharArray(),
+                "#######".toCharArray()
+        };
+
+        char[][] original = new char[grilla.length][];
+
+        for (int fila = 0; fila < grilla.length; fila++) {
+            original[fila] = grilla[fila].clone();
+        }
+
+        generador.colocarAguaYLava(grilla, "DIFICIL", new Random(42));
+
+        for (int fila = 0; fila < grilla.length; fila++) {
+            assertArrayEquals(original[fila], grilla[fila]);
+        }
     }
 }
