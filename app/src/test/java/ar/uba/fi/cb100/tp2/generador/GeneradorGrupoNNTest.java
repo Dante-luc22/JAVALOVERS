@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GeneradorGrupoNNTest {
 
@@ -181,5 +182,72 @@ class GeneradorGrupoNNTest {
                     "Las grillas difieren en la fila " + fila
             );
         }
+    }
+
+    @Test
+    void agregaBifurcacionesSinSuperarElLimiteTransitable() {
+        GeneradorGrupoNN generador = new GeneradorGrupoNN();
+
+        char[][] grilla = {
+                "#######".toCharArray(),
+                "#.....#".toCharArray(),
+                "#####.#".toCharArray(),
+                "#.....#".toCharArray(),
+                "#.#####".toCharArray(),
+                "#.....#".toCharArray(),
+                "#######".toCharArray()
+        };
+
+        boolean pudoAjustar = generador.agregarBifurcaciones(
+                grilla, new Random(42)
+        );
+
+        assertTrue(pudoAjustar, "Debe poder ajustar este laberinto");
+
+        int transitables = 0;
+        int bifurcaciones = 0;
+
+        for (int fila = 1; fila < grilla.length - 1; fila++) {
+            for (int columna = 1;
+                 columna < grilla[fila].length - 1;
+                 columna++) {
+
+                if (grilla[fila][columna] == '#') {
+                    continue;
+                }
+
+                transitables++;
+                int vecinos = 0;
+
+                if (grilla[fila - 1][columna] != '#') {
+                    vecinos++;
+                }
+                if (grilla[fila + 1][columna] != '#') {
+                    vecinos++;
+                }
+                if (grilla[fila][columna - 1] != '#') {
+                    vecinos++;
+                }
+                if (grilla[fila][columna + 1] != '#') {
+                    vecinos++;
+                }
+
+                if (vecinos >= 3) {
+                    bifurcaciones++;
+                }
+            }
+        }
+
+        long totalCeldas = (long) grilla.length * grilla[0].length;
+
+        assertTrue(
+                bifurcaciones * 10L >= transitables,
+                "Al menos el 10 % debe tener tres o más vecinos"
+        );
+
+        assertTrue(
+                transitables * 100L <= totalCeldas * 60,
+                "No debe superar el 60 % de celdas transitables"
+        );
     }
 }

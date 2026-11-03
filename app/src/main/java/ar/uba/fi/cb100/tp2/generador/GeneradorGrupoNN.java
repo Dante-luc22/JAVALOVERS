@@ -398,7 +398,7 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
      * @return true si alcanza el objetivo; false si esta grilla
      *         no pudo ajustarse sin superar el límite transitable
      */
-    private boolean agregarBifurcaciones(char[][] grilla, Random azar) {
+    boolean agregarBifurcaciones(char[][] grilla, Random azar) {
         int transitables = contarTransitables(grilla);
         long totalCeldas = (long) grilla.length * grilla[0].length;
 
