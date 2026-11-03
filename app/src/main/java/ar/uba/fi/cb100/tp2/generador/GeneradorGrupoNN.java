@@ -28,9 +28,15 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         Random azar = new Random(parametros.semilla());
         excavar(grilla, azar);
 
-        throw new UnsupportedOperationException(
-                "Caminos excavados; generación pendiente de completar"
-        );
+
+        if (!agregarBifurcaciones(grilla, azar)) {
+            throw new IllegalStateException(
+                    "No se pudieron alcanzar las bifurcaciones "
+                            + "sin superar el límite transitable"
+            );
+        }
+
+        return json.toString();
     }
     /**
      * Coordenadas internas, con índices desde cero.
@@ -346,4 +352,90 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         return cantidad;
     }
 
+    /**
+     * Comprueba que al menos el 10 % de las celdas transitables
+     * tenga tres o más vecinos transitables.
+     */
+    private boolean tieneBifurcacionesSuficientes(char[][] grilla) {
+        int transitables = 0;
+        int bifurcaciones = 0;
+
+        for (int fila = 1; fila < grilla.length - 1; fila++) {
+            for (int columna = 1; columna < grilla[fila].length - 1; columna++) {
+                if (grilla[fila][columna] != '#') {
+                    transitables++;
+
+                    if (contarVecinosTransitables(grilla, fila, columna) >= 3) {
+                        bifurcaciones++;
+                    }
+                }
+            }
+        }
+
+        return transitables > 0 && bifurcaciones * 10L >= transitables;
+    }
+
+    /**
+     * Cuenta todas las celdas que no son pared.
+     */
+    private int contarTransitables(char[][] grilla) {
+        int cantidad = 0;
+
+        for (char[] fila : grilla) {
+            for (char celda : fila) {
+                if (celda != '#') {
+                    cantidad++;
+                }
+            }
+        }
+
+        return cantidad;
+    }
+
+    /**
+     * Abre paredes para alcanzar el mínimo de bifurcaciones.
+     *
+     * @return true si alcanza el objetivo; false si esta grilla
+     *         no pudo ajustarse sin superar el límite transitable
+     */
+    private boolean agregarBifurcaciones(char[][] grilla, Random azar) {
+        int transitables = contarTransitables(grilla);
+        long totalCeldas = (long) grilla.length * grilla[0].length;
+
+        while (!tieneBifurcacionesSuficientes(grilla)) {
+            // Abrir una pared suma una celda transitable.
+            if ((transitables + 1L) * 100 > totalCeldas * 60) {
+                return false;
+            }
+
+            List<Celda> candidatas = new ArrayList<>();
+
+            for (int fila = 1; fila < grilla.length - 1; fila++) {
+                for (int columna = 1;
+                     columna < grilla[fila].length - 1;
+                     columna++) {
+
+                    if (grilla[fila][columna] == '#'
+                            && contarVecinosTransitables(
+                            grilla, fila, columna
+                    ) >= 2) {
+                        candidatas.add(new Celda(fila, columna));
+                    }
+                }
+            }
+
+            if (candidatas.isEmpty()) {
+                return false;
+            }
+
+            Celda elegida = candidatas.get(
+                    azar.nextInt(candidatas.size())
+            );
+
+            grilla[elegida.fila()][elegida.columna()] = '.';
+            transitables++;
+        }
+
+        return true;
+    }
 }
