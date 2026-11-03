@@ -86,6 +86,7 @@ public class Tablero {
     public List<Posicion> vecinasTransitables(Posicion posicion) {
         validar(posicion);
         List<Posicion> vecinas = new ArrayList<>();
+        
         for (Direccion direccion : Direccion.values()) {
             Posicion vecina = posicion.mover(direccion);
             if (esTransitable(vecina)) {
