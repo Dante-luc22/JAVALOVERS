@@ -23,8 +23,11 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         Random azar = new Random(parametros.semilla());
         char[][] grilla = construirGrilla(parametros, azar);
 
+        Celda entrada = elegirEntrada(grilla, azar);
+        grilla[entrada.fila()][entrada.columna()] = 'E';
+
         throw new UnsupportedOperationException(
-                "Grilla construida; falta ubicar los elementos y generar el JSON"
+                "Entrada ubicada; falta completar el plano y generar el JSON"
         );
     }
     /**
@@ -470,4 +473,32 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
                         + maxIntentos + " intentos"
         );
     }
+
+    /**
+     * Elige al azar una celda de piso para la entrada del heroe.
+     */
+    private Celda elegirEntrada(char[][] grilla, Random azar) {
+        List<Celda> pisos = new ArrayList<>();
+
+        for (int fila = 1; fila < grilla.length - 1; fila++) {
+            for (int columna = 1;
+                 columna < grilla[fila].length - 1;
+                 columna++) {
+
+                if (grilla[fila][columna] == '.') {
+                    pisos.add(new Celda(fila, columna));
+                }
+            }
+        }
+
+        if (pisos.isEmpty()) {
+            throw new IllegalStateException(
+                    "No hay celdas de piso para ubicar la entrada"
+            );
+        }
+
+        int indiceElegido = azar.nextInt(pisos.size());
+        return pisos.get(indiceElegido);
+    }
+
 }
