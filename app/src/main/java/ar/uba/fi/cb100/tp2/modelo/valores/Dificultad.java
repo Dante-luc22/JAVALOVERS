@@ -7,7 +7,7 @@ package ar.uba.fi.cb100.tp2.modelo.valores;
 
 public enum Dificultad {
     FACIL,
-    MEDIA,
+    MEDIO,
     DIFICIL;
     
 }
