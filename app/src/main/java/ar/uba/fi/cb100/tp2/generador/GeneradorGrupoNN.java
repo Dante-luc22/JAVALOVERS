@@ -38,4 +38,34 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
     ) {
     }
 
+    /**
+     * Interpreta el texto recibido como un objeto JSON.
+     *
+     * @throws IllegalArgumentException si el texto es nulo,
+     *         está mal formado o no representa un objeto
+     */
+    private JsonObject leerObjetoJson(String texto) {
+        if (texto == null || texto.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Los parámetros JSON no pueden estar vacíos"
+            );
+        }
+
+        try {
+            JsonElement elemento = JsonParser.parseString(texto);
+
+            if (!elemento.isJsonObject()) {
+                throw new IllegalArgumentException(
+                        "Los parámetros deben ser un objeto JSON"
+                );
+            }
+
+            return elemento.getAsJsonObject();
+        } catch (JsonParseException e) {
+            throw new IllegalArgumentException(
+                    "El JSON de parámetros es inválido", e
+            );
+        }
+    }
+
 }
