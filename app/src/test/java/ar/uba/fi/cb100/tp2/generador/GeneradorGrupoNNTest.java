@@ -2,10 +2,13 @@ package ar.uba.fi.cb100.tp2.generador;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import java.util.Random;
 import org.junit.jupiter.api.Test;
+
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 class GeneradorGrupoNNTest {
 
@@ -142,4 +145,41 @@ class GeneradorGrupoNNTest {
         }
     }
 
+    @Test
+    void excavarAbreElInicioYConservaLosBordes() {
+        GeneradorGrupoNN generador = new GeneradorGrupoNN();
+        char[][] grilla = generador.crearGrilla(15, 20);
+
+        generador.excavar(grilla, new Random(42));
+
+        assertEquals('.', grilla[1][1]);
+
+        for (int columna = 0; columna < grilla[0].length; columna++) {
+            assertEquals('#', grilla[0][columna]);
+            assertEquals('#', grilla[grilla.length - 1][columna]);
+        }
+
+        for (int fila = 0; fila < grilla.length; fila++) {
+            assertEquals('#', grilla[fila][0]);
+            assertEquals('#', grilla[fila][grilla[fila].length - 1]);
+        }
+    }
+
+    @Test
+    void excavarConLaMismaSemillaProduceLaMismaGrilla() {
+        GeneradorGrupoNN generador = new GeneradorGrupoNN();
+        char[][] primera = generador.crearGrilla(15, 20);
+        char[][] segunda = generador.crearGrilla(15, 20);
+
+        generador.excavar(primera, new Random(42));
+        generador.excavar(segunda, new Random(42));
+
+        for (int fila = 0; fila < primera.length; fila++) {
+            assertArrayEquals(
+                    primera[fila],
+                    segunda[fila],
+                    "Las grillas difieren en la fila " + fila
+            );
+        }
+    }
 }

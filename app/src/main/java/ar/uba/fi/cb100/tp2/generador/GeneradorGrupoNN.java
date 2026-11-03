@@ -284,7 +284,7 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
     /**
      * Excava caminos conectados mediante backtracking con pila.
      */
-    private void excavar(char[][] grilla, Random azar) {
+    void excavar(char[][] grilla, Random azar) {
 
         ArrayDeque<Celda> pila = new ArrayDeque<>();
 
