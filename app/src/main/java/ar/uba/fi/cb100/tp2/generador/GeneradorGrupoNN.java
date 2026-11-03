@@ -15,8 +15,13 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         JsonObject json = leerObjetoJson(parametrosJson);
         Parametros parametros = leerParametros(json);
 
+        char[][] grilla = crearGrilla(
+                parametros.filas(),
+                parametros.columnas()
+        );
+
         throw new UnsupportedOperationException(
-                "Parámetros validados; generación pendiente de implementar"
+                "Grilla creada; excavación pendiente de implementar"
         );
     }
     /**
@@ -218,5 +223,22 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
 
         return campo.getAsBoolean();
     }
+
+
+    /**
+     * Crea una grilla con todas sus celdas como pared.
+     */
+    private char[][] crearGrilla(int filas, int columnas) {
+        char[][] grilla = new char[filas][columnas];
+
+        for (int fila = 0; fila < filas; fila++) {
+            for (int columna = 0; columna < columnas; columna++) {
+                grilla[fila][columna] = '#';
+            }
+        }
+
+        return grilla;
+    }
+
 
 }
