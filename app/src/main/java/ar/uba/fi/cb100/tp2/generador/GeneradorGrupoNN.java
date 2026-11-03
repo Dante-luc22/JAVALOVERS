@@ -51,7 +51,7 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         // Colocar agua y lava en pisos libres, sin superar el % exigido por la dificultad.
         colocarAguaYLava(grilla, parametros.dificultad(), azar);
 
-        throw new UnsupportedOperationException("Plano construido; falta generar el JSON de salida");
+        return generarJsonDeSalida(json, grilla, entrada, salida);
     }
 
     /**
@@ -451,20 +451,35 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
 
     /**
      * <hr><hr>
-     * <h1>Etapa 3: Despligue de contenido del mapa.</h1>
+     * <h1>Etapa 3: Ubicación de la entrada y distribución de entidades y terrenos</h1>
      * <hr><hr>
-
+     * Selecciona posiciones y distribuye entidades y terrenos en el mapa.
+     * Elige la entrada, busca la celda más lejana y coloca monstruos,
+     * cofres, agua y lava sobre pisos libres.
      *
      * <hr>
      * <ul>
-
+     *   <li>{@code elegirEntrada} → Elige al azar una celda de piso interior
+     *       como posición de entrada del héroe.</li>
+     *   <li>{@code buscarCeldaMasLejana} → Usa búsqueda en anchura (BFS)
+     *       para encontrar una celda alcanzable a máxima distancia de la entrada,
+     *       contando movimientos sin diagonales ni costos de terreno.</li>
+     *   <li>{@code colocarMonstruos} → Distribuye monstruos al azar en pisos
+     *       libres, a una distancia Manhattan de al menos tres de la entrada.</li>
+     *   <li>{@code colocarCofres} → Distribuye la cantidad solicitada de cofres
+     *       al azar en pisos libres, sin repetir posiciones.</li>
+     *   <li>{@code colocarAguaYLava} → Distribuye agua y lava al azar según
+     *       la dificultad: 5 % y 0 % en fácil, 10 % y 5 % en medio,
+     *       y 10 % y 10 % en difícil. Calcula las cantidades sobre el total
+     *       transitable y las limita a los pisos libres disponibles.</li>
      * </ul>
      * <hr>
+     * Si faltan pisos para la entrada, los monstruos o los cofres,
+     * se lanza {@code IllegalStateException}. Una dificultad desconocida
+     * provoca {@code IllegalArgumentException}.
      */
 
-    /**
-     * Elige al azar una celda de piso para la entrada del heroe.
-     */
+
     private Celda elegirEntrada(char[][] grilla, Random azar) {
         List<Celda> pisos = new ArrayList<>();
 
@@ -486,10 +501,6 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         return pisos.get(indiceElegido);
     }
 
-    /**
-     * Encuentra una celda a distancia máxima desde la entrada.
-     * La distancia se mide en movimientos, sin ponderar terrenos.
-     */
     Celda buscarCeldaMasLejana(char[][] grilla, Celda entrada) {
         int[][] distancias = new int[grilla.length][grilla[0].length];
 
@@ -543,10 +554,6 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         return masLejana;
     }
 
-    /**
-     * Coloca monstruos en pisos libres a distancia Manhattan
-     * de al menos tres respecto de la entrada.
-     */
     void colocarMonstruos(char[][] grilla, Celda entrada, int cantidad, Random azar) {
         List<Celda> disponibles = new ArrayList<>();
 
@@ -573,9 +580,6 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         }
     }
 
-    /**
-     * Coloca la cantidad solicitada de cofres en pisos libres.
-     */
     void colocarCofres(char[][] grilla, int cantidad, Random azar) {
         List<Celda> disponibles = new ArrayList<>();
 
@@ -599,9 +603,6 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         }
     }
 
-    /**
-     * Coloca agua y lava en pisos libres según la dificultad.
-     */
     void colocarAguaYLava(char[][] grilla, String dificultad, Random azar) {
         int porcentajeAgua;
         int porcentajeLava;
@@ -654,9 +655,27 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         }
     }
 
+
     /**
-     * Convierte una celda a coordenadas JSON, que comienzan en uno.
+     * <hr><hr>
+     * <h1>Etapa 4: Conversión del mapa a JSON de salida</h1>
+     * <hr><hr>
+     *
+     * Construye el JSON final con los datos del generador, los parámetros
+     * originales, las coordenadas de entrada y salida, y el plano del mapa.
+     *
+     * <hr>
+     * <ul>
+     *   <li>{@code convertirCoordenadas} → Convierte una celda en un objeto
+     *       JSON con fila y columna numeradas desde 1.</li>
+     *   <li>{@code generarJsonDeSalida} → Reúne la versión, el nombre del
+     *       generador, una copia de los parámetros y las coordenadas.
+     *       Representa cada fila del plano como texto y devuelve el JSON
+     *       con sangría, conservando la salida como null cuando no existe.</li>
+     * </ul>
+     * <hr>
      */
+
     private JsonObject convertirCoordenadas(Celda celda) {
         JsonObject coordenadas = new JsonObject();
 
@@ -666,9 +685,6 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         return coordenadas;
     }
 
-    /**
-     * Construye el JSON de salida con el formato del Anexo B.
-     */
     private String generarJsonDeSalida(JsonObject parametrosOriginales, char[][] grilla, Celda entrada, Celda salida) {
         JsonObject resultado = new JsonObject();
 

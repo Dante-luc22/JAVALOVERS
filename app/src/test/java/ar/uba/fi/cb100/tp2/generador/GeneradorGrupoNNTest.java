@@ -2,6 +2,9 @@ package ar.uba.fi.cb100.tp2.generador;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+
 import java.util.Random;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -531,5 +534,70 @@ class GeneradorGrupoNNTest {
         for (int fila = 0; fila < grilla.length; fila++) {
             assertArrayEquals(original[fila], grilla[fila]);
         }
+    }
+
+    @Test
+    void generaJsonConDimensionesEntidadesYCoordenadasCorrectas() {
+        GeneradorGrupoNN generador = new GeneradorGrupoNN();
+        JsonObject parametros = parametrosValidos();
+
+        String resultado = generador.generar(parametros.toString());
+        JsonObject json = JsonParser.parseString(resultado).getAsJsonObject();
+
+        assertEquals(1, json.get("version").getAsInt());
+        assertEquals("JAVALOVERS", json.get("generador").getAsString());
+        assertEquals(parametros, json.getAsJsonObject("parametros"));
+
+        JsonArray plano = json.getAsJsonArray("plano");
+        assertEquals(25, plano.size());
+
+        int entradas = 0;
+        int salidas = 0;
+        int cofres = 0;
+        int monstruos = 0;
+
+        for (JsonElement elemento : plano) {
+            String fila = elemento.getAsString();
+            assertEquals(40, fila.length());
+
+            for (char simbolo : fila.toCharArray()) {
+                assertTrue(
+                        "#.~^CMES".indexOf(simbolo) >= 0,
+                        "Símbolo desconocido: " + simbolo
+                );
+
+                switch (simbolo) {
+                    case 'E' -> entradas++;
+                    case 'S' -> salidas++;
+                    case 'C' -> cofres++;
+                    case 'M' -> monstruos++;
+                    default -> {
+                    }
+                }
+            }
+        }
+
+        assertEquals(1, entradas);
+        assertEquals(1, salidas);
+        assertEquals(12, cofres);
+        assertEquals(4, monstruos);
+
+        JsonObject entrada = json.getAsJsonObject("entrada");
+        int filaEntrada = entrada.get("fila").getAsInt() - 1;
+        int columnaEntrada = entrada.get("columna").getAsInt() - 1;
+
+        assertEquals(
+                'E',
+                plano.get(filaEntrada).getAsString().charAt(columnaEntrada)
+        );
+
+        JsonObject salida = json.getAsJsonObject("salida");
+        int filaSalida = salida.get("fila").getAsInt() - 1;
+        int columnaSalida = salida.get("columna").getAsInt() - 1;
+
+        assertEquals(
+                'S',
+                plano.get(filaSalida).getAsString().charAt(columnaSalida)
+        );
     }
 }
