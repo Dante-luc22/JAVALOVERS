@@ -42,10 +42,13 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         // Colocar monstruos en pisos libres, lejos de la entrada.
         colocarMonstruos(grilla, entrada, parametros.monstruos(), azar);
 
-        // Colocar cofres en pisos libres
+        // Colocar cofres en pisos libres.
         colocarCofres(grilla, parametros.cofres(), azar);
 
-        throw new UnsupportedOperationException("Falta colocar agua y lava, y generar el JSON de salida");
+        // Colocar agua y lava en pisos libres, sin superar el % exigido por la dificultad.
+        colocarAguaYLava(grilla, parametros.dificultad(), azar);
+
+        throw new UnsupportedOperationException("Plano construido; falta generar el JSON de salida");
     }
 
     /**
@@ -590,6 +593,61 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
             Celda elegida = disponibles.remove(indice);
 
             grilla[elegida.fila()][elegida.columna()] = 'C';
+        }
+    }
+
+    /**
+     * Coloca agua y lava en pisos libres según la dificultad.
+     */
+    void colocarAguaYLava(char[][] grilla, String dificultad, Random azar) {
+        int porcentajeAgua;
+        int porcentajeLava;
+
+        switch (dificultad) {
+            case "FACIL" -> {
+                porcentajeAgua = 5;
+                porcentajeLava = 0;
+            }
+            case "MEDIO" -> {
+                porcentajeAgua = 10;
+                porcentajeLava = 5;
+            }
+            case "DIFICIL" -> {
+                porcentajeAgua = 10;
+                porcentajeLava = 10;
+            }
+            default -> throw new IllegalArgumentException(
+                    "Dificultad desconocida: " + dificultad
+            );
+        }
+
+        List<Celda> disponibles = new ArrayList<>();
+
+        for (int fila = 1; fila < grilla.length - 1; fila++) {
+            for (int columna = 1; columna < grilla[fila].length - 1; columna++) {
+                if (grilla[fila][columna] == '.') {
+                    disponibles.add(new Celda(fila, columna));
+                }
+            }
+        }
+
+        int transitables = contarTransitables(grilla);
+
+        int cantidadAgua = (int) ((long) transitables * porcentajeAgua / 100);
+        int cantidadLava = (int) ((long) transitables * porcentajeLava / 100);
+
+        cantidadAgua = Math.min(cantidadAgua, disponibles.size());
+
+        cantidadLava = Math.min(cantidadLava, disponibles.size() - cantidadAgua);
+
+        for (int i = 0; i < cantidadAgua; i++) {
+            Celda elegida = disponibles.remove(azar.nextInt(disponibles.size()));
+            grilla[elegida.fila()][elegida.columna()] = '~';
+        }
+
+        for (int i = 0; i < cantidadLava; i++) {
+            Celda elegida = disponibles.remove(azar.nextInt(disponibles.size()));
+            grilla[elegida.fila()][elegida.columna()] = '^';
         }
     }
 }
