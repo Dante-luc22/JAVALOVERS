@@ -12,8 +12,11 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
 
     @Override
     public String generar(String parametrosJson) {
+        JsonObject json = leerObjetoJson(parametrosJson);
+        Parametros parametros = leerParametros(json);
+
         throw new UnsupportedOperationException(
-                "Generación pendiente de implementar"
+                "Parámetros validados; generación pendiente de implementar"
         );
     }
 
