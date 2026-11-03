@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class GeneradorGrupoNNTest {
 
@@ -123,4 +124,22 @@ class GeneradorGrupoNNTest {
                 () -> generador.generar(json.toString())
         );
     }
+
+    @Test
+    void creaGrillaConDimensionesIndicadasYTodasParedes() {
+        GeneradorGrupoNN generador = new GeneradorGrupoNN();
+
+        char[][] grilla = generador.crearGrilla(5, 7);
+
+        assertEquals(5, grilla.length, "Debe tener 5 filas");
+
+        for (char[] fila : grilla) {
+            assertEquals(7, fila.length, "Cada fila debe tener 7 columnas");
+
+            for (char celda : fila) {
+                assertEquals('#', celda, "Todas las celdas deben ser paredes");
+            }
+        }
+    }
+
 }

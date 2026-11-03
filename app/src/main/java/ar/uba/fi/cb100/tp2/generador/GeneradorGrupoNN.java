@@ -228,7 +228,7 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
     /**
      * Crea una grilla con todas sus celdas como pared.
      */
-    private char[][] crearGrilla(int filas, int columnas) {
+    char[][] crearGrilla(int filas, int columnas) {
         char[][] grilla = new char[filas][columnas];
 
         for (int fila = 0; fila < filas; fila++) {
