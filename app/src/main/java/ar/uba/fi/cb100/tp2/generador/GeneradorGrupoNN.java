@@ -82,6 +82,76 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
     }
 
     /**
+     * Lee los parámetros y comprueba sus restricciones básicas.
+     */
+    private Parametros leerParametros(JsonObject json) {
+        int version = leerEntero(json, "version");
+        String dificultad = leerTexto(json, "dificultad");
+        int filas = leerEntero(json, "filas");
+        int columnas = leerEntero(json, "columnas");
+        long semilla = leerLong(json, "semilla");
+        int cofres = leerEntero(json, "cofres");
+        int monstruos = leerEntero(json, "monstruos");
+        boolean conSalida = leerBooleano(json, "conSalida");
+
+        if (version != 1) {
+            throw new IllegalArgumentException(
+                    "La versión del formato debe ser 1"
+            );
+        }
+
+        if (!dificultad.equals("FACIL")
+                && !dificultad.equals("MEDIO")
+                && !dificultad.equals("DIFICIL")) {
+            throw new IllegalArgumentException(
+                    "La dificultad debe ser FACIL, MEDIO o DIFICIL"
+            );
+        }
+
+        if (filas < 5 || columnas < 5) {
+            throw new IllegalArgumentException(
+                    "Las filas y columnas deben ser al menos 5"
+            );
+        }
+
+        if (cofres < 0 || monstruos < 0) {
+            throw new IllegalArgumentException(
+                    "Las cantidades de cofres y monstruos no pueden ser negativas"
+            );
+        }
+
+        long celdasInteriores = (long) (filas - 2) * (columnas - 2);
+        int posicionesReservadas = conSalida ? 2 : 1;
+        long entidadesSolicitadas = (long) cofres + monstruos;
+
+        if (entidadesSolicitadas > celdasInteriores - posicionesReservadas) {
+            throw new IllegalArgumentException(
+                    "No hay espacio interior suficiente para cofres y monstruos"
+            );
+        }
+
+        return new Parametros(
+                version,
+                dificultad,
+                filas,
+                columnas,
+                semilla,
+                cofres,
+                monstruos,
+                conSalida
+        );
+    }
+
+
+
+
+
+
+
+
+
+
+    /**
      * Lee un campo numérico y exige que sea un entero válido.
      */
     private int leerEntero(JsonObject json, String nombre) {
@@ -103,7 +173,6 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
             );
         }
     }
-
     /**
      * Lee un campo numérico y exige que sea un entero largo válido.
      */
@@ -126,7 +195,6 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
             );
         }
     }
-
     /**
      * Lee un campo y exige que su valor sea texto.
      */
@@ -142,7 +210,6 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
 
         return campo.getAsString();
     }
-
     /**
      * Lee un campo y exige que sea un booleano.
      */
@@ -158,4 +225,5 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
 
         return campo.getAsBoolean();
     }
+
 }
