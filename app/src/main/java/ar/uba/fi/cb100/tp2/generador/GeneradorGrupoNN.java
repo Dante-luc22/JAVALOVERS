@@ -666,4 +666,34 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         return coordenadas;
     }
 
+    /**
+     * Construye el JSON de salida con el formato del Anexo B.
+     */
+    private String generarJsonDeSalida(JsonObject parametrosOriginales, char[][] grilla, Celda entrada, Celda salida) {
+        JsonObject resultado = new JsonObject();
+
+        resultado.addProperty("version", 1);
+        resultado.addProperty("generador", "JAVALOVERS");
+        resultado.add("parametros", parametrosOriginales.deepCopy());
+        resultado.add("entrada", convertirCoordenadas(entrada));
+
+        if (salida == null) {
+            resultado.add("salida", com.google.gson.JsonNull.INSTANCE);
+        } else {
+            resultado.add("salida", convertirCoordenadas(salida));
+        }
+
+        JsonArray filas = new JsonArray();
+
+        for (char[] fila : grilla) {
+            filas.add(new String(fila));
+        }
+
+        resultado.add("plano", filas);
+
+        Gson gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
+
+        return gson.toJson(resultado);
+    }
+
 }
