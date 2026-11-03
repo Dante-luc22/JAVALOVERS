@@ -4,6 +4,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -650,4 +653,17 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
             grilla[elegida.fila()][elegida.columna()] = '^';
         }
     }
+
+    /**
+     * Convierte una celda a coordenadas JSON, que comienzan en uno.
+     */
+    private JsonObject convertirCoordenadas(Celda celda) {
+        JsonObject coordenadas = new JsonObject();
+
+        coordenadas.addProperty("fila", celda.fila() + 1);
+        coordenadas.addProperty("columna", celda.columna() + 1);
+
+        return coordenadas;
+    }
+
 }
