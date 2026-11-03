@@ -21,7 +21,7 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         JsonObject json = leerObjetoJson(parametrosJson);
         Parametros parametros = leerParametros(json);
 
-        // Usar el mismo generador de azar durante todo el proceso.
+        // Usar el mismo generador de azar durante el proceso completo.
         Random azar = new Random(parametros.semilla());
 
         // Construir paredes y caminos con bifurcaciones.
@@ -564,4 +564,29 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         }
     }
 
+    /**
+     * Coloca la cantidad solicitada de cofres en pisos libres.
+     */
+    void colocarCofres(char[][] grilla, int cantidad, Random azar) {
+        List<Celda> disponibles = new ArrayList<>();
+
+        for (int fila = 1; fila < grilla.length - 1; fila++) {
+            for (int columna = 1; columna < grilla[fila].length - 1; columna++) {
+                if (grilla[fila][columna] == '.') {
+                    disponibles.add(new Celda(fila, columna));
+                }
+            }
+        }
+
+        if (cantidad > disponibles.size()) {
+            throw new IllegalStateException("No hay suficientes pisos libres para colocar los cofres");
+        }
+
+        for (int i = 0; i < cantidad; i++) {
+            int indice = azar.nextInt(disponibles.size());
+            Celda elegida = disponibles.remove(indice);
+
+            grilla[elegida.fila()][elegida.columna()] = 'C';
+        }
+    }
 }
