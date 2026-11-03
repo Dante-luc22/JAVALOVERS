@@ -29,6 +29,48 @@ public class Plano {
         this.salida = salida;
     }
 
+    /**
+     * @param entidad el monstruo o cofre a poner en el plano
+     */
+    public void agregarEntidad(Entidad entidad) {
+        this.entidades.add(entidad);
+    }
+
+    /**
+     * Saca una entidad del plano, por ejemplo un cofre que ya se abrió.
+     * @param entidad la entidad a sacar
+     */
+    public void quitarEntidad(Entidad entidad) {
+        this.entidades.remove(entidad);
+    }
+
+    /**
+     * Las entidades que hay en una celda. Puede haber más de una
+     * (dos monstruos en la misma celda) o ninguna.
+     * @param posicion la celda, de 1 a n
+     * @return las entidades en esa celda; vacía si no hay ninguna
+     */
+    public List<Entidad> obtenerEntidades(Posicion posicion) {
+        List<Entidad> encontradas = new LinkedList<>();
+        for (Entidad entidad : this.entidades) {
+            if (entidad.getPosicion().equals(posicion)) {
+                encontradas.add(entidad);
+            }
+        }
+        return encontradas;
+    }
+
+    /**
+     * Una copia de todas las entidades, para recorrerlas en cada paso.
+     * Es una copia para que se pueda quitar una entidad del plano
+     * mientras se recorre sin que se rompa el recorrido.
+     * @return todas las entidades del plano
+     */
+    public List<Entidad> getEntidades() {
+        return new LinkedList<>(this.entidades);
+    }
+    
+
     /** @return la grilla de terreno */
     public Tablero getTablero() {
         return this.tablero;
