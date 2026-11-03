@@ -5,6 +5,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Genera laberintos mediante backtracking con una pila explícita.
  */
@@ -240,5 +243,37 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         return grilla;
     }
 
+    /**
+     * Busca destinos sin excavar a dos celdas de distancia,
+     * sin incluir el borde de la grilla.
+     */
+    private List<Celda> buscarVecinosSinExcavar(char[][] grilla, Celda actual) {
+
+        List<Celda> vecinos = new ArrayList<>();
+
+        int[][] desplazamientos = {
+                {-2, 0},  // Arriba
+                {2, 0},   // Abajo
+                {0, -2},  // Izquierda
+                {0, 2}    // Derecha
+        };
+
+        for (int[] desplazamiento : desplazamientos) {
+            int fila = actual.fila() + desplazamiento[0];
+            int columna = actual.columna() + desplazamiento[1];
+
+            boolean esInterior =
+                    fila > 0
+                            && fila < grilla.length - 1
+                            && columna > 0
+                            && columna < grilla[0].length - 1;
+
+            if (esInterior && grilla[fila][columna] == '#') {
+                vecinos.add(new Celda(fila, columna));
+            }
+        }
+
+        return vecinos;
+    }
 
 }
