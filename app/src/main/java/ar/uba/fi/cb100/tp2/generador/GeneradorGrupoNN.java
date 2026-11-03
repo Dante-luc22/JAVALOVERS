@@ -17,17 +17,38 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
 
     @Override
     public String generar(String parametrosJson) {
+        // Leer el JSON y validar los parámetros.
         JsonObject json = leerObjetoJson(parametrosJson);
         Parametros parametros = leerParametros(json);
 
+        // Usar el mismo generador de azar durante todo el proceso.
         Random azar = new Random(parametros.semilla());
+
+        // Construir paredes y caminos con bifurcaciones.
         char[][] grilla = construirGrilla(parametros, azar);
 
+        // Elegir y marcar la entrada.
         Celda entrada = elegirEntrada(grilla, azar);
         grilla[entrada.fila()][entrada.columna()] = 'E';
 
+        // Colocar la salida más lejana, si este plano debe tenerla.
+        Celda salida = null;
+
+        if (parametros.conSalida()) {
+            salida = buscarCeldaMasLejana(grilla, entrada);
+            grilla[salida.fila()][salida.columna()] = 'S';
+        }
+
+        // Colocar monstruos en pisos libres, lejos de la entrada.
+        colocarMonstruos(
+                grilla,
+                entrada,
+                parametros.monstruos(),
+                azar
+        );
+
         throw new UnsupportedOperationException(
-                "Entrada ubicada; falta completar el plano y generar el JSON"
+                "Falta colocar cofres, agua y lava, y generar el JSON de salida"
         );
     }
 
@@ -518,6 +539,36 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         }
 
         return masLejana;
+    }
+
+    /**
+     * Coloca monstruos en pisos libres a distancia Manhattan
+     * de al menos tres respecto de la entrada.
+     */
+    private void colocarMonstruos(char[][] grilla, Celda entrada, int cantidad, Random azar) {
+        List<Celda> disponibles = new ArrayList<>();
+
+        for (int fila = 1; fila < grilla.length - 1; fila++) {
+            for (int columna = 1; columna < grilla[fila].length - 1; columna++) {
+
+                int distancia = Math.abs(fila - entrada.fila()) + Math.abs(columna - entrada.columna());
+
+                if (grilla[fila][columna] == '.' && distancia >= 3) {
+                    disponibles.add(new Celda(fila, columna));
+                }
+            }
+        }
+
+        if (cantidad > disponibles.size()) {
+            throw new IllegalStateException("No hay suficientes pisos disponibles para colocar los monstruos lejos de la entrada");
+        }
+
+        for (int i = 0; i < cantidad; i++) {
+            int indice = azar.nextInt(disponibles.size());
+            Celda elegida = disponibles.remove(indice);
+
+            grilla[elegida.fila()][elegida.columna()] = 'M';
+        }
     }
 
 }
