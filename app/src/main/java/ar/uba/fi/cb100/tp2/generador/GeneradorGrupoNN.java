@@ -81,4 +81,27 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         return json.get(nombre);
     }
 
+    /**
+     * Lee un campo numérico y exige que sea un entero válido.
+     */
+    private int leerEntero(JsonObject json, String nombre) {
+        JsonElement campo = obtenerCampo(json, nombre);
+
+        if (!campo.isJsonPrimitive()
+                || !campo.getAsJsonPrimitive().isNumber()) {
+            throw new IllegalArgumentException(
+                    "El parámetro " + nombre + " debe ser un número entero"
+            );
+        }
+
+        try {
+            return campo.getAsBigDecimal().intValueExact();
+        } catch (ArithmeticException | NumberFormatException e) {
+            throw new IllegalArgumentException(
+                    "El parámetro " + nombre + " debe ser un entero válido",
+                    e
+            );
+        }
+    }
+
 }
