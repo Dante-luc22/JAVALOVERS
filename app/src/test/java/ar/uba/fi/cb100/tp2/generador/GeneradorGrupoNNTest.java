@@ -275,4 +275,76 @@ class GeneradorGrupoNNTest {
                 "Debe encontrar el extremo del corredor"
         );
     }
+
+    @Test
+    void colocaMonstruosEnCantidadExactaYLejosDeLaEntrada() {
+        GeneradorGrupoNN generador = new GeneradorGrupoNN();
+
+        char[][] grilla = {
+                "#######".toCharArray(),
+                "#E....#".toCharArray(),
+                "#.....#".toCharArray(),
+                "#....S#".toCharArray(),
+                "#######".toCharArray()
+        };
+
+        GeneradorGrupoNN.Celda entrada = new GeneradorGrupoNN.Celda(1, 1);
+
+        generador.colocarMonstruos(grilla, entrada, 4, new Random(42));
+
+        int monstruos = 0;
+
+        for (int fila = 0; fila < grilla.length; fila++) {
+            for (int columna = 0; columna < grilla[fila].length; columna++) {
+
+                if (grilla[fila][columna] == 'M') {
+                    monstruos++;
+
+                    int distancia = Math.abs(fila - entrada.fila()) + Math.abs(columna - entrada.columna());
+
+                    assertTrue(
+                            distancia >= 3,
+                            "Monstruo demasiado cerca de la entrada en "
+                                    + fila + ", " + columna
+                    );
+
+                    assertTrue(
+                            fila > 0 && fila < grilla.length - 1
+                                    && columna > 0
+                                    && columna < grilla[fila].length - 1,
+                            "No debe haber monstruos en el borde"
+                    );
+                }
+            }
+        }
+
+        assertEquals(4, monstruos);
+        assertEquals('E', grilla[1][1]);
+        assertEquals('S', grilla[3][5]);
+    }
+
+    @Test
+    void rechazaMonstruosCuandoNoHayPosicionesPermitidas() {
+        GeneradorGrupoNN generador = new GeneradorGrupoNN();
+
+        char[][] grilla = {
+                "#####".toCharArray(),
+                "#E.##".toCharArray(),
+                "#####".toCharArray(),
+                "#####".toCharArray(),
+                "#####".toCharArray()
+        };
+
+        GeneradorGrupoNN.Celda entrada = new GeneradorGrupoNN.Celda(1, 1);
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> generador.colocarMonstruos(
+                        grilla, entrada, 1, new Random(42)
+                )
+        );
+
+        assertEquals('.', grilla[1][2]);
+        assertEquals('E', grilla[1][1]);
+    }
 }

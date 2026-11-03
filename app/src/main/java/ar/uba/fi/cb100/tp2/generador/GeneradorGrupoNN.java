@@ -40,16 +40,9 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         }
 
         // Colocar monstruos en pisos libres, lejos de la entrada.
-        colocarMonstruos(
-                grilla,
-                entrada,
-                parametros.monstruos(),
-                azar
-        );
+        colocarMonstruos(grilla, entrada, parametros.monstruos(), azar);
 
-        throw new UnsupportedOperationException(
-                "Falta colocar cofres, agua y lava, y generar el JSON de salida"
-        );
+        throw new UnsupportedOperationException("Falta colocar cofres, agua y lava, y generar el JSON de salida");
     }
 
     /**
@@ -545,7 +538,7 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
      * Coloca monstruos en pisos libres a distancia Manhattan
      * de al menos tres respecto de la entrada.
      */
-    private void colocarMonstruos(char[][] grilla, Celda entrada, int cantidad, Random azar) {
+    void colocarMonstruos(char[][] grilla, Celda entrada, int cantidad, Random azar) {
         List<Celda> disponibles = new ArrayList<>();
 
         for (int fila = 1; fila < grilla.length - 1; fila++) {
