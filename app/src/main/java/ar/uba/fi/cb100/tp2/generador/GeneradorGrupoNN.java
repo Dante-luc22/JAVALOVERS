@@ -19,13 +19,11 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
                 "Parámetros validados; generación pendiente de implementar"
         );
     }
-
     /**
      * Coordenadas internas, con índices desde cero.
      */
     private record Celda(int fila, int columna) {
     }
-
     /**
      * Parámetros del contrato de generación.
      */
@@ -42,10 +40,26 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
     }
 
     /**
-     * Interpreta el texto recibido como un objeto JSON.
+     * Lee y valida los parámetros recibidos en formato JSON antes de crear
+     * el objeto Parametros. Comprueba la estructura, los campos obligatorios,
+     * sus tipos y las restricciones necesarias para generar el mapa.
      *
-     * @throws IllegalArgumentException si el texto es nulo,
-     *         está mal formado o no representa un objeto
+     * <hr>
+     * <ul>
+     *   <li>{@code leerObjetoJson} → Convierte el texto en un objeto JSON
+     *       y rechaza entradas vacías, mal formadas o de otro tipo.</li>
+     *   <li>{@code obtenerCampo} → Obtiene un campo obligatorio y verifica
+     *       que exista y no sea nulo.</li>
+     *   <li>{@code leerParametros} → Valida la versión, dificultad, dimensiones,
+     *       cantidades y espacio disponible; luego crea los parámetros.</li>
+     *   <li>{@code leerEntero} → Lee un número entero dentro del rango de int.</li>
+     *   <li>{@code leerLong} → Lee un número entero dentro del rango de long.</li>
+     *   <li>{@code leerTexto} → Lee un campo y comprueba que sea texto.</li>
+     *   <li>{@code leerBooleano} → Lee un campo y comprueba que sea booleano.</li>
+     * </ul>
+     * <hr>
+     * Si alguna validación falla, se lanza {@code IllegalArgumentException}
+     * con un mensaje que describe el problema.
      */
     private JsonObject leerObjetoJson(String texto) {
         if (texto == null || texto.isBlank()) {
@@ -71,9 +85,6 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         }
     }
 
-    /**
-     * Obtiene un campo obligatorio del JSON.
-     */
     private JsonElement obtenerCampo(JsonObject json, String nombre) {
         if (!json.has(nombre) || json.get(nombre).isJsonNull()) {
             throw new IllegalArgumentException(
@@ -84,9 +95,6 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         return json.get(nombre);
     }
 
-    /**
-     * Lee los parámetros y comprueba sus restricciones básicas.
-     */
     private Parametros leerParametros(JsonObject json) {
         int version = leerEntero(json, "version");
         String dificultad = leerTexto(json, "dificultad");
@@ -145,18 +153,6 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         );
     }
 
-
-
-
-
-
-
-
-
-
-    /**
-     * Lee un campo numérico y exige que sea un entero válido.
-     */
     private int leerEntero(JsonObject json, String nombre) {
         JsonElement campo = obtenerCampo(json, nombre);
 
@@ -176,9 +172,7 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
             );
         }
     }
-    /**
-     * Lee un campo numérico y exige que sea un entero largo válido.
-     */
+
     private long leerLong(JsonObject json, String nombre) {
         JsonElement campo = obtenerCampo(json, nombre);
 
@@ -198,9 +192,7 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
             );
         }
     }
-    /**
-     * Lee un campo y exige que su valor sea texto.
-     */
+
     private String leerTexto(JsonObject json, String nombre) {
         JsonElement campo = obtenerCampo(json, nombre);
 
@@ -213,9 +205,7 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
 
         return campo.getAsString();
     }
-    /**
-     * Lee un campo y exige que sea un booleano.
-     */
+
     private boolean leerBooleano(JsonObject json, String nombre) {
         JsonElement campo = obtenerCampo(json, nombre);
 
