@@ -4,6 +4,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
@@ -85,5 +86,21 @@ class TableroTest {
         tablero.setTerreno(new Posicion(2, 2), Terreno.PISO);
 
         assertTrue(tablero.vecinasTransitables(new Posicion(2, 2)).isEmpty());
+    }
+
+    @Test
+    void crearUnTableroSinFilasOColumnasTiraError() {
+        assertThrows(IllegalArgumentException.class, () -> new Tablero(0, 5));
+        assertThrows(IllegalArgumentException.class, () -> new Tablero(5, 0));
+    }
+
+    @Test
+    void pedirOCambiarUnaCeldaFueraDelTableroTiraError() {
+        Tablero tablero = new Tablero(3, 3);
+        Posicion afuera = new Posicion(4, 1);
+
+        assertThrows(IllegalArgumentException.class, () -> tablero.getTerreno(afuera));
+        assertThrows(IllegalArgumentException.class, () -> tablero.setTerreno(afuera, Terreno.PISO));
+        assertThrows(IllegalArgumentException.class, () -> tablero.vecinasTransitables(afuera));
     }
 }
