@@ -250,4 +250,29 @@ class GeneradorGrupoNNTest {
                 "No debe superar el 60 % de celdas transitables"
         );
     }
+
+    @Test
+    void encuentraLaCeldaMasLejanaPorElCaminoDisponible() {
+        GeneradorGrupoNN generador = new GeneradorGrupoNN();
+
+        char[][] grilla = {
+                "#######".toCharArray(),
+                "#E....#".toCharArray(),
+                "#####.#".toCharArray(),
+                "#.....#".toCharArray(),
+                "#######".toCharArray()
+        };
+
+        GeneradorGrupoNN.Celda entrada =
+                new GeneradorGrupoNN.Celda(1, 1);
+
+        GeneradorGrupoNN.Celda resultado =
+                generador.buscarCeldaMasLejana(grilla, entrada);
+
+        assertEquals(
+                new GeneradorGrupoNN.Celda(3, 1),
+                resultado,
+                "Debe encontrar el extremo del corredor"
+        );
+    }
 }

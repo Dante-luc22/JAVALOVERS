@@ -34,7 +34,7 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
     /**
      * Coordenadas internas, con índices desde cero.
      */
-    private record Celda(int fila, int columna) {
+    record Celda(int fila, int columna) {
     }
 
     /**
@@ -427,6 +427,19 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
     }
 
     /**
+     * <hr><hr>
+     * <h1>Etapa 3: Despligue de contenido del mapa.</h1>
+     * <hr><hr>
+
+     *
+     * <hr>
+     * <ul>
+
+     * </ul>
+     * <hr>
+     */
+
+    /**
      * Elige al azar una celda de piso para la entrada del heroe.
      */
     private Celda elegirEntrada(char[][] grilla, Random azar) {
@@ -454,7 +467,7 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
      * Encuentra una celda a distancia máxima desde la entrada.
      * La distancia se mide en movimientos, sin ponderar terrenos.
      */
-    private Celda buscarCeldaMasLejana(char[][] grilla, Celda entrada) {
+    Celda buscarCeldaMasLejana(char[][] grilla, Celda entrada) {
         int[][] distancias = new int[grilla.length][grilla[0].length];
 
         for (int fila = 0; fila < distancias.length; fila++) {
@@ -490,18 +503,14 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
                                 && columna >= 0
                                 && columna < grilla[0].length;
 
-                if (estaDentro
-                        && grilla[fila][columna] != '#'
-                        && distancias[fila][columna] == -1) {
+                if (estaDentro && grilla[fila][columna] != '#' && distancias[fila][columna] == -1) {
 
-                    distancias[fila][columna] =
-                            distancias[actual.fila()][actual.columna()] + 1;
+                    distancias[fila][columna] = distancias[actual.fila()][actual.columna()] + 1;
 
                     Celda vecina = new Celda(fila, columna);
                     cola.addLast(vecina);
 
-                    if (distancias[fila][columna]
-                            > distancias[masLejana.fila()][masLejana.columna()]) {
+                    if (distancias[fila][columna] > distancias[masLejana.fila()][masLejana.columna()]) {
                         masLejana = vecina;
                     }
                 }
