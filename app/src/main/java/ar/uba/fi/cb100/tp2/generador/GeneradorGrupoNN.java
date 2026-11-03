@@ -20,23 +20,12 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         JsonObject json = leerObjetoJson(parametrosJson);
         Parametros parametros = leerParametros(json);
 
-        char[][] grilla = crearGrilla(
-                parametros.filas(),
-                parametros.columnas()
-        );
-
         Random azar = new Random(parametros.semilla());
-        excavar(grilla, azar);
+        char[][] grilla = construirGrilla(parametros, azar);
 
-
-        if (!agregarBifurcaciones(grilla, azar)) {
-            throw new IllegalStateException(
-                    "No se pudieron alcanzar las bifurcaciones "
-                            + "sin superar el límite transitable"
-            );
-        }
-
-        return json.toString();
+        throw new UnsupportedOperationException(
+                "Grilla construida; falta ubicar los elementos y generar el JSON"
+        );
     }
     /**
      * Coordenadas internas, con índices desde cero.
@@ -437,5 +426,45 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         }
 
         return true;
+    }
+
+    /**
+     * Comprueba que entre el 30 % y el 60 % del plano sea transitable.
+     */
+    private boolean tieneProporcionValida(char[][] grilla) {
+        long transitables = contarTransitables(grilla);
+        long totalCeldas = (long) grilla.length * grilla[0].length;
+
+        return transitables * 100 >= totalCeldas * 30
+                && transitables * 100 <= totalCeldas * 60;
+    }
+
+    /**
+     * Construye una grilla conectada con bifurcaciones
+     * y una proporción transitable válida.
+     */
+    private char[][] construirGrilla(Parametros parametros, Random azar) {
+        final int maxIntentos = 100;
+
+        for (int intento = 0; intento < maxIntentos; intento++) {
+            char[][] grilla = crearGrilla(
+                    parametros.filas(),
+                    parametros.columnas()
+            );
+
+            excavar(grilla, azar);
+
+            boolean pudoAgregarBifurcaciones =
+                    agregarBifurcaciones(grilla, azar);
+
+            if (pudoAgregarBifurcaciones && tieneProporcionValida(grilla)) {
+                return grilla;
+            }
+        }
+
+        throw new IllegalStateException(
+                "No se pudo construir una grilla válida tras "
+                        + maxIntentos + " intentos"
+        );
     }
 }
