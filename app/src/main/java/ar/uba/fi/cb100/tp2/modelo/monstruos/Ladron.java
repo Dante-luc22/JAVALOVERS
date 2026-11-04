@@ -1,4 +1,4 @@
 package ar.uba.fi.cb100.tp2.modelo.monstruos;
 
-public class Ladron extends Monstruo {
+public class Ladron{
 }

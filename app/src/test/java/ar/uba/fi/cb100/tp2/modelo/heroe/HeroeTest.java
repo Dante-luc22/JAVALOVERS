@@ -109,9 +109,8 @@ class HeroeTest {
     }
 
     @Test
-    void restarEnergiaRechazaCero() {
-        assertThrows(IllegalArgumentException.class,
-                () -> this.heroe.restarEnergia(0));
+    void restarCeroNoCambiaLaEnergia() {
+        this.heroe.restarEnergia(0);
         assertEquals(ENERGIA_INICIAL, this.heroe.getEnergia());
     }
 

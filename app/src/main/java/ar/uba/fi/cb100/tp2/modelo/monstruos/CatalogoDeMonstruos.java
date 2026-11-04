@@ -7,7 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.Random;
 
 /**
- * Clase que guarda una fabrica por cada tipo de monstruo y crea uno  al azar.
+ * Clase que guarda una fabrica por cada tipo de monstruo y crea uno al azar.
  * Agregar un tipo al juego es un registrar mas.
  */
 public class CatalogoDeMonstruos{

@@ -1,4 +1,4 @@
 package ar.uba.fi.cb100.tp2.modelo.cofres;
 
-public class CofreDeZapatosDeAgua extends Cofre{
+public class CofreDeZapatosDeAgua{
 }
