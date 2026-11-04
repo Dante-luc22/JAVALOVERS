@@ -35,6 +35,9 @@ dependencies {
     // en la cache de Gradle.
     implementation 'org.apache.poi:poi-ooxml:5.5.1'
 
+    // Lectura y escritura de JSON con Gson.
+    implementation 'com.google.code.gson:gson:2.15.0'
+
     // Sin estas dos líneas, POI imprime al arrancar el mensaje
     // "ERROR Log4j API could not find a logging provider".
     // No es un error del programa: es POI buscando un logger.
