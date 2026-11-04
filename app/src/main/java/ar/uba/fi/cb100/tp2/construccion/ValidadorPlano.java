@@ -12,6 +12,8 @@ import com.google.gson.JsonParser;
  */
 public class ValidadorPlano {
 
+    private static final String SIMBOLOS_VALIDOS = "#.~^CMES";
+
     // Datos leídos del JSON. Las posiciones quedan en base 0.
     private int filas;
     private int columnas;
@@ -29,6 +31,207 @@ public class ValidadorPlano {
      */
     public void validar(String json) {
         leer(json);
+        validarDimensiones();
+        validarSimbolos();
+        validarBorde();
+        validarEntradaYSalida();
+        validarProporcion();
+        validarCantidades();
+        validarAguaYLava();
+        validarMonstruosLejosDeLaEntrada();
+    }
+
+    /**
+     * R1: el plano tiene exactamente filas cadenas de exactamente columnas
+     * caracteres, y ambas medidas son al menos 5.
+     */
+    private void validarDimensiones() {
+        if (filas < 5 || columnas < 5) {
+            throw new IllegalArgumentException("R1: filas y columnas deben ser al menos 5");
+        }
+
+        if (plano.length != filas) {
+            throw new IllegalArgumentException(
+                    "R1: el plano tiene " + plano.length + " filas y se esperaban " + filas);
+        }
+
+        for (int fila = 0; fila < filas; fila++) {
+            if (plano[fila].length != columnas) {
+                throw new IllegalArgumentException("R1: la fila " + (fila + 1) + " tiene "
+                        + plano[fila].length + " columnas y se esperaban " + columnas);
+            }
+        }
+    }
+
+    /**
+     * R2: sólo aparecen los ocho símbolos de B.3.
+     */
+    private void validarSimbolos() {
+        for (int fila = 0; fila < filas; fila++) {
+            for (int columna = 0; columna < columnas; columna++) {
+                char simbolo = plano[fila][columna];
+
+                if (SIMBOLOS_VALIDOS.indexOf(simbolo) == -1) {
+                    throw new IllegalArgumentException("R2: símbolo inválido '" + simbolo
+                            + "' en (" + (fila + 1) + ", " + (columna + 1) + ")");
+                }
+            }
+        }
+    }
+
+    /**
+     * R3: la primera y la última fila, y la primera y la última columna, son
+     * todas pared.
+     */
+    private void validarBorde() {
+        for (int fila = 0; fila < filas; fila++) {
+            for (int columna = 0; columna < columnas; columna++) {
+                boolean esBorde = fila == 0 || fila == filas - 1
+                        || columna == 0 || columna == columnas - 1;
+
+                if (esBorde && plano[fila][columna] != '#') {
+                    throw new IllegalArgumentException("R3: el borde debe ser pared y ("
+                            + (fila + 1) + ", " + (columna + 1) + ") no lo es");
+                }
+            }
+        }
+    }
+
+    /**
+     * R4: exactamente una E; exactamente una S si conSalida, ninguna si no.
+     * Los campos entrada y salida coinciden con ellas.
+     */
+    private void validarEntradaYSalida() {
+        int cantidadDeE = contar('E');
+        if (cantidadDeE != 1) {
+            throw new IllegalArgumentException("R4: debe haber exactamente una E y hay " + cantidadDeE);
+        }
+
+        int cantidadDeS = contar('S');
+        int esperadasDeS = conSalida ? 1 : 0;
+        if (cantidadDeS != esperadasDeS) {
+            throw new IllegalArgumentException("R4: con conSalida " + conSalida + " se esperaban "
+                    + esperadasDeS + " S y hay " + cantidadDeS);
+        }
+
+        if (!hay(entrada, 'E')) {
+            throw new IllegalArgumentException("R4: el campo entrada no coincide con la E del plano");
+        }
+
+        if (conSalida) {
+            if (salida == null || !hay(salida, 'S')) {
+                throw new IllegalArgumentException("R4: el campo salida no coincide con la S del plano");
+            }
+        } else if (salida != null) {
+            throw new IllegalArgumentException("R4: conSalida es false pero el campo salida no es null");
+        }
+    }
+
+    /**
+     * R7: entre el 30 % y el 60 % de las celdas del plano son transitables.
+     */
+    private void validarProporcion() {
+        int transitables = contarTransitables();
+        int total = filas * columnas;
+
+        // transitables / total entre 30 % y 60 %, multiplicando para no usar decimales
+        if (transitables * 100 < total * 30 || transitables * 100 > total * 60) {
+            throw new IllegalArgumentException("R7: hay " + transitables + " celdas transitables de "
+                    + total + ", y tienen que ser entre el 30 % y el 60 %");
+        }
+    }
+
+    /**
+     * R8: tantas C como cofres y tantas M como monstruos.
+     */
+    private void validarCantidades() {
+        int cantidadDeC = contar('C');
+        if (cantidadDeC != cofres) {
+            throw new IllegalArgumentException("R8: hay " + cantidadDeC + " C y se esperaban " + cofres);
+        }
+
+        int cantidadDeM = contar('M');
+        if (cantidadDeM != monstruos) {
+            throw new IllegalArgumentException("R8: hay " + cantidadDeM + " M y se esperaban " + monstruos);
+        }
+    }
+
+    /**
+     * R10: entre agua y lava, como mucho el 25 % de las transitables.
+     */
+    private void validarAguaYLava() {
+        int aguaYLava = contar('~') + contar('^');
+        int transitables = contarTransitables();
+
+        if (aguaYLava * 100 > transitables * 25) {
+            throw new IllegalArgumentException("R10: hay " + aguaYLava + " celdas de agua y lava de "
+                    + transitables + " transitables, y el máximo es el 25 %");
+        }
+    }
+
+    /**
+     * R11: toda M está a distancia Manhattan mayor o igual a 3 de la E.
+     */
+    private void validarMonstruosLejosDeLaEntrada() {
+        for (int fila = 0; fila < filas; fila++) {
+            for (int columna = 0; columna < columnas; columna++) {
+                if (plano[fila][columna] == 'M') {
+                    int distancia = Math.abs(fila - entrada.fila()) + Math.abs(columna - entrada.columna());
+
+                    if (distancia < 3) {
+                        throw new IllegalArgumentException("R11: el monstruo en (" + (fila + 1) + ", "
+                                + (columna + 1) + ") está a distancia " + distancia
+                                + " de la entrada, y el mínimo es 3");
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Cuenta cuántas veces aparece el símbolo en el plano.
+     */
+    private int contar(char simbolo) {
+        int cantidad = 0;
+
+        for (int fila = 0; fila < filas; fila++) {
+            for (int columna = 0; columna < columnas; columna++) {
+                if (plano[fila][columna] == simbolo) {
+                    cantidad++;
+                }
+            }
+        }
+
+        return cantidad;
+    }
+
+    /**
+     * Cuenta las celdas transitables: todo lo que no es pared.
+     */
+    private int contarTransitables() {
+        int cantidad = 0;
+
+        for (int fila = 0; fila < filas; fila++) {
+            for (int columna = 0; columna < columnas; columna++) {
+                if (plano[fila][columna] != '#') {
+                    cantidad++;
+                }
+            }
+        }
+
+        return cantidad;
+    }
+
+    /**
+     * Indica si en la posición está el símbolo. Si la posición queda fuera
+     * del plano, devuelve false.
+     */
+    private boolean hay(Posicion posicion, char simbolo) {
+        int fila = posicion.fila();
+        int columna = posicion.columna();
+        boolean estaDentro = fila >= 0 && fila < filas && columna >= 0 && columna < columnas;
+
+        return estaDentro && plano[fila][columna] == simbolo;
     }
 
     /**
