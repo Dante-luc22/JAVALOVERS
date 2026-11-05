@@ -8,10 +8,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ArrayDeque;
-import java.util.Random;
+import java.util.*;
 
 /**
  * Genera laberintos mediante backtracking con una pila explícita.
@@ -89,7 +86,7 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
      *       y rechaza entradas vacías, mal formadas o de otro tipo.</li>
      *   <li>{@code obtenerCampo} → Obtiene un campo obligatorio y verifica
      *       que exista y no sea nulo.</li>
-     *   <li>{@code leerParametros} → Valida la versión, dificultad, dimensiones,
+     *   <li>{@code leerParametros} → Válida la versión, dificultad, dimensiones,
      *       cantidades y espacio disponible; luego crea los parámetros.</li>
      *   <li>{@code leerEntero} → Lee un número entero dentro del rango de int.</li>
      *   <li>{@code leerLong} → Lee un número entero dentro del rango de long.</li>
@@ -128,13 +125,13 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
 
     private Parametros leerParametros(JsonObject json) {
         int version = leerEntero(json, "version");
-        String dificultad = leerTexto(json, "dificultad");
+        String dificultad = leerTexto(json);
         int filas = leerEntero(json, "filas");
         int columnas = leerEntero(json, "columnas");
-        long semilla = leerLong(json, "semilla");
+        long semilla = leerLong(json);
         int cofres = leerEntero(json, "cofres");
         int monstruos = leerEntero(json, "monstruos");
-        boolean conSalida = leerBooleano(json, "conSalida");
+        boolean conSalida = leerBooleano(json);
 
         if (version != 1) {
             throw new IllegalArgumentException("La versión del formato debe ser 1");
@@ -186,35 +183,37 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         }
     }
 
-    private long leerLong(JsonObject json, String nombre) {
-        JsonElement campo = obtenerCampo(json, nombre);
+    private long leerLong(JsonObject json) {
+        JsonElement campo = obtenerCampo(json, "semilla");
 
-        if (!campo.isJsonPrimitive() || !campo.getAsJsonPrimitive().isNumber()) {
-            throw new IllegalArgumentException("El parámetro " + nombre + " debe ser un número entero");
+        if (!campo.getAsJsonPrimitive().isNumber()) {
+            throw new IllegalArgumentException("El parámetro " + "semilla" + " debe ser un número entero");
+        } else if (!campo.isJsonPrimitive()) {
+            throw new IllegalArgumentException("El parámetro " + "semilla" + " debe ser un número entero");
         }
 
         try {
             return campo.getAsBigDecimal().longValueExact();
         } catch (ArithmeticException | NumberFormatException e) {
-            throw new IllegalArgumentException("El parámetro " + nombre + " debe ser un long válido", e);
+            throw new IllegalArgumentException("El parámetro " + "semilla" + " debe ser un long válido", e);
         }
     }
 
-    private String leerTexto(JsonObject json, String nombre) {
-        JsonElement campo = obtenerCampo(json, nombre);
+    private String leerTexto(JsonObject json) {
+        JsonElement campo = obtenerCampo(json, "dificultad");
 
         if (!campo.isJsonPrimitive() || !campo.getAsJsonPrimitive().isString()) {
-            throw new IllegalArgumentException("El parámetro " + nombre + " debe ser texto");
+            throw new IllegalArgumentException("El parámetro " + "dificultad" + " debe ser texto");
         }
 
         return campo.getAsString();
     }
 
-    private boolean leerBooleano(JsonObject json, String nombre) {
-        JsonElement campo = obtenerCampo(json, nombre);
+    private boolean leerBooleano(JsonObject json) {
+        JsonElement campo = obtenerCampo(json, "conSalida");
 
         if (!campo.isJsonPrimitive() || !campo.getAsJsonPrimitive().isBoolean()) {
-            throw new IllegalArgumentException("El parámetro " + nombre + " debe ser un booleano");
+            throw new IllegalArgumentException("El parámetro " + "conSalida" + " debe ser un booleano");
         }
 
         return campo.getAsBoolean();
@@ -465,6 +464,8 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
      *   <li>{@code buscarCeldaMasLejana} → Usa búsqueda en anchura (BFS)
      *       para encontrar una celda alcanzable a máxima distancia de la entrada,
      *       contando movimientos sin diagonales ni costos de terreno.</li>
+     *   <li>{@code admiteMonstruo} → Comprueba si una celda está a distancia
+     *     Manhattan de al menos tres respecto de la entrada.</li>
      *   <li>{@code colocarMonstruos} → Distribuye monstruos al azar en pisos
      *       libres, a una distancia Manhattan de al menos tres de la entrada.</li>
      *   <li>{@code colocarCofres} → Distribuye la cantidad solicitada de cofres
@@ -506,10 +507,7 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
             int lugares = 0;
 
             for (Celda piso : pisos) {
-                int distancia = Math.abs(piso.fila() - entrada.fila())
-                        + Math.abs(piso.columna() - entrada.columna());
-
-                if (distancia >= 3 && !piso.equals(salida)) {
+                if (!piso.equals(salida) && admiteMonstruo(piso, entrada)) {
                     lugares++;
 
                     if (lugares == cantidadMonstruos) {
@@ -527,10 +525,8 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
     Celda buscarCeldaMasLejana(char[][] grilla, Celda entrada) {
         int[][] distancias = new int[grilla.length][grilla[0].length];
 
-        for (int fila = 0; fila < distancias.length; fila++) {
-            for (int columna = 0; columna < distancias[fila].length; columna++) {
-                distancias[fila][columna] = -1;
-            }
+        for (int[] distancia : distancias) {
+            Arrays.fill(distancia, -1);
         }
 
         ArrayDeque<Celda> cola = new ArrayDeque<>();
@@ -577,28 +573,38 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         return masLejana;
     }
 
+    private boolean admiteMonstruo(Celda celda, Celda entrada) {
+        int distancia = Math.abs(celda.fila() - entrada.fila())
+                + Math.abs(celda.columna() - entrada.columna());
+
+        return distancia >= 3;
+    }
+
     void colocarMonstruos(char[][] grilla, Celda entrada, int cantidad, Random azar) {
         List<Celda> disponibles = new ArrayList<>();
 
         for (int fila = 1; fila < grilla.length - 1; fila++) {
             for (int columna = 1; columna < grilla[fila].length - 1; columna++) {
+                if (grilla[fila][columna] == '.') {
+                    Celda piso = new Celda(fila, columna);
 
-                int distancia = Math.abs(fila - entrada.fila()) + Math.abs(columna - entrada.columna());
-
-                if (grilla[fila][columna] == '.' && distancia >= 3) {
-                    disponibles.add(new Celda(fila, columna));
+                    if (admiteMonstruo(piso, entrada)) {
+                        disponibles.add(piso);
+                    }
                 }
             }
         }
 
         if (cantidad > disponibles.size()) {
-            throw new IllegalStateException("No hay suficientes pisos disponibles para colocar los monstruos lejos de la entrada");
+            throw new IllegalStateException(
+                    "No hay suficientes pisos disponibles "
+                            + "para colocar los monstruos lejos de la entrada"
+            );
         }
 
         for (int i = 0; i < cantidad; i++) {
             int indice = azar.nextInt(disponibles.size());
             Celda elegida = disponibles.remove(indice);
-
             grilla[elegida.fila()][elegida.columna()] = 'M';
         }
     }
@@ -713,7 +719,7 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
 
         resultado.addProperty("version", 1);
         resultado.addProperty("generador", "JAVALOVERS");
-        resultado.add("parametros", parametrosOriginales.deepCopy());
+        resultado.add("parámetros", parametrosOriginales.deepCopy());
         resultado.add("entrada", convertirCoordenadas(entrada));
 
         if (salida == null) {
