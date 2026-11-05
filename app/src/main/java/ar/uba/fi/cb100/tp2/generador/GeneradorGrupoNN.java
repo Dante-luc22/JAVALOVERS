@@ -458,16 +458,17 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
      *
      * <hr>
      * <ul>
-     *   <li>{@code elegirEntrada} → Elige al azar un piso interior desde el cual
-     *     sea posible ubicar todos los monstruos a distancia Manhattan de al menos
-     *     tres, reservando la celda de salida cuando corresponda.</li>
+     *    <li>{@code elegirEntrada} → Elige al azar un piso interior como entrada.
+     *     Usa {@code admiteMonstruo} para comprobar que haya suficientes pisos
+     *     aptos, excluida la salida cuando corresponda.</li>
      *   <li>{@code buscarCeldaMasLejana} → Usa búsqueda en anchura (BFS)
      *       para encontrar una celda alcanzable a máxima distancia de la entrada,
      *       contando movimientos sin diagonales ni costos de terreno.</li>
      *   <li>{@code admiteMonstruo} → Comprueba si una celda está a distancia
      *     Manhattan de al menos tres respecto de la entrada.</li>
-     *   <li>{@code colocarMonstruos} → Distribuye monstruos al azar en pisos
-     *       libres, a una distancia Manhattan de al menos tres de la entrada.</li>
+     *   <li>{@code colocarMonstruos} → Usa {@code admiteMonstruo} para identificar
+     *     los pisos libres a distancia Manhattan de al menos tres de la entrada.
+     *     Entre ellos, distribuye los monstruos al azar sin repetir posiciones.</li>
      *   <li>{@code colocarCofres} → Distribuye la cantidad solicitada de cofres
      *       al azar en pisos libres, sin repetir posiciones.</li>
      *   <li>{@code colocarAguaYLava} → Distribuye agua y lava al azar según
