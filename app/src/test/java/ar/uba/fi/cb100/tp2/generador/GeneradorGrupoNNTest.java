@@ -799,4 +799,14 @@ class GeneradorGrupoNNTest {
                 () -> generador.generar(parametros.toString())
         );
     }
+
+    @Test
+    void rechazaJsonConClaveEntreComillasSimples() {
+        String json = parametrosValidos().toString()
+                .replace("\"filas\"", "'filas'");
+
+        GeneradorGrupoNN generador = new GeneradorGrupoNN();
+
+        assertThrows(IllegalArgumentException.class, () -> generador.generar(json));
+    }
 }

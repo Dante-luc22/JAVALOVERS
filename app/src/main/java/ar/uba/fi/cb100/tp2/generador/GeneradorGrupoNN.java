@@ -1,14 +1,18 @@
 package ar.uba.fi.cb100.tp2.generador;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonParser;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.Strictness;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 
 /**
  * Genera laberintos mediante backtracking con una pila explícita.
@@ -16,6 +20,7 @@ import java.util.*;
 public class GeneradorGrupoNN implements GeneradorDeLaberinto {
 
     private static final int MAX_INTENTOS = 100;
+    private static final Gson LECTOR_JSON = new GsonBuilder().setStrictness(Strictness.STRICT).create();
 
     @Override
     public String generar(String parametrosJson) {
@@ -115,7 +120,7 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         }
 
         try {
-            JsonElement elemento = JsonParser.parseString(texto);
+            JsonElement elemento = LECTOR_JSON.fromJson(texto, JsonElement.class);
 
             if (!elemento.isJsonObject()) {
                 throw new IllegalArgumentException("Los parámetros deben ser un objeto JSON");
