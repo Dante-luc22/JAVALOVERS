@@ -187,9 +187,9 @@ class GeneradorGrupoNNTest {
             assertEquals('#', grilla[grilla.length - 1][columna]);
         }
 
-        for (int fila = 0; fila < grilla.length; fila++) {
-            assertEquals('#', grilla[fila][0]);
-            assertEquals('#', grilla[fila][grilla[fila].length - 1]);
+        for (char[] chars : grilla) {
+            assertEquals('#', chars[0]);
+            assertEquals('#', chars[chars.length - 1]);
         }
     }
 
@@ -717,5 +717,42 @@ class GeneradorGrupoNNTest {
                 .getAsJsonObject().getAsJsonArray("plano");
 
         assertNotEquals(planoUno, planoDos);
+    }
+
+    @Test
+    void generaPlanoMinimoConMonstruoAunqueLaPrimeraEntradaNoSirva() {
+        JsonObject parametros = parametrosValidos();
+        parametros.addProperty("filas", 5);
+        parametros.addProperty("columnas", 5);
+        parametros.addProperty("semilla", 1);
+        parametros.addProperty("cofres", 0);
+        parametros.addProperty("monstruos", 1);
+        parametros.addProperty("conSalida", false);
+
+        String resultado = new GeneradorGrupoNN().generar(parametros.toString());
+        JsonObject json = JsonParser.parseString(resultado).getAsJsonObject();
+
+        // El JSON usa coordenadas desde 1; las filas del plano, desde 0.
+        JsonObject entrada = json.getAsJsonObject("entrada");
+        int filaEntrada = entrada.get("fila").getAsInt() - 1;
+        int columnaEntrada = entrada.get("columna").getAsInt() - 1;
+
+        JsonArray plano = json.getAsJsonArray("plano");
+        int monstruos = 0;
+
+        for (int fila = 0; fila < plano.size(); fila++) {
+            String celdas = plano.get(fila).getAsString();
+
+            for (int columna = 0; columna < celdas.length(); columna++) {
+                if (celdas.charAt(columna) == 'M') {
+                    monstruos++;
+                    int distancia = Math.abs(fila - filaEntrada)
+                            + Math.abs(columna - columnaEntrada);
+                    assertTrue(distancia >= 3);
+                }
+            }
+        }
+
+        assertEquals(1, monstruos);
     }
 }

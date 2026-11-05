@@ -31,7 +31,7 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         char[][] grilla = construirGrilla(parametros, azar);
 
         // Elegir y marcar la entrada.
-        Celda entrada = elegirEntrada(grilla, azar);
+        Celda entrada = elegirEntrada(grilla, parametros.monstruos(), parametros.conSalida(), azar);
         grilla[entrada.fila()][entrada.columna()] = 'E';
 
         // Colocar la salida más lejana, si este plano debe tenerla.
@@ -459,8 +459,9 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
      *
      * <hr>
      * <ul>
-     *   <li>{@code elegirEntrada} → Elige al azar una celda de piso interior
-     *       como posición de entrada del héroe.</li>
+     *   <li>{@code elegirEntrada} → Elige al azar un piso interior desde el cual
+     *     sea posible ubicar todos los monstruos a distancia Manhattan de al menos
+     *     tres, reservando la celda de salida cuando corresponda.</li>
      *   <li>{@code buscarCeldaMasLejana} → Usa búsqueda en anchura (BFS)
      *       para encontrar una celda alcanzable a máxima distancia de la entrada,
      *       contando movimientos sin diagonales ni costos de terreno.</li>
@@ -479,8 +480,7 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
      * provoca {@code IllegalArgumentException}.
      */
 
-
-    private Celda elegirEntrada(char[][] grilla, Random azar) {
+    private Celda elegirEntrada(char[][] grilla, int cantidadMonstruos, boolean conSalida, Random azar) {
         List<Celda> pisos = new ArrayList<>();
 
         for (int fila = 1; fila < grilla.length - 1; fila++) {
@@ -491,14 +491,37 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
             }
         }
 
-        if (pisos.isEmpty()) {
-            throw new IllegalStateException(
-                    "No hay celdas de piso para ubicar la entrada"
-            );
+        List<Celda> candidatas = new ArrayList<>(pisos);
+
+        while (!candidatas.isEmpty()) {
+            int indice = azar.nextInt(candidatas.size());
+            Celda entrada = candidatas.remove(indice);
+
+            if (cantidadMonstruos == 0) {
+                return entrada;
+            }
+
+            Celda salida = conSalida ? buscarCeldaMasLejana(grilla, entrada) : null;
+
+            int lugares = 0;
+
+            for (Celda piso : pisos) {
+                int distancia = Math.abs(piso.fila() - entrada.fila())
+                        + Math.abs(piso.columna() - entrada.columna());
+
+                if (distancia >= 3 && !piso.equals(salida)) {
+                    lugares++;
+
+                    if (lugares == cantidadMonstruos) {
+                        return entrada;
+                    }
+                }
+            }
         }
 
-        int indiceElegido = azar.nextInt(pisos.size());
-        return pisos.get(indiceElegido);
+        throw new IllegalStateException(
+                "Ninguna entrada de esta grilla deja lugar para los monstruos"
+        );
     }
 
     Celda buscarCeldaMasLejana(char[][] grilla, Celda entrada) {
