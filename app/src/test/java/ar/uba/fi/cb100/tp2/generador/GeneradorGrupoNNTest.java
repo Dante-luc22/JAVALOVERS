@@ -755,4 +755,31 @@ class GeneradorGrupoNNTest {
 
         assertEquals(1, monstruos);
     }
+
+    @Test
+    void reintentaCuandoLaPrimeraGrillaNoTieneEspacioParaLosCofres() {
+        JsonObject parametros = parametrosValidos();
+        parametros.addProperty("filas", 5);
+        parametros.addProperty("columnas", 5);
+        parametros.addProperty("semilla", 3);
+        parametros.addProperty("cofres", 8);
+        parametros.addProperty("monstruos", 0);
+        parametros.addProperty("conSalida", false);
+
+        String resultado = new GeneradorGrupoNN().generar(parametros.toString());
+        JsonArray plano = JsonParser.parseString(resultado)
+                .getAsJsonObject()
+                .getAsJsonArray("plano");
+
+        int cofres = 0;
+        for (JsonElement fila : plano) {
+            for (char celda : fila.getAsString().toCharArray()) {
+                if (celda == 'C') {
+                    cofres++;
+                }
+            }
+        }
+
+        assertEquals(8, cofres);
+    }
 }

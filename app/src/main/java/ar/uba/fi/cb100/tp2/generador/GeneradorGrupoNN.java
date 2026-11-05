@@ -15,40 +15,52 @@ import java.util.*;
  */
 public class GeneradorGrupoNN implements GeneradorDeLaberinto {
 
+    private static final int MAX_INTENTOS = 100;
+
     @Override
     public String generar(String parametrosJson) {
-        // Leer el JSON y validar los parámetros.
         JsonObject json = leerObjetoJson(parametrosJson);
         Parametros parametros = leerParametros(json);
-
-        // Usar el mismo generador de azar durante el proceso completo.
         Random azar = new Random(parametros.semilla());
 
-        // Construir paredes y caminos con bifurcaciones.
-        char[][] grilla = construirGrilla(parametros, azar);
+        long pisosNecesarios = 1L + (parametros.conSalida() ? 1 : 0) + parametros.monstruos() + parametros.cofres();
 
-        // Elegir y marcar la entrada.
-        Celda entrada = elegirEntrada(grilla, parametros.monstruos(), parametros.conSalida(), azar);
-        grilla[entrada.fila()][entrada.columna()] = 'E';
+        for (int intento = 0; intento < MAX_INTENTOS; intento++) {
+            char[][] grilla = crearGrilla(parametros.filas(), parametros.columnas());
+            excavar(grilla, azar);
 
-        // Colocar la salida más lejana, si este plano debe tenerla.
-        Celda salida = null;
+            if (!agregarBifurcaciones(grilla, azar) || !tieneProporcionValida(grilla)) {
+                continue;
+            }
 
-        if (parametros.conSalida()) {
-            salida = buscarCeldaMasLejana(grilla, entrada);
-            grilla[salida.fila()][salida.columna()] = 'S';
+            if (contarTransitables(grilla) < pisosNecesarios) {
+                continue;
+            }
+
+            Celda entrada = elegirEntrada(grilla, parametros.monstruos(), parametros.conSalida(), azar);
+
+            if (entrada == null) {
+                continue;
+            }
+
+            grilla[entrada.fila()][entrada.columna()] = 'E';
+
+            Celda salida = null;
+            if (parametros.conSalida()) {
+                salida = buscarCeldaMasLejana(grilla, entrada);
+                grilla[salida.fila()][salida.columna()] = 'S';
+            }
+
+            colocarMonstruos(grilla, entrada, parametros.monstruos(), azar);
+            colocarCofres(grilla, parametros.cofres(), azar);
+            colocarAguaYLava(grilla, parametros.dificultad(), azar);
+
+            return generarJsonDeSalida(json, grilla, entrada, salida);
         }
 
-        // Colocar monstruos en pisos libres, lejos de la entrada.
-        colocarMonstruos(grilla, entrada, parametros.monstruos(), azar);
-
-        // Colocar cofres en pisos libres.
-        colocarCofres(grilla, parametros.cofres(), azar);
-
-        // Colocar agua y lava en pisos libres, sin superar el % exigido por la dificultad.
-        colocarAguaYLava(grilla, parametros.dificultad(), azar);
-
-        return generarJsonDeSalida(json, grilla, entrada, salida);
+        throw new IllegalStateException(
+                "No se pudo generar un plano con los parámetros solicitados tras " + MAX_INTENTOS + " intentos"
+        );
     }
 
     /**
@@ -247,8 +259,6 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
      *       de celdas transitables. Indica si logró el objetivo.</li>
      *   <li>{@code tieneProporcionValida} → Comprueba que entre el 30 %
      *       y el 60 % del total de celdas sea transitable.</li>
-     *   <li>{@code construirGrilla} → Coordina la generación y validación
-     *       del mapa, con un máximo de 100 intentos.</li>
      * </ul>
      * <hr>
      * Si no se consigue una grilla válida tras los 100 intentos,
@@ -427,27 +437,6 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         return (transitables * 100 >= totalCeldas * 30) && (transitables * 100 <= totalCeldas * 60);
     }
 
-    private char[][] construirGrilla(Parametros parametros, Random azar) {
-        final int maxIntentos = 100;
-
-        for (int intento = 0; intento < maxIntentos; intento++) {
-            char[][] grilla = crearGrilla(parametros.filas(), parametros.columnas());
-
-            excavar(grilla, azar);
-
-            boolean pudoAgregarBifurcaciones = agregarBifurcaciones(grilla, azar);
-
-            if (pudoAgregarBifurcaciones && tieneProporcionValida(grilla)) {
-                return grilla;
-            }
-        }
-
-        throw new IllegalStateException(
-                "No se pudo construir una grilla válida tras "
-                        + maxIntentos + " intentos"
-        );
-    }
-
     /**
      * <hr><hr>
      * <h1>Etapa 3: Ubicación de la entrada y distribución de entidades y terrenos</h1>
@@ -518,9 +507,7 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
             }
         }
 
-        throw new IllegalStateException(
-                "Ninguna entrada de esta grilla deja lugar para los monstruos"
-        );
+        return null;
     }
 
     Celda buscarCeldaMasLejana(char[][] grilla, Celda entrada) {
@@ -720,7 +707,7 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
 
         resultado.addProperty("version", 1);
         resultado.addProperty("generador", "JAVALOVERS");
-        resultado.add("parámetros", parametrosOriginales.deepCopy());
+        resultado.add("parametros", parametrosOriginales.deepCopy());
         resultado.add("entrada", convertirCoordenadas(entrada));
 
         if (salida == null) {
