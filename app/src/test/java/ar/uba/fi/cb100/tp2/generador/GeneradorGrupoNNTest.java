@@ -17,6 +17,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -657,9 +658,7 @@ class GeneradorGrupoNNTest {
 
     @ParameterizedTest(name = "{0}, semilla {1}")
     @MethodSource("dificultadesYSemillas")
-    void generaPlanoConDimensionesYCantidadesSolicitadas(
-            String dificultad, int semilla
-    ) {
+    void generaPlanoConDimensionesYCantidadesSolicitadas(String dificultad, int semilla) {
         boolean esFacil = dificultad.equals("FACIL");
         int filas = esFacil ? 25 : 15;
         int columnas = esFacil ? 40 : 20;
@@ -699,5 +698,24 @@ class GeneradorGrupoNNTest {
 
         assertEquals(cofres, cofresEncontrados, "Cantidad de cofres incorrecta");
         assertEquals(monstruos, monstruosEncontrados, "Cantidad de monstruos incorrecta");
+    }
+
+    @Test
+    void dosSemillasDistintasPuedenGenerarPlanosDistintos() {
+        GeneradorGrupoNN generador = new GeneradorGrupoNN();
+
+        JsonObject parametros = parametrosValidos();
+        parametros.addProperty("semilla", 1);
+        String resultadoUno = generador.generar(parametros.toString());
+
+        parametros.addProperty("semilla", 2);
+        String resultadoDos = generador.generar(parametros.toString());
+
+        JsonArray planoUno = JsonParser.parseString(resultadoUno)
+                .getAsJsonObject().getAsJsonArray("plano");
+        JsonArray planoDos = JsonParser.parseString(resultadoDos)
+                .getAsJsonObject().getAsJsonArray("plano");
+
+        assertNotEquals(planoUno, planoDos);
     }
 }
