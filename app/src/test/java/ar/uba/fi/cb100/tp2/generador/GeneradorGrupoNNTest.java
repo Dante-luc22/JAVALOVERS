@@ -782,4 +782,21 @@ class GeneradorGrupoNNTest {
 
         assertEquals(8, cofres);
     }
+
+    @Test
+    void rechazaEntidadesQueSuperanElMaximoTransitable() {
+        JsonObject parametros = parametrosValidos();
+        parametros.addProperty("filas", 10);
+        parametros.addProperty("columnas", 10);
+        parametros.addProperty("cofres", 59);
+        parametros.addProperty("monstruos", 0);
+        parametros.addProperty("conSalida", true);
+
+        GeneradorGrupoNN generador = new GeneradorGrupoNN();
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> generador.generar(parametros.toString())
+        );
+    }
 }

@@ -162,11 +162,20 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         }
 
         long celdasInteriores = (long) (filas - 2) * (columnas - 2);
+        long totalCeldas = (long) filas * columnas;
+
+        long maxTransitables = (totalCeldas / 5) * 3 + ((totalCeldas % 5) * 3) / 5;
+
         int posicionesReservadas = conSalida ? 2 : 1;
+
+        long capacidadParaEntidades = Math.min(celdasInteriores, maxTransitables) - posicionesReservadas;
+
         long entidadesSolicitadas = (long) cofres + monstruos;
 
-        if (entidadesSolicitadas > celdasInteriores - posicionesReservadas) {
-            throw new IllegalArgumentException("No hay espacio interior suficiente para cofres y monstruos");
+        if (entidadesSolicitadas > capacidadParaEntidades) {
+            throw new IllegalArgumentException(
+                    "La cantidad de cofres y monstruos supera la capacidad del plano"
+            );
         }
 
         return new Parametros(
