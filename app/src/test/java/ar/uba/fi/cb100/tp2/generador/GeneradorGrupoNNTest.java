@@ -6,9 +6,13 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 
 import java.util.Random;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -34,6 +38,23 @@ class GeneradorGrupoNNTest {
                     "conSalida": true
                 }
                 """).getAsJsonObject();
+    }
+
+    /**
+     * Generador de 20 semillas para cada dificultad.
+     */
+
+    static List<Arguments> dificultadesYSemillas() {
+        List<Arguments> casos = new ArrayList<>();
+        String[] dificultades = {"FACIL", "MEDIO", "DIFICIL"};
+
+        for (String dificultad : dificultades) {
+            for (int semilla = 1; semilla <= 20; semilla++) {
+                casos.add(Arguments.of(dificultad, semilla));
+            }
+        }
+
+        return casos;
     }
 
     @Test
@@ -632,5 +653,51 @@ class GeneradorGrupoNNTest {
         for (JsonElement fila : resultado.getAsJsonArray("plano")) {
             assertEquals(-1, fila.getAsString().indexOf('S'), "No debe haber una salida en la grilla");
         }
+    }
+
+    @ParameterizedTest(name = "{0}, semilla {1}")
+    @MethodSource("dificultadesYSemillas")
+    void generaPlanoConDimensionesYCantidadesSolicitadas(
+            String dificultad, int semilla
+    ) {
+        boolean esFacil = dificultad.equals("FACIL");
+        int filas = esFacil ? 25 : 15;
+        int columnas = esFacil ? 40 : 20;
+        int cofres = esFacil ? 12 : 2;
+        int monstruos = esFacil ? 4 : 2;
+
+        JsonObject parametros = parametrosValidos();
+        parametros.addProperty("dificultad", dificultad);
+        parametros.addProperty("semilla", semilla);
+        parametros.addProperty("filas", filas);
+        parametros.addProperty("columnas", columnas);
+        parametros.addProperty("cofres", cofres);
+        parametros.addProperty("monstruos", monstruos);
+
+        String resultado = new GeneradorGrupoNN().generar(parametros.toString());
+        JsonArray plano = JsonParser.parseString(resultado)
+                .getAsJsonObject()
+                .getAsJsonArray("plano");
+
+        assertEquals(filas, plano.size(), "Cantidad de filas incorrecta");
+
+        int cofresEncontrados = 0;
+        int monstruosEncontrados = 0;
+
+        for (JsonElement elemento : plano) {
+            String fila = elemento.getAsString();
+            assertEquals(columnas, fila.length(), "Largo de fila incorrecto");
+
+            for (char celda : fila.toCharArray()) {
+                if (celda == 'C') {
+                    cofresEncontrados++;
+                } else if (celda == 'M') {
+                    monstruosEncontrados++;
+                }
+            }
+        }
+
+        assertEquals(cofres, cofresEncontrados, "Cantidad de cofres incorrecta");
+        assertEquals(monstruos, monstruosEncontrados, "Cantidad de monstruos incorrecta");
     }
 }
