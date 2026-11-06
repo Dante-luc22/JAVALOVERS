@@ -1,16 +1,17 @@
 package ar.uba.fi.cb100.tp2.generador;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonParser;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.Strictness;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -18,40 +19,53 @@ import java.util.Random;
  */
 public class GeneradorGrupoNN implements GeneradorDeLaberinto {
 
+    private static final int MAX_INTENTOS = 100;
+    private static final Gson LECTOR_JSON = new GsonBuilder().setStrictness(Strictness.STRICT).create();
+
     @Override
     public String generar(String parametrosJson) {
-        // Leer el JSON y validar los parámetros.
         JsonObject json = leerObjetoJson(parametrosJson);
         Parametros parametros = leerParametros(json);
-
-        // Usar el mismo generador de azar durante el proceso completo.
         Random azar = new Random(parametros.semilla());
 
-        // Construir paredes y caminos con bifurcaciones.
-        char[][] grilla = construirGrilla(parametros, azar);
+        long pisosNecesarios = 1L + (parametros.conSalida() ? 1 : 0) + parametros.monstruos() + parametros.cofres();
 
-        // Elegir y marcar la entrada.
-        Celda entrada = elegirEntrada(grilla, azar);
-        grilla[entrada.fila()][entrada.columna()] = 'E';
+        for (int intento = 0; intento < MAX_INTENTOS; intento++) {
+            char[][] grilla = crearGrilla(parametros.filas(), parametros.columnas());
+            excavar(grilla, azar);
 
-        // Colocar la salida más lejana, si este plano debe tenerla.
-        Celda salida = null;
+            if (!agregarBifurcaciones(grilla, azar) || !tieneProporcionValida(grilla)) {
+                continue;
+            }
 
-        if (parametros.conSalida()) {
-            salida = buscarCeldaMasLejana(grilla, entrada);
-            grilla[salida.fila()][salida.columna()] = 'S';
+            if (contarTransitables(grilla) < pisosNecesarios) {
+                continue;
+            }
+
+            Celda entrada = elegirEntrada(grilla, parametros.monstruos(), parametros.conSalida(), azar);
+
+            if (entrada == null) {
+                continue;
+            }
+
+            grilla[entrada.fila()][entrada.columna()] = 'E';
+
+            Celda salida = null;
+            if (parametros.conSalida()) {
+                salida = buscarCeldaMasLejana(grilla, entrada);
+                grilla[salida.fila()][salida.columna()] = 'S';
+            }
+
+            colocarMonstruos(grilla, entrada, parametros.monstruos(), azar);
+            colocarCofres(grilla, parametros.cofres(), azar);
+            colocarAguaYLava(grilla, parametros.dificultad(), azar);
+
+            return generarJsonDeSalida(json, grilla, entrada, salida);
         }
 
-        // Colocar monstruos en pisos libres, lejos de la entrada.
-        colocarMonstruos(grilla, entrada, parametros.monstruos(), azar);
-
-        // Colocar cofres en pisos libres.
-        colocarCofres(grilla, parametros.cofres(), azar);
-
-        // Colocar agua y lava en pisos libres, sin superar el % exigido por la dificultad.
-        colocarAguaYLava(grilla, parametros.dificultad(), azar);
-
-        return generarJsonDeSalida(json, grilla, entrada, salida);
+        throw new IllegalStateException(
+                "No se pudo generar un plano con los parámetros solicitados tras " + MAX_INTENTOS + " intentos"
+        );
     }
 
     /**
@@ -89,7 +103,7 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
      *       y rechaza entradas vacías, mal formadas o de otro tipo.</li>
      *   <li>{@code obtenerCampo} → Obtiene un campo obligatorio y verifica
      *       que exista y no sea nulo.</li>
-     *   <li>{@code leerParametros} → Valida la versión, dificultad, dimensiones,
+     *   <li>{@code leerParametros} → Válida la versión, dificultad, dimensiones,
      *       cantidades y espacio disponible; luego crea los parámetros.</li>
      *   <li>{@code leerEntero} → Lee un número entero dentro del rango de int.</li>
      *   <li>{@code leerLong} → Lee un número entero dentro del rango de long.</li>
@@ -106,7 +120,7 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         }
 
         try {
-            JsonElement elemento = JsonParser.parseString(texto);
+            JsonElement elemento = LECTOR_JSON.fromJson(texto, JsonElement.class);
 
             if (!elemento.isJsonObject()) {
                 throw new IllegalArgumentException("Los parámetros deben ser un objeto JSON");
@@ -128,13 +142,13 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
 
     private Parametros leerParametros(JsonObject json) {
         int version = leerEntero(json, "version");
-        String dificultad = leerTexto(json, "dificultad");
+        String dificultad = leerTexto(json);
         int filas = leerEntero(json, "filas");
         int columnas = leerEntero(json, "columnas");
-        long semilla = leerLong(json, "semilla");
+        long semilla = leerLong(json);
         int cofres = leerEntero(json, "cofres");
         int monstruos = leerEntero(json, "monstruos");
-        boolean conSalida = leerBooleano(json, "conSalida");
+        boolean conSalida = leerBooleano(json);
 
         if (version != 1) {
             throw new IllegalArgumentException("La versión del formato debe ser 1");
@@ -153,11 +167,20 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         }
 
         long celdasInteriores = (long) (filas - 2) * (columnas - 2);
+        long totalCeldas = (long) filas * columnas;
+
+        long maxTransitables = (totalCeldas / 5) * 3 + ((totalCeldas % 5) * 3) / 5;
+
         int posicionesReservadas = conSalida ? 2 : 1;
+
+        long capacidadParaEntidades = Math.min(celdasInteriores, maxTransitables) - posicionesReservadas;
+
         long entidadesSolicitadas = (long) cofres + monstruos;
 
-        if (entidadesSolicitadas > celdasInteriores - posicionesReservadas) {
-            throw new IllegalArgumentException("No hay espacio interior suficiente para cofres y monstruos");
+        if (entidadesSolicitadas > capacidadParaEntidades) {
+            throw new IllegalArgumentException(
+                    "La cantidad de cofres y monstruos supera la capacidad del plano"
+            );
         }
 
         return new Parametros(
@@ -186,35 +209,37 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         }
     }
 
-    private long leerLong(JsonObject json, String nombre) {
-        JsonElement campo = obtenerCampo(json, nombre);
+    private long leerLong(JsonObject json) {
+        JsonElement campo = obtenerCampo(json, "semilla");
 
-        if (!campo.isJsonPrimitive() || !campo.getAsJsonPrimitive().isNumber()) {
-            throw new IllegalArgumentException("El parámetro " + nombre + " debe ser un número entero");
+        if (!campo.getAsJsonPrimitive().isNumber()) {
+            throw new IllegalArgumentException("El parámetro " + "semilla" + " debe ser un número entero");
+        } else if (!campo.isJsonPrimitive()) {
+            throw new IllegalArgumentException("El parámetro " + "semilla" + " debe ser un número entero");
         }
 
         try {
             return campo.getAsBigDecimal().longValueExact();
         } catch (ArithmeticException | NumberFormatException e) {
-            throw new IllegalArgumentException("El parámetro " + nombre + " debe ser un long válido", e);
+            throw new IllegalArgumentException("El parámetro " + "semilla" + " debe ser un long válido", e);
         }
     }
 
-    private String leerTexto(JsonObject json, String nombre) {
-        JsonElement campo = obtenerCampo(json, nombre);
+    private String leerTexto(JsonObject json) {
+        JsonElement campo = obtenerCampo(json, "dificultad");
 
         if (!campo.isJsonPrimitive() || !campo.getAsJsonPrimitive().isString()) {
-            throw new IllegalArgumentException("El parámetro " + nombre + " debe ser texto");
+            throw new IllegalArgumentException("El parámetro " + "dificultad" + " debe ser texto");
         }
 
         return campo.getAsString();
     }
 
-    private boolean leerBooleano(JsonObject json, String nombre) {
-        JsonElement campo = obtenerCampo(json, nombre);
+    private boolean leerBooleano(JsonObject json) {
+        JsonElement campo = obtenerCampo(json, "conSalida");
 
         if (!campo.isJsonPrimitive() || !campo.getAsJsonPrimitive().isBoolean()) {
-            throw new IllegalArgumentException("El parámetro " + nombre + " debe ser un booleano");
+            throw new IllegalArgumentException("El parámetro " + "conSalida" + " debe ser un booleano");
         }
 
         return campo.getAsBoolean();
@@ -248,8 +273,6 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
      *       de celdas transitables. Indica si logró el objetivo.</li>
      *   <li>{@code tieneProporcionValida} → Comprueba que entre el 30 %
      *       y el 60 % del total de celdas sea transitable.</li>
-     *   <li>{@code construirGrilla} → Coordina la generación y validación
-     *       del mapa, con un máximo de 100 intentos.</li>
      * </ul>
      * <hr>
      * Si no se consigue una grilla válida tras los 100 intentos,
@@ -428,27 +451,6 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         return (transitables * 100 >= totalCeldas * 30) && (transitables * 100 <= totalCeldas * 60);
     }
 
-    private char[][] construirGrilla(Parametros parametros, Random azar) {
-        final int maxIntentos = 100;
-
-        for (int intento = 0; intento < maxIntentos; intento++) {
-            char[][] grilla = crearGrilla(parametros.filas(), parametros.columnas());
-
-            excavar(grilla, azar);
-
-            boolean pudoAgregarBifurcaciones = agregarBifurcaciones(grilla, azar);
-
-            if (pudoAgregarBifurcaciones && tieneProporcionValida(grilla)) {
-                return grilla;
-            }
-        }
-
-        throw new IllegalStateException(
-                "No se pudo construir una grilla válida tras "
-                        + maxIntentos + " intentos"
-        );
-    }
-
     /**
      * <hr><hr>
      * <h1>Etapa 3: Ubicación de la entrada y distribución de entidades y terrenos</h1>
@@ -459,13 +461,17 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
      *
      * <hr>
      * <ul>
-     *   <li>{@code elegirEntrada} → Elige al azar una celda de piso interior
-     *       como posición de entrada del héroe.</li>
+     *    <li>{@code elegirEntrada} → Elige al azar un piso interior como entrada.
+     *     Usa {@code admiteMonstruo} para comprobar que haya suficientes pisos
+     *     aptos, excluida la salida cuando corresponda.</li>
      *   <li>{@code buscarCeldaMasLejana} → Usa búsqueda en anchura (BFS)
      *       para encontrar una celda alcanzable a máxima distancia de la entrada,
      *       contando movimientos sin diagonales ni costos de terreno.</li>
-     *   <li>{@code colocarMonstruos} → Distribuye monstruos al azar en pisos
-     *       libres, a una distancia Manhattan de al menos tres de la entrada.</li>
+     *   <li>{@code admiteMonstruo} → Comprueba si una celda está a distancia
+     *     Manhattan de al menos tres respecto de la entrada.</li>
+     *   <li>{@code colocarMonstruos} → Usa {@code admiteMonstruo} para identificar
+     *     los pisos libres a distancia Manhattan de al menos tres de la entrada.
+     *     Entre ellos, distribuye los monstruos al azar sin repetir posiciones.</li>
      *   <li>{@code colocarCofres} → Distribuye la cantidad solicitada de cofres
      *       al azar en pisos libres, sin repetir posiciones.</li>
      *   <li>{@code colocarAguaYLava} → Distribuye agua y lava al azar según
@@ -479,8 +485,7 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
      * provoca {@code IllegalArgumentException}.
      */
 
-
-    private Celda elegirEntrada(char[][] grilla, Random azar) {
+    private Celda elegirEntrada(char[][] grilla, int cantidadMonstruos, boolean conSalida, Random azar) {
         List<Celda> pisos = new ArrayList<>();
 
         for (int fila = 1; fila < grilla.length - 1; fila++) {
@@ -491,23 +496,39 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
             }
         }
 
-        if (pisos.isEmpty()) {
-            throw new IllegalStateException(
-                    "No hay celdas de piso para ubicar la entrada"
-            );
+        List<Celda> candidatas = new ArrayList<>(pisos);
+
+        while (!candidatas.isEmpty()) {
+            int indice = azar.nextInt(candidatas.size());
+            Celda entrada = candidatas.remove(indice);
+
+            if (cantidadMonstruos == 0) {
+                return entrada;
+            }
+
+            Celda salida = conSalida ? buscarCeldaMasLejana(grilla, entrada) : null;
+
+            int lugares = 0;
+
+            for (Celda piso : pisos) {
+                if (!piso.equals(salida) && admiteMonstruo(piso, entrada)) {
+                    lugares++;
+
+                    if (lugares == cantidadMonstruos) {
+                        return entrada;
+                    }
+                }
+            }
         }
 
-        int indiceElegido = azar.nextInt(pisos.size());
-        return pisos.get(indiceElegido);
+        return null;
     }
 
     Celda buscarCeldaMasLejana(char[][] grilla, Celda entrada) {
         int[][] distancias = new int[grilla.length][grilla[0].length];
 
-        for (int fila = 0; fila < distancias.length; fila++) {
-            for (int columna = 0; columna < distancias[fila].length; columna++) {
-                distancias[fila][columna] = -1;
-            }
+        for (int[] distancia : distancias) {
+            Arrays.fill(distancia, -1);
         }
 
         ArrayDeque<Celda> cola = new ArrayDeque<>();
@@ -554,28 +575,38 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         return masLejana;
     }
 
+    private boolean admiteMonstruo(Celda celda, Celda entrada) {
+        int distancia = Math.abs(celda.fila() - entrada.fila())
+                + Math.abs(celda.columna() - entrada.columna());
+
+        return distancia >= 3;
+    }
+
     void colocarMonstruos(char[][] grilla, Celda entrada, int cantidad, Random azar) {
         List<Celda> disponibles = new ArrayList<>();
 
         for (int fila = 1; fila < grilla.length - 1; fila++) {
             for (int columna = 1; columna < grilla[fila].length - 1; columna++) {
+                if (grilla[fila][columna] == '.') {
+                    Celda piso = new Celda(fila, columna);
 
-                int distancia = Math.abs(fila - entrada.fila()) + Math.abs(columna - entrada.columna());
-
-                if (grilla[fila][columna] == '.' && distancia >= 3) {
-                    disponibles.add(new Celda(fila, columna));
+                    if (admiteMonstruo(piso, entrada)) {
+                        disponibles.add(piso);
+                    }
                 }
             }
         }
 
         if (cantidad > disponibles.size()) {
-            throw new IllegalStateException("No hay suficientes pisos disponibles para colocar los monstruos lejos de la entrada");
+            throw new IllegalStateException(
+                    "No hay suficientes pisos disponibles "
+                            + "para colocar los monstruos lejos de la entrada"
+            );
         }
 
         for (int i = 0; i < cantidad; i++) {
             int indice = azar.nextInt(disponibles.size());
             Celda elegida = disponibles.remove(indice);
-
             grilla[elegida.fila()][elegida.columna()] = 'M';
         }
     }
