@@ -49,5 +49,19 @@ public abstract class Entidad {
      * @param agenda la agenda, para efectos que vencen más adelante
      */
     public abstract void alEncontrarseConHeroe(Heroe heroe, Agenda agenda);
+
+    /**
+     * Si la entidad tiene que sacarse del plano después de encontrarse con el
+     * héroe. Por defecto no: un monstruo sigue en el plano. Un cofre abierto,
+     * en cambio, desaparece (regla 4 del enunciado).
+     * La Partida lo pregunta después de cada encuentro, así saca lo que
+     * corresponde sin tener que preguntar de qué tipo es cada entidad.
+     * @return true si hay que quitarla del plano
+     */
+    public boolean debeSalirDelPlano() {
+        return false;
+    }
 }
+
+
 
