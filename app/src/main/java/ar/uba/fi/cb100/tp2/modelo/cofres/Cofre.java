@@ -8,6 +8,8 @@ import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 
 public abstract class Cofre extends Entidad {
 
+    private boolean abierto = false;  
+
     /**
      * Constructor de la clase cofre, recibe la posicion donde va a
      * estar el cofre.
@@ -50,7 +52,20 @@ public abstract class Cofre extends Entidad {
             throw new IllegalArgumentException(
                     "El heroe no puede ser nulo.");
         }
+        if (this.abierto) {
+            return;
+        }
+        this.abierto = true;     
         heroe.sumarCofreAbierto();
         abrir(heroe, agenda);
+    }
+
+    /**                                                       // NUEVO (3)
+     * Un cofre abierto desaparece del plano (regla 4 del enunciado).
+     * @return true una vez que el héroe lo abrió
+     */
+    @Override
+    public final boolean debeSalirDelPlano() {
+        return this.abierto;
     }
 }

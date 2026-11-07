@@ -110,6 +110,9 @@ public class Partida {
 
         for (Entidad entidad : plano.obtenerEntidades(destino)) {
             entidad.alEncontrarseConHeroe(this.heroe, this.agenda);
+            if (entidad.debeSalirDelPlano()) {
+                plano.quitarEntidad(entidad);
+            }
         }
         return new ResultadoTurno(true, this.estadoActual());
     }
