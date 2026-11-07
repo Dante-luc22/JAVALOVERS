@@ -83,7 +83,7 @@ public class CargadorDePlano {
     }
 
     private Posicion leerPosicion(JsonElement elemento) {
-        if (elemento.isJsonNull()) {
+        if (elemento == null || elemento.isJsonNull()) {
             return null;
         }
 
