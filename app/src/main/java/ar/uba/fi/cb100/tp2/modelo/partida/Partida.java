@@ -159,4 +159,11 @@ public class Partida {
     public static int calcularPuntaje(int cofresAbiertos, int energiaRestante, int pasos) {
         return cofresAbiertos * PUNTOS_POR_COFRE + energiaRestante * PUNTOS_POR_ENERGIA - pasos;
     }
+
+        /**
+     * @return el héroe de esta partida, para que la vista lo pueda dibujar
+     */
+    public Heroe getHeroe() {
+        return this.heroe;
+    }
 }
