@@ -1,30 +1,34 @@
+
 package ar.uba.fi.cb100.tp2.modelo.partida;
 
-public class Configuracion {
-    private int ancho;
-    private int alto;
-    private int pasos;
-    private String directorioSalida;
+import java.util.Map;
 
-    //-----CONSTRUCTOR-----
-    public Configuracion() {
+import ar.uba.fi.cb100.tp2.modelo.valores.Dificultad;
+
+/**
+ * La configuración leída de configuracion.json. Es un record porque es un
+ * valor: se lee una vez al iniciar y no cambia.
+ * Los nombres coinciden con las claves del JSON para que Gson lo lea directo.
+ *
+ * @param energiaInicial con cuánta energía empieza el héroe
+ * @param costos         energía que cuesta entrar a cada terreno ("piso", "agua", "lava")
+ * @param semilla        null para que cada partida sea distinta; un número para repetirla
+ * @param dificultades   los parámetros de FACIL, MEDIO y DIFICIL
+ */
+public record Configuracion(int energiaInicial, Map<String, Integer> costos, Long semilla,
+                            Map<Dificultad, ParametrosDeDificultad> dificultades) {
+
+    /**
+     * @param dificultad la elegida por el jugador
+     * @return sus parámetros
+     * @throws IllegalArgumentException si el archivo no trae esa dificultad
+     */
+    public ParametrosDeDificultad parametrosDe(Dificultad dificultad) {
+        ParametrosDeDificultad parametros = this.dificultades.get(dificultad);
+        if (parametros == null) {
+            throw new IllegalArgumentException(
+                    "configuracion.json no tiene la dificultad " + dificultad);
+        }
+        return parametros;
     }
-    public Configuracion(int ancho, int alto, int pasos, String directorioSalida) {
-        this.ancho = ancho;
-        this.alto = alto;
-        this.pasos = pasos;
-        this.directorioSalida = directorioSalida;
-    }
-    //-----GETTERS SIMPLES-----
-    public int getAncho() {
-        return ancho;}
-
-    public int getAlto() {
-        return alto;}
-
-    public int getPasos() {
-        return pasos;}
-
-    public String getDirectorioSalida() {
-        return directorioSalida;}
 }
