@@ -114,6 +114,73 @@ class HeroeTest {
         assertEquals(ENERGIA_INICIAL, this.heroe.getEnergia());
     }
 
+    // =================== SUMAR ENERGÍA =================== //
+
+    @Test
+    void laEnergiaMaximaEsLaEnergiaInicial() {
+        assertEquals(ENERGIA_INICIAL, this.heroe.getEnergiaMaxima());
+        assertEquals(150, new Heroe(this.inicio, 150).getEnergiaMaxima());
+    }
+
+    @Test
+    void sumarEnergiaDevuelveLaCantidad() {
+        this.heroe.restarEnergia(40);
+        this.heroe.sumarEnergia(25);
+        assertEquals(85, this.heroe.getEnergia());
+    }
+
+    @Test
+    void sumarEnergiaNoPasaDelMaximo() {
+        this.heroe.restarEnergia(10);
+        this.heroe.sumarEnergia(50);
+        assertEquals(ENERGIA_INICIAL, this.heroe.getEnergia());
+    }
+
+    @Test
+    void sumarConEnergiaLlenaNoCambiaNada() {
+        this.heroe.sumarEnergia(30);
+        assertEquals(ENERGIA_INICIAL, this.heroe.getEnergia());
+    }
+
+    @Test
+    void conMaximoMayorA100SumaSinTopeEn100() {
+        Heroe fuerte = new Heroe(this.inicio, 150);
+        fuerte.restarEnergia(90);
+        fuerte.sumarEnergia(50);
+        assertEquals(110, fuerte.getEnergia());
+    }
+
+    @Test
+    void conMaximoMenorA100NoSePasaDeSuMaximo() {
+        Heroe debil = new Heroe(this.inicio, 80);
+        debil.restarEnergia(10);
+        debil.sumarEnergia(20);
+        assertEquals(80, debil.getEnergia());
+    }
+
+    @Test
+    void sumarEnergiaRechazaCantidadNegativa() {
+        this.heroe.restarEnergia(40);
+        assertThrows(IllegalArgumentException.class,
+                () -> this.heroe.sumarEnergia(-5));
+        assertEquals(60, this.heroe.getEnergia());
+    }
+
+    @Test
+    void sumarCeroNoCambiaLaEnergia() {
+        this.heroe.restarEnergia(40);
+        this.heroe.sumarEnergia(0);
+        assertEquals(60, this.heroe.getEnergia());
+    }
+
+    @Test
+    void unHeroeSinEnergiaPuedeRecuperarla() {
+        this.heroe.restarEnergia(ENERGIA_INICIAL);
+        this.heroe.sumarEnergia(10);
+        assertEquals(10, this.heroe.getEnergia());
+        assertFalse(this.heroe.estaSinEnergia());
+    }
+
     // =================== COFRES =================== //
 
     @Test

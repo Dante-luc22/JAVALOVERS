@@ -67,14 +67,20 @@ public class Heroe {
         }
     }
 
+    /**
+     * Metodo para sumar la cantidad de energia dada.
+     *
+     * @param cantidad energia a sumar
+     * @throws IllegalArgumentException si la cantidad dada es negativa.
+     */
     public void sumarEnergia(int cantidad) {
         if (cantidad < 0) {
             throw new IllegalArgumentException(
-                    "La energia a restar no puede ser negativa, se recibio: " + cantidad);
+                    "La energia a sumar no puede ser negativa, se recibio: " + cantidad);
         }
         this.energia += cantidad;
-        if (energia > 100) {
-            this.energia = 100;
+        if (energia > energiaMaxima) {
+            this.energia = energiaMaxima;
         }
     }
 
