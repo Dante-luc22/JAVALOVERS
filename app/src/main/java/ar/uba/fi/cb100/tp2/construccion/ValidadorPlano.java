@@ -6,6 +6,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
+import java.util.ArrayDeque;
+import java.util.Queue;
 
 /**
  * Valida un plano en el formato JSON del Anexo B.3 con las once reglas de B.4.
@@ -13,6 +15,9 @@ import com.google.gson.JsonParser;
 public class ValidadorPlano {
 
     private static final String SIMBOLOS_VALIDOS = "#.~^CMES";
+
+    // arriba, abajo, izquierda, derecha
+    private static final int[][] MOVIMIENTOS = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
 
     // Datos leídos del JSON. Las posiciones quedan en base 0.
     private int filas;
@@ -35,10 +40,128 @@ public class ValidadorPlano {
         validarSimbolos();
         validarBorde();
         validarEntradaYSalida();
+
+        int[][] distancias = calcularDistancias();
+        validarConexo(distancias);
+        validarBifurcaciones();
         validarProporcion();
         validarCantidades();
+        validarSalidaMasLejana(distancias);
         validarAguaYLava();
         validarMonstruosLejosDeLaEntrada();
+    }
+
+    /**
+     * BFS con cola desde la entrada. Devuelve la distancia en pasos hasta cada
+     * celda, o -1 si no se llega a ella.
+     */
+    private int[][] calcularDistancias() {
+        int[][] distancias = new int[filas][columnas];
+        for (int fila = 0; fila < filas; fila++) {
+            for (int columna = 0; columna < columnas; columna++) {
+                distancias[fila][columna] = -1;
+            }
+        }
+
+        Queue<Posicion> cola = new ArrayDeque<>();
+        distancias[entrada.fila()][entrada.columna()] = 0;
+        cola.add(entrada);
+
+        while (!cola.isEmpty()) {
+            Posicion actual = cola.remove();
+            int distanciaActual = distancias[actual.fila()][actual.columna()];
+
+            for (int[] movimiento : MOVIMIENTOS) {
+                int fila = actual.fila() + movimiento[0];
+                int columna = actual.columna() + movimiento[1];
+
+                if (esTransitable(fila, columna) && distancias[fila][columna] == -1) {
+                    distancias[fila][columna] = distanciaActual + 1;
+                    cola.add(new Posicion(fila, columna));
+                }
+            }
+        }
+
+        return distancias;
+    }
+
+    /**
+     * R5: desde la E se llega a toda celda transitable.
+     */
+    private void validarConexo(int[][] distancias) {
+        int alcanzadas = 0;
+        for (int fila = 0; fila < filas; fila++) {
+            for (int columna = 0; columna < columnas; columna++) {
+                if (distancias[fila][columna] != -1) {
+                    alcanzadas++;
+                }
+            }
+        }
+
+        int transitables = contarTransitables();
+        if (alcanzadas != transitables) {
+            throw new IllegalArgumentException("R5: desde la entrada se alcanzan " + alcanzadas
+                    + " de " + transitables + " celdas transitables");
+        }
+    }
+
+    /**
+     * R6: al menos el 10 % de las celdas transitables tienen 3 o más vecinos
+     * transitables.
+     */
+    private void validarBifurcaciones() {
+        int conBifurcacion = 0;
+
+        for (int fila = 0; fila < filas; fila++) {
+            for (int columna = 0; columna < columnas; columna++) {
+                if (esTransitable(fila, columna) && contarVecinosTransitables(fila, columna) >= 3) {
+                    conBifurcacion++;
+                }
+            }
+        }
+
+        int transitables = contarTransitables();
+        if (conBifurcacion * 100 < transitables * 10) {
+            throw new IllegalArgumentException("R6: sólo " + conBifurcacion + " de " + transitables
+                    + " celdas transitables tienen 3 o más vecinos, y tiene que ser al menos el 10 %");
+        }
+    }
+
+    /**
+     * R9: si hay S, su distancia a la E es la máxima del plano (se admiten empates).
+     */
+    private void validarSalidaMasLejana(int[][] distancias) {
+        if (!conSalida) {
+            return;
+        }
+
+        int maxima = 0;
+        for (int fila = 0; fila < filas; fila++) {
+            for (int columna = 0; columna < columnas; columna++) {
+                maxima = Math.max(maxima, distancias[fila][columna]);
+            }
+        }
+
+        int distanciaDeLaSalida = distancias[salida.fila()][salida.columna()];
+        if (distanciaDeLaSalida != maxima) {
+            throw new IllegalArgumentException("R9: la salida está a distancia " + distanciaDeLaSalida
+                    + " y la celda más lejana está a " + maxima);
+        }
+    }
+
+    private boolean esTransitable(int fila, int columna) {
+        boolean estaDentro = fila >= 0 && fila < filas && columna >= 0 && columna < columnas;
+        return estaDentro && plano[fila][columna] != '#';
+    }
+
+    private int contarVecinosTransitables(int fila, int columna) {
+        int vecinos = 0;
+        for (int[] movimiento : MOVIMIENTOS) {
+            if (esTransitable(fila + movimiento[0], columna + movimiento[1])) {
+                vecinos++;
+            }
+        }
+        return vecinos;
     }
 
     /**
