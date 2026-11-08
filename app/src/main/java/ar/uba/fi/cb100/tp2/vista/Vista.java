@@ -1,10 +1,27 @@
 package ar.uba.fi.cb100.tp2.vista;
 
-public interface Vista {/**
- * Renderiza o exporta el estado actual en un paso determinado de la simulación.
- *
- * @param paso   Número del paso o iteración actual.
- * @param matriz Matriz de datos que representa el estado del tablero o mapa.
+import ar.uba.fi.cb100.tp2.modelo.partida.Accion;
+import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
+
+/**
+ * Lo que el juego necesita de una vista: mostrar cómo quedó la partida
+ * y preguntar qué hace el héroe.
+ * VistaBmp escribe un BMP y lee la tecla de la consola; una VistaGrafica
+ * haría lo mismo con JuegoVisual. El modelo no se entera del cambio.
  */
-void renderizar(int paso, int[][] matriz);
+public interface Vista {
+
+    /**
+     * Muestra la partida tal como quedó después del último paso.
+     *
+     * @param partida la partida a mostrar
+     */
+    void mostrar(Partida partida);
+
+    /**
+     * Espera a que el jugador elija qué hace el héroe.
+     *
+     * @return la acción elegida
+     */
+    Accion leerAccion();
 }
