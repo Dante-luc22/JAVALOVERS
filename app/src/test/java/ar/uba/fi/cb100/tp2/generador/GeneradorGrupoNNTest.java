@@ -14,8 +14,10 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import ar.uba.fi.cb100.tp2.construccion.ValidadorPlano;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -809,4 +811,33 @@ class GeneradorGrupoNNTest {
 
         assertThrows(IllegalArgumentException.class, () -> generador.generar(json));
     }
+
+    @ParameterizedTest(name = "{0}, semilla {1}")
+    @MethodSource("dificultadesYSemillas")
+    void generaPlanosAceptadosPorElValidador(
+            String dificultad,
+            int semilla
+    ) {
+        boolean esFacil = dificultad.equals("FACIL");
+
+        JsonObject parametros = parametrosValidos();
+        parametros.addProperty("dificultad", dificultad);
+        parametros.addProperty("semilla", semilla);
+        parametros.addProperty("filas", esFacil ? 25 : 15);
+        parametros.addProperty("columnas", esFacil ? 40 : 20);
+        parametros.addProperty("cofres", esFacil ? 12 : 2);
+        parametros.addProperty("monstruos", esFacil ? 4 : 2);
+
+        GeneradorGrupoNN generador = new GeneradorGrupoNN();
+        String resultado = generador.generar(parametros.toString());
+
+        ValidadorPlano validador = new ValidadorPlano();
+
+        assertDoesNotThrow(
+                () -> validador.validar(resultado),
+                "El validador rechazó el plano de "
+                        + dificultad + " con semilla " + semilla
+        );
+    }
+
 }

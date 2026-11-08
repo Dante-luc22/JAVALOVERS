@@ -49,6 +49,33 @@ class ValidadorPlanoTest {
     }
 
     @Test
+    void rechazaJsonMalFormado() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new ValidadorPlano().validar("{ esto no es json"));
+    }
+
+    @Test
+    void rechazaJsonQueNoEsUnObjeto() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new ValidadorPlano().validar("[1, 2, 3]"));
+    }
+
+    @Test
+    void rechazaJsonSinElCampoPlano() {
+        String sinPlano = """
+                {
+                  "parametros": { "filas": 5, "columnas": 5, "cofres": 0, "monstruos": 0, "conSalida": false },
+                  "entrada": { "fila": 2, "columna": 2 },
+                  "salida": null
+                }
+                """;
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> new ValidadorPlano().validar(sinPlano));
+
+        assertTrue(error.getMessage().contains("plano"), error.getMessage());
+    }
+
+    @Test
     void r1RechazaCantidadDeFilasDistintaALaDeLosParametros() {
         assertRechaza("R1", PLANO_EJEMPLO.replace("\"filas\": 9", "\"filas\": 10"));
     }
@@ -68,6 +95,46 @@ class ValidadorPlanoTest {
         assertRechaza("R4", PLANO_EJEMPLO.replace(
                 "\"entrada\": { \"fila\": 2, \"columna\": 2 }",
                 "\"entrada\": { \"fila\": 3, \"columna\": 2 }"));
+    }
+
+    @Test
+    void r5RechazaCeldasInalcanzables() {
+        // Dos cámaras separadas por una pared: desde la E no se llega a la de la derecha.
+        String dosCamaras = """
+                {
+                  "parametros": { "filas": 5, "columnas": 7, "cofres": 0, "monstruos": 0, "conSalida": false },
+                  "entrada": { "fila": 2, "columna": 2 },
+                  "salida": null,
+                  "plano": [
+                    "#######",
+                    "#E.#..#",
+                    "#..#..#",
+                    "#..#..#",
+                    "#######"
+                  ]
+                }
+                """;
+        assertRechaza("R5", dosCamaras);
+    }
+
+    @Test
+    void r6RechazaPlanoSinBifurcaciones() {
+        // Un solo camino sin cruces: ninguna celda tiene 3 vecinos transitables.
+        String camino = """
+                {
+                  "parametros": { "filas": 5, "columnas": 5, "cofres": 0, "monstruos": 0, "conSalida": true },
+                  "entrada": { "fila": 2, "columna": 2 },
+                  "salida": { "fila": 4, "columna": 4 },
+                  "plano": [
+                    "#####",
+                    "#E..#",
+                    "###.#",
+                    "#..S#",
+                    "#####"
+                  ]
+                }
+                """;
+        assertRechaza("R6", camino);
     }
 
     @Test
@@ -95,6 +162,15 @@ class ValidadorPlanoTest {
     @Test
     void r8RechazaCantidadDeCofresDistinta() {
         assertRechaza("R8", PLANO_EJEMPLO.replace("\"cofres\": 1", "\"cofres\": 2"));
+    }
+
+    @Test
+    void r9RechazaSalidaQueNoEsLaMasLejana() {
+        // Borrador descrito en B.5: la S pasa a (8, 11) y (8, 10) queda más lejos.
+        assertRechaza("R9", PLANO_EJEMPLO
+                .replace("\"#.M.....#S.#\"", "\"#.M.....#.S#\"")
+                .replace("\"salida\":  { \"fila\": 8, \"columna\": 10 }",
+                         "\"salida\":  { \"fila\": 8, \"columna\": 11 }"));
     }
 
     @Test
