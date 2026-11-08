@@ -7,6 +7,7 @@ public class Heroe {
     private Ubicacion ubicacion;
     private int energia;
     private int cofresAbiertos;
+    private final int energiaMaxima;
 
     /**
      * Constructor de la clase heroe, recibe su ubicacionInicial y
@@ -28,6 +29,7 @@ public class Heroe {
         }
         this.ubicacion = ubicacionInicial;
         this.energia = energiaInicial;
+        this.energiaMaxima = energiaInicial;
         this.cofresAbiertos = 0;
     }
 
@@ -62,6 +64,17 @@ public class Heroe {
         this.energia -= cantidad;
         if (energia < 0) {
             this.energia = 0;
+        }
+    }
+
+    public void sumarEnergia(int cantidad) {
+        if (cantidad < 0) {
+            throw new IllegalArgumentException(
+                    "La energia a restar no puede ser negativa, se recibio: " + cantidad);
+        }
+        this.energia += cantidad;
+        if (energia > 100) {
+            this.energia = 100;
         }
     }
 
@@ -104,5 +117,12 @@ public class Heroe {
      */
     public int getCofresAbiertos() {
         return cofresAbiertos;
+    }
+
+    /**
+     * Getter que devuelve la energia maxima del heroe.
+     */
+    public int getEnergiaMaxima() {
+        return energiaMaxima;
     }
 }
