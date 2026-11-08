@@ -35,7 +35,7 @@ public class ControladorJuego {
             case MOVER_IZQUIERDA -> this.partida.moverHeroe(Direccion.IZQUIERDA);
             case MOVER_DERECHA -> this.partida.moverHeroe(Direccion.DERECHA);
             case ESPERAR -> this.partida.esperar();
-            case USAR, GUARDAR, SALIR -> new ResultadoTurno(false, this.partida.estado());
+                        case USAR, GUARDAR, SALIR -> new ResultadoTurno(false, this.partida.estadoActual());
         };
     }
 }
