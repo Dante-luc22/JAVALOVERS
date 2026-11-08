@@ -6,8 +6,8 @@ import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import java.util.HashMap;
 
 /**
- * Clase Domilon, es un cazador que a veces no caza, se queda quieto mientras el
- * heroe esta lejor. Cuando el heroe esta a distancia <= 3, despierta y caza.
+ * Clase Dormilon, es un cazador que a veces no caza, se queda quieto mientras el
+ * heroe esta lejos. Cuando el heroe esta a distancia <= el radio, despierta y caza.
  */
 public class Dormilon extends Cazador{
 
@@ -19,6 +19,8 @@ public class Dormilon extends Cazador{
      *
      * @param posicionInicial del dormilon.
      * @param danio           que realiza el dormilon.
+     * @param radio           radio para alcanzar al heroe.
+     * @throws IllegalArgumentException si el radio dado es menor o igual a 0.
      */
     public Dormilon(Posicion posicionInicial, int danio, int radio) {
         if (radio <= 0) {
@@ -30,8 +32,8 @@ public class Dormilon extends Cazador{
     }
 
     /**
-     * Metodo para decidir el movimiento del dormilon, si el heroe esta a un radio
-     * <=3 lo caza, sino sigue dormido.
+     * Metodo para decidir el movimiento del dormilon, si el heroe esta a una distancia
+     * <= que el radio lo caza, sino sigue dormido.
      *
      * @param plano lugar del plano donde se va a mover;
      * @param heroe posicion del heroe;
