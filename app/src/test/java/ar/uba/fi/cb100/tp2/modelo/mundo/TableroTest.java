@@ -103,4 +103,12 @@ class TableroTest {
         assertThrows(IllegalArgumentException.class, () -> tablero.setTerreno(afuera, Terreno.PISO));
         assertThrows(IllegalArgumentException.class, () -> tablero.vecinasTransitables(afuera));
     }
+
+        @Test
+    void conoceSuTamanio() {
+        Tablero tablero = new Tablero(5, 7);
+
+        assertEquals(5, tablero.getFilas());
+        assertEquals(7, tablero.getColumnas());
+    }
 }
