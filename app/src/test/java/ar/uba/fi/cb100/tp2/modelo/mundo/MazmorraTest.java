@@ -34,34 +34,34 @@ class MazmorraTest {
     }
 
     @Test
-    void conUnSoloPlanoLaUbicacionCeroCeroLoDevuelve() {
+    void conUnSoloPlanoLaUbicacionUnoUnoLoDevuelve() {
         Plano plano = planoConSalida();
         Mazmorra mazmorra = new Mazmorra(List.of(plano), 1);
 
-        assertSame(plano, mazmorra.getPlano(new Ubicacion(0, 0, ENTRADA)));
+        assertSame(plano, mazmorra.getPlano(new Ubicacion(1, 1, ENTRADA)));
     }
 
     @Test
-    void elTableroUnoPisoDosEsElSextoPlanoConTresPisosPorTablero() {
+    void elTableroDosPisoTresEsElSextoPlanoConTresPisosPorTablero() {
         List<Plano> planos = seisPlanosConSalidaEnElQuinto();
         Mazmorra mazmorra = new Mazmorra(planos, 3);
 
-        assertSame(planos.get(5), mazmorra.getPlano(new Ubicacion(1, 2, ENTRADA)));
+        assertSame(planos.get(5), mazmorra.getPlano(new Ubicacion(2, 3, ENTRADA)));
     }
 
     @Test
-    void laEntradaEsElTableroCeroPisoCeroConLaEntradaDelPrimerPlano() {
+    void laEntradaEsElTableroUnoPisoUnoConLaEntradaDelPrimerPlano() {
         Mazmorra mazmorra = new Mazmorra(seisPlanosConSalidaEnElQuinto(), 3);
 
-        assertEquals(new Ubicacion(0, 0, ENTRADA), mazmorra.getEntrada());
+        assertEquals(new Ubicacion(1, 1, ENTRADA), mazmorra.getEntrada());
     }
 
     @Test
     void laSalidaTraeElTableroYElPisoDelPlanoQueLaTiene() {
-        // el plano de la lista en la posición 4 es el tablero 1, piso 1
+        // el plano de la lista en la posición 4 es el tablero 2, piso 2
         Mazmorra mazmorra = new Mazmorra(seisPlanosConSalidaEnElQuinto(), 3);
 
-        assertEquals(new Ubicacion(1, 1, SALIDA), mazmorra.getSalida());
+        assertEquals(new Ubicacion(2, 2, SALIDA), mazmorra.getSalida());
     }
 
     @Test
@@ -75,9 +75,10 @@ class MazmorraTest {
     void unaUbicacionQueNoExisteTiraError() {
         Mazmorra mazmorra = new Mazmorra(seisPlanosConSalidaEnElQuinto(), 3);
 
-        assertThrows(IllegalArgumentException.class, () -> mazmorra.getPlano(new Ubicacion(2, 0, ENTRADA)));
-        assertThrows(IllegalArgumentException.class, () -> mazmorra.getPlano(new Ubicacion(0, 3, ENTRADA)));
-        assertThrows(IllegalArgumentException.class, () -> mazmorra.getPlano(new Ubicacion(-1, 0, ENTRADA)));
+        assertThrows(IllegalArgumentException.class, () -> mazmorra.getPlano(new Ubicacion(3, 1, ENTRADA)));
+        assertThrows(IllegalArgumentException.class, () -> mazmorra.getPlano(new Ubicacion(1, 4, ENTRADA)));
+        assertThrows(IllegalArgumentException.class, () -> mazmorra.getPlano(new Ubicacion(0, 1, ENTRADA)));
+        assertThrows(IllegalArgumentException.class, () -> mazmorra.getPlano(new Ubicacion(1, 0, ENTRADA)));
     }
 
     @Test
@@ -95,6 +96,6 @@ class MazmorraTest {
 
         planos.clear();
 
-        assertEquals(new Ubicacion(0, 0, SALIDA), mazmorra.getSalida());
+        assertEquals(new Ubicacion(1, 1, SALIDA), mazmorra.getSalida());
     }
 }

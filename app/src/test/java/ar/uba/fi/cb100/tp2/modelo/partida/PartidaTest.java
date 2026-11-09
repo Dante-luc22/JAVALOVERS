@@ -257,7 +257,7 @@ class PartidaTest {
     void laPartidaSabeEnQuePlanoEstaElHeroe() {
         Partida partida = partidaConEnergia(100);
 
-        assertEquals(new Ubicacion(0, 0, ENTRADA), this.heroe.getUbicacion());
+        assertEquals(new Ubicacion(1, 1, ENTRADA), this.heroe.getUbicacion());
         assertEquals(ENTRADA, partida.getPlanoActual().getEntrada());
     }
 

@@ -9,7 +9,7 @@ import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
  * Todos los planos del juego. En Fácil es uno solo, en Medio un tablero de
  * tres pisos y en Difícil tres tableros de tres pisos.
  * Los planos se guardan en una sola lista: primero los pisos del tablero 0,
- * después los del tablero 1, y así. Tablero y piso empiezan en 0.
+ * después los del tablero 2, y así. Tablero y piso empiezan en 1, como en el enunciado.
  */
 public class Mazmorra {
 
@@ -39,26 +39,29 @@ public class Mazmorra {
     }
 
     /**
-     * @param ubicacion tablero y piso (desde 0) del plano buscado
+     * @param ubicacion tablero y piso (desde 1) del plano buscado
      * @return el plano que está en esa ubicación
      * @throws IllegalArgumentException si el tablero o el piso no existen
      */
     public Plano getPlano(Ubicacion ubicacion) {
         int tablero = ubicacion.tablero();
         int piso = ubicacion.piso();
-        if (tablero < 0 || piso < 0 || piso >= this.pisosPorTablero
-                || tablero * this.pisosPorTablero + piso >= this.planos.size()) {
+        if (tablero < 1 || piso < 1 || piso > this.pisosPorTablero) {
             throw new IllegalArgumentException("No existe el plano de: " + ubicacion);
         }
-        return this.planos.get(tablero * this.pisosPorTablero + piso);
+        int indice = (tablero - 1) * this.pisosPorTablero + (piso - 1);
+        if (indice >= this.planos.size()) {
+            throw new IllegalArgumentException("No existe el plano de: " + ubicacion);
+        }
+        return this.planos.get(indice);
     }
 
     /**
-     * El héroe siempre empieza en el primer plano: tablero 0, piso 0.
+     * El héroe siempre empieza en el primer plano: tablero 1, piso 1.
      * @return dónde aparece el héroe al empezar
      */
     public Ubicacion getEntrada() {
-        return new Ubicacion(0, 0, this.planos.getFirst().getEntrada());
+        return new Ubicacion(1, 1, this.planos.getFirst().getEntrada());
     }
 
     /**
@@ -69,7 +72,7 @@ public class Mazmorra {
         for (int i = 0; i < this.planos.size(); i++) {
             Plano plano = this.planos.get(i);
             if (plano.getSalida() != null) {
-                return new Ubicacion(i / this.pisosPorTablero, i % this.pisosPorTablero, plano.getSalida());
+                return new Ubicacion(i / this.pisosPorTablero + 1, i % this.pisosPorTablero + 1, plano.getSalida());
             }
         }
         throw new IllegalStateException("La mazmorra no tiene salida");
