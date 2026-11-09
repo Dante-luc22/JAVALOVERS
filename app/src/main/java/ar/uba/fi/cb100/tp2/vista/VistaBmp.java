@@ -29,20 +29,23 @@ public class VistaBmp implements Vista {
 
     /** Lado en píxeles de cada celda. */
     public static final int TAMANIO_CELDA = 16;
-
+    
+    private final EntradaConsola entrada;
     private final Path carpeta;
     private final int energiaMaxima;
 
     /**
      * @param carpeta       dónde se escriben los BMP (se crea si no existe)
      * @param energiaMaxima la energía que llena la barra entera
+     * @param entrada       de dónde se leen las teclas (la misma que usa el Main)
      */
-    public VistaBmp(Path carpeta, int energiaMaxima) {
+    public VistaBmp(Path carpeta, int energiaMaxima, EntradaConsola entrada) {
         if (energiaMaxima < 1) {
             throw new IllegalArgumentException("La energía máxima tiene que ser positiva");
         }
         this.carpeta = carpeta;
         this.energiaMaxima = energiaMaxima;
+        this.entrada = entrada;
     }
 
     @Override
@@ -64,11 +67,47 @@ public class VistaBmp implements Vista {
 
         lapiz.dispose();
         guardar(imagen, partida.getPasos());
+
+                lapiz.dispose();
+        guardar(imagen, partida.getPasos());
+
+        System.out.println("Paso " + partida.getPasos()
+                + " | energía " + heroe.getEnergia()
+                + " | cofres " + heroe.getCofresAbiertos());
+    
     }
 
     @Override
     public Accion leerAccion() {
-        throw new UnsupportedOperationException("Parte 4");
+        while (true) {
+            String texto = this.entrada.leerTexto(
+                    "Acción (w a s d mover, e esperar, u usar, g guardar, q salir):");
+            Accion accion = accionDe(texto);
+            if (accion != null) {
+                return accion;
+            }
+            System.out.println("No entiendo \"" + texto + "\", probá de nuevo.");
+        }
+    }
+
+    /**
+     * @return la acción de esa tecla, o null si no es ninguna
+     */
+    private Accion accionDe(String texto) {
+        if (texto.length() != 1) {
+            return null;
+        }
+        return switch (Character.toLowerCase(texto.charAt(0))) {
+            case 'w' -> Accion.MOVER_ARRIBA;
+            case 'a' -> Accion.MOVER_IZQUIERDA;
+            case 's' -> Accion.MOVER_ABAJO;
+            case 'd' -> Accion.MOVER_DERECHA;
+            case 'e' -> Accion.ESPERAR;
+            case 'u' -> Accion.USAR;
+            case 'g' -> Accion.GUARDAR;
+            case 'q' -> Accion.SALIR;
+            default -> null;
+        };
     }
 
     // ---------- dibujo ----------
