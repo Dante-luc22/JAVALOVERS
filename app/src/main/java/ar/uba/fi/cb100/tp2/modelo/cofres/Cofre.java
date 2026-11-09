@@ -68,4 +68,10 @@ public abstract class Cofre extends Entidad {
     public final boolean debeSalirDelPlano() {
         return this.abierto;
     }
+
+        @Override
+    public final char getSimbolo() {
+        return 'C';
+    }
+
 }

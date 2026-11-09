@@ -38,6 +38,11 @@ public class PlanoTest {
         @Override
         public void alEncontrarseConHeroe(Heroe heroe, Agenda agenda) {
         }
+
+                @Override
+        public char getSimbolo() {
+            return 'X';
+        }
     }
 
     @Test

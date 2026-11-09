@@ -61,6 +61,14 @@ public abstract class Entidad {
     public boolean debeSalirDelPlano() {
         return false;
     }
+
+        /**
+     * El símbolo de la entidad según el anexo B.3: 'C' cofre, 'M' monstruo.
+     * La vista elige el color a partir de esto, sin preguntar el tipo.
+     *
+     * @return el símbolo de la entidad
+     */
+    public abstract char getSimbolo();
 }
 
 
