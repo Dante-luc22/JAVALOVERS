@@ -14,9 +14,9 @@ import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
 
 /**
- * Una partida en curso: junta la mazmorra, el héroe y la cuenta de pasos y
- * cofres, y aplica las reglas del juego (movimiento, costo del terreno,
- * ganar, perder y puntaje).
+ * Una partida en curso: junta la mazmorra, el héroe y la cuenta de pasos, y
+ * aplica las reglas del juego (movimiento, costo del terreno, turno de los
+ * monstruos, ganar, perder y puntaje). Los cofres abiertos los cuenta el héroe.
  */
 public class Partida {
 
@@ -28,7 +28,6 @@ public class Partida {
     private final Map<Terreno, Integer> costos;
     private final Agenda agenda;
     private int pasos;
-    private int cofresAbiertos;
 
     /**
      * @param mazmorra todos los planos del juego
@@ -42,7 +41,6 @@ public class Partida {
         this.costos.putAll(costos);
         this.agenda = new Agenda();
         this.pasos = 0;
-        this.cofresAbiertos = 0;
     }
 
     /** @return cuántos pasos se dieron; las acciones inválidas no cuentan */
@@ -50,19 +48,9 @@ public class Partida {
         return this.pasos;
     }
 
-    /** @return cuántos cofres abrió el héroe */
+    /** @return cuántos cofres abrió el héroe (los cuenta el propio héroe al abrirlos) */
     public int getCofresAbiertos() {
-        return this.cofresAbiertos;
-    }
-
-    /** Suma un paso. Se llama una vez por cada acción válida del héroe. */
-    public void registrarPaso() {
-        this.pasos++;
-    }
-
-    /** Suma un cofre abierto. */
-    public void registrarCofreAbierto() {
-        this.cofresAbiertos++;
+        return this.heroe.getCofresAbiertos();
     }
 
     /** @return el plano donde está el héroe ahora */
@@ -86,7 +74,8 @@ public class Partida {
     /**
      * Mueve al héroe una celda. Si hay una pared (o el borde) no hace nada y la
      * acción no cuenta como paso. Si no, cobra el costo del terreno al que entra,
-     * suma un paso y avisa a las entidades de esa celda que el héroe llegó.
+     * suma un paso, avisa a las entidades de esa celda que el héroe llegó y,
+     * si la partida sigue, mueve a los monstruos.
      * Una partida ya terminada no acepta más movimientos.
      *
      * @param direccion hacia dónde se mueve
@@ -106,7 +95,7 @@ public class Partida {
 
         this.heroe.restarEnergia(this.costoDe(plano.getTablero().getTerreno(destino)));
         this.heroe.mover(new Ubicacion(actual.tablero(), actual.piso(), destino));
-        this.registrarPaso();
+        this.pasos++;
 
         for (Entidad entidad : plano.obtenerEntidades(destino)) {
             entidad.alEncontrarseConHeroe(this.heroe, this.agenda);
@@ -114,7 +103,21 @@ public class Partida {
                 plano.quitarEntidad(entidad);
             }
         }
-        return new ResultadoTurno(true, this.estadoActual());
+        return this.cerrarTurno();
+    }
+
+    /**
+     * El héroe se queda donde está: cuenta como un paso, no cuesta energía y
+     * los monstruos igual se mueven. Una partida ya terminada no lo acepta.
+     *
+     * @return si la acción fue válida y cómo quedó la partida
+     */
+    public ResultadoTurno esperar() {
+        if (this.estadoActual() != EstadoPartida.EN_CURSO) {
+            return new ResultadoTurno(false, this.estadoActual());
+        }
+        this.pasos++;
+        return this.cerrarTurno();
     }
 
     /** @return si el héroe pisó la salida */
@@ -129,7 +132,36 @@ public class Partida {
 
     /** @return el puntaje de la partida hasta ahora */
     public int puntaje() {
-        return calcularPuntaje(this.cofresAbiertos, this.heroe.getEnergia(), this.pasos);
+        return calcularPuntaje(this.heroe.getCofresAbiertos(), this.heroe.getEnergia(), this.pasos);
+    }
+
+    /**
+     * Cierra el paso del héroe: si la partida sigue, mueven los monstruos.
+     * Si el héroe ganó o perdió en este paso, los monstruos no juegan.
+     */
+    private ResultadoTurno cerrarTurno() {
+        if (this.estadoActual() == EstadoPartida.EN_CURSO) {
+            this.moverMonstruos(this.getPlanoActual());
+        }
+        return new ResultadoTurno(true, this.estadoActual());
+    }
+
+    /**
+     * Le da su turno a cada entidad del plano. Una entidad que se movió y
+     * quedó en la celda del héroe lo alcanzó. Las que no se movieron (los
+     * cofres) no se vuelven a encontrar con el héroe: eso ya pasó cuando
+     * él las pisó. Solo juega el plano donde está el héroe, porque los
+     * monstruos nunca cambian de plano.
+     */
+    private void moverMonstruos(Plano plano) {
+        Posicion posicionHeroe = this.heroe.getUbicacion().posicion();
+        for (Entidad entidad : plano.getEntidades()) {
+            Posicion antes = entidad.getPosicion();
+            entidad.actuar(plano, this.heroe);
+            if (!entidad.getPosicion().equals(antes) && entidad.getPosicion().equals(posicionHeroe)) {
+                entidad.alEncontrarseConHeroe(this.heroe, this.agenda);
+            }
+        }
     }
 
     /**

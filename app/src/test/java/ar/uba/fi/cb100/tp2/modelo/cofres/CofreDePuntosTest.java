@@ -27,7 +27,7 @@ class CofreDePuntosTest {
 
     @BeforeEach
     void crear() {
-        this.heroe = new Heroe(new Ubicacion(0, 0, LUGAR), ENERGIA_INICIAL);
+        this.heroe = new Heroe(new Ubicacion(1, 1, LUGAR), ENERGIA_INICIAL);
         this.cofre = new CofreDePuntos(LUGAR);
     }
 

@@ -24,7 +24,7 @@ class HeroeTest {
 
     @BeforeEach
     void crearHeroe() {
-        this.inicio = new Ubicacion(0, 0, new Posicion(2, 2));
+        this.inicio = new Ubicacion(1, 1, new Posicion(2, 2));
         this.heroe = new Heroe(this.inicio, ENERGIA_INICIAL);
     }
 
@@ -127,14 +127,14 @@ class HeroeTest {
 
     @Test
     void moverCambiaLaUbicacion() {
-        Ubicacion destino = new Ubicacion(0, 0, new Posicion(2, 3));
+        Ubicacion destino = new Ubicacion(1, 1, new Posicion(2, 3));
         this.heroe.mover(destino);
         assertEquals(destino, this.heroe.getUbicacion());
     }
 
     @Test
     void moverNoGastaEnergia() {
-        this.heroe.mover(new Ubicacion(0, 0, new Posicion(2, 3)));
+        this.heroe.mover(new Ubicacion(1, 1, new Posicion(2, 3)));
         assertEquals(ENERGIA_INICIAL, this.heroe.getEnergia());
     }
 
