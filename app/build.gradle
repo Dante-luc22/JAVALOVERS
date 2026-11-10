@@ -55,8 +55,6 @@ dependencies {
     testImplementation platform('org.junit:junit-bom:5.11.3')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly    'org.junit.platform:junit-platform-launcher'
-    // Librería Gson para el parseo y lectura de archivos de configuración JSON
-    implementation 'com.google.code.gson:gson:2.10.1'
 }
 
 // --- Codificación de los fuentes --------------------------------------
@@ -76,11 +74,21 @@ test {
 
 // --- Clase principal (la que tiene el método main) --------------------
 application {
-    mainClass = 'ar.uba.fi.cb100.material.i01_intro.HolaCB100'
+    mainClass = 'ar.uba.fi.cb100.tp2.aplicacion.Main'
 
     // Codificación de la SALIDA del programa. Compilar en UTF-8 no alcanza:
     // desde Java 18, System.out escribe con la página de códigos de la
     // consola de Windows (cp1252), y una terminal UTF-8 muestra "Luc�a".
     // Con esto, todo lo que el programa imprime sale en UTF-8.
     applicationDefaultJvmArgs = ['-Dstdout.encoding=UTF-8', '-Dstderr.encoding=UTF-8']
+
+// --- Cómo correr el juego -----------------------------------------------
+// standardInput: sin esto, gradlew run no le pasa el teclado al programa
+// y el Scanner no lee nada.
+// workingDir: el programa corre desde la raíz del repo, así encuentra
+// configuracion.json y deja los BMP en salida/ de la raíz.
+run {
+    standardInput = System.in
+    workingDir = rootProject.projectDir
+}
 }
