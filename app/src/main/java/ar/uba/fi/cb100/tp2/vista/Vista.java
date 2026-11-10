@@ -24,4 +24,11 @@ public interface Vista {
      * @return la acción elegida
      */
     Accion leerAccion();
+
+        /**
+     * Le avisa algo al jugador, por ejemplo que no se pudo mover.
+     *
+     * @param mensaje el texto a mostrar
+     */
+    void avisar(String mensaje);
 }

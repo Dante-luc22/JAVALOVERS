@@ -87,6 +87,11 @@ public class VistaBmp implements Vista {
         }
     }
 
+        @Override
+    public void avisar(String mensaje) {
+        System.out.println(mensaje);
+    }
+
     /**
      * @return la acción de esa tecla, o null si no es ninguna
      */

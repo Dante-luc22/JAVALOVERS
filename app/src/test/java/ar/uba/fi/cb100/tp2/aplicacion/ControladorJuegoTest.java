@@ -46,6 +46,10 @@ public class ControladorJuegoTest {
         public Accion leerAccion() {
             return this.acciones.removeFirst();
         }
+
+        @Override
+        public void avisar(String mensaje) {
+        }
     }
 
     private Partida partida;

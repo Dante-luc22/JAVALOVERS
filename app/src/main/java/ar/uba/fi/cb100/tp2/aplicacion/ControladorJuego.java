@@ -44,6 +44,8 @@ public class ControladorJuego {
             ResultadoTurno resultado = this.ejecutar(accion);
             if (resultado.accionValida()) {
                 this.vista.mostrar(this.partida);
+            }else {
+                this.vista.avisar("No se puede: " + accion + " no hizo nada.");
             }
         }
         return this.partida.estadoActual();
