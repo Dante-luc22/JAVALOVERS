@@ -32,6 +32,7 @@ public class ControladorJuegoTest {
 
         private final Deque<Accion> acciones;
         private int vecesMostrada = 0;
+        private int avisos = 0;
 
         VistaFalsa(Accion... acciones) {
             this.acciones = new ArrayDeque<>(List.of(acciones));
@@ -49,6 +50,7 @@ public class ControladorJuegoTest {
 
         @Override
         public void avisar(String mensaje) {
+            this.avisos++;
         }
     }
 
@@ -100,6 +102,7 @@ public class ControladorJuegoTest {
 
         assertEquals(1, vista.vecesMostrada);
         assertEquals(0, this.partida.getPasos());
+        assertEquals(1, vista.avisos);
     }
 
     @Test

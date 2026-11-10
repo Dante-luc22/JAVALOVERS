@@ -1,6 +1,7 @@
 package ar.uba.fi.cb100.tp2.vista;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -17,6 +18,7 @@ import javax.imageio.ImageIO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Mazmorra;
@@ -88,5 +90,18 @@ public class VistaBmpTest {
     void noAceptaEnergiaMaximaCero() {
         assertThrows(IllegalArgumentException.class,
                 () -> new VistaBmp(this.carpeta, 0, new EntradaConsola()));
+    }
+
+        @Test
+    void alCrearseBorraLosPasosDeUnaPartidaAnteriorYNadaMas() throws IOException {
+        Path pasoViejo = this.carpeta.resolve("paso-0042.bmp");
+        Path otroArchivo = this.carpeta.resolve("notas.txt");
+        Files.writeString(pasoViejo, "viejo");
+        Files.writeString(otroArchivo, "no tocar");
+
+        new VistaBmp(this.carpeta, 100, new EntradaConsola());
+
+        assertFalse(Files.exists(pasoViejo));
+        assertTrue(Files.exists(otroArchivo));
     }
 }

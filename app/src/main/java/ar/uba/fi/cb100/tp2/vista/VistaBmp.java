@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.DirectoryStream;
 
 import javax.imageio.ImageIO;
 
@@ -46,6 +47,7 @@ public class VistaBmp implements Vista {
         this.carpeta = carpeta;
         this.energiaMaxima = energiaMaxima;
         this.entrada = entrada;
+        borrarPasosAnteriores();
     }
 
     @Override
@@ -204,6 +206,23 @@ public class VistaBmp implements Vista {
             ImageIO.write(imagen, "bmp", archivo.toFile());
         } catch (IOException e) {
             throw new UncheckedIOException("No se pudo escribir el BMP del paso " + paso, e);
+        }
+    }
+
+        /**
+     * Borra los pasos.bmp de una partida anterior, para que la película de
+     * esta partida no quede mezclada con la otra. No toca ningún otro archivo.
+     */
+    private void borrarPasosAnteriores() {
+        if (!Files.isDirectory(this.carpeta)) {
+            return;
+        }
+        try (DirectoryStream<Path> viejos = Files.newDirectoryStream(this.carpeta, "paso-*.bmp")) {
+            for (Path viejo : viejos) {
+                Files.delete(viejo);
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException("No se pudieron borrar los BMP anteriores", e);
         }
     }
 }
