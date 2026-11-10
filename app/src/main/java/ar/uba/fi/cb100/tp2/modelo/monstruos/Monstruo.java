@@ -137,4 +137,9 @@ public abstract class Monstruo extends Entidad {
     public int getDanio() {
         return danio;
     }
+
+        @Override
+    public final char getSimbolo() {
+        return 'M';
+    }
 }

@@ -107,4 +107,18 @@ public class Tablero {
         }
     }
 
+        /**
+     * @return cantidad de filas, incluido el borde
+     */
+    public int getFilas() {
+        return this.filas;
+    }
+
+    /**
+     * @return cantidad de columnas, incluido el borde
+     */
+    public int getColumnas() {
+        return this.columnas;
+    }
+
 }

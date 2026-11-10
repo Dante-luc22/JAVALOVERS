@@ -48,7 +48,7 @@ class ErranteTest {
     }
 
     private static Heroe heroeEn(Posicion posicion, int energia) {
-        return new Heroe(new Ubicacion(0, 0, posicion), energia);
+        return new Heroe(new Ubicacion(1, 1, posicion), energia);
     }
 
     // =================== CONSTRUCTOR =================== //
