@@ -168,7 +168,7 @@ public class Partida {
      * Pisar la salida gana aunque ese último paso haya dejado la energía en 0:
      * por eso se mira primero la salida.
      */
-    private EstadoPartida estadoActual() {
+    public EstadoPartida estadoActual() {
         if (this.heroe.getUbicacion().equals(this.mazmorra.getSalida())) {
             return EstadoPartida.GANADA;
         }
