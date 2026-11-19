@@ -1,7 +1,11 @@
 package ar.uba.fi.cb100.tp2.modelo.heroe;
 
+import ar.uba.fi.cb100.tp2.modelo.efectos.Efecto;
+import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
 import ar.uba.fi.cb100.tp2.modelo.objetos.Inventario;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
+
+import java.util.ArrayList;
 
 public class Heroe {
 
@@ -10,6 +14,7 @@ public class Heroe {
     private int cofresAbiertos;
     private final int energiaMaxima;
     private final Inventario inventario;
+    private final ArrayList<Efecto> efectosActivos = new ArrayList<>();
 
     /**
      * Constructor de la clase heroe, recibe su ubicacionInicial y
@@ -105,6 +110,47 @@ public class Heroe {
     }
 
 
+    /**
+     * Metodo para agregar un efecto al heroe.
+     *
+     * @param efecto a agregar
+     * @throws IllegalArgumentException si el efeto es nulo.
+     */
+    public void agregarEfecto(Efecto efecto) {
+        if  (efecto == null) {
+            throw new IllegalArgumentException("El efecto no puede ser nulo.");
+        }
+        this.efectosActivos.add(efecto);
+    }
+
+    /**
+     * Sirve para ajustar el costo del terreno
+     *
+     * @param terreno      donde se mueve el heroe
+     * @param costoBase    del terrero.
+     * @param costoDelPiso el costo que le saca el piso al heroe
+     * @return el costo ajustado
+     */
+    public int ajustarCosto(Terreno terreno, int costoBase, int costoDelPiso) {
+        int costo = costoBase;
+        for (Efecto efecto : this.efectosActivos) {
+            costo = efecto.ajustarCosto(terreno, costo, costoDelPiso);
+        }
+        return costo;
+    }
+
+    /**
+     * Metodo para indicar que el heroe camino con el efecto
+     * activo.
+     */
+    public void pasarUnPaso() {
+        for (Efecto ef : this.efectosActivos) {
+            ef.pasarUnPaso();
+        }
+        this.efectosActivos.removeIf(Efecto::termino);
+    }
+
+
 
     // =================== GETTERS SIMPLES =================== //
 
@@ -141,5 +187,13 @@ public class Heroe {
      */
     public Inventario getInventario() {
         return inventario;
+    }
+
+    /**
+     * Getter que devuelve una copia de la lista de
+     * efectos activos.
+     */
+    public ArrayList<Efecto> getEfectosActivos() {
+        return new ArrayList<>(this.efectosActivos);
     }
 }
