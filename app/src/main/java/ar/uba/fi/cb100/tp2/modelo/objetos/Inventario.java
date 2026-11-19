@@ -8,8 +8,8 @@ import java.util.LinkedHashMap;
 import java.util.Random;
 
 /**
- * Inventario del usuario. Se utilizaron tablas hash id -> cantidad, con un objeto
- * representante por id, se uso LinkedHashMap porque el robo al azar iene
+ * Inventario del heroe. Se utilizaron tablas hash id -> cantidad, con un objeto
+ * representante por id, se uso LinkedHashMap porque el robo al azar tiene
  * que dar lo mismo con la misma semilla.
  */
 public class Inventario {
@@ -112,7 +112,7 @@ public class Inventario {
      * Metodo para quitar un objeto al azar del inventario
      *
      * @param azar para elegir el objeto al azar
-     * @return null si el inventario esta vacio.
+     * @return el objeto robado o null si el inventario esta vacio.
      * @throws IllegalArgumentException si el azar es nulo.
      */
     public Objeto quitarUnoAlAzar(Random azar){

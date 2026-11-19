@@ -1,5 +1,6 @@
 package ar.uba.fi.cb100.tp2.modelo.heroe;
 
+import ar.uba.fi.cb100.tp2.modelo.objetos.Inventario;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
 
 public class Heroe {
@@ -8,10 +9,12 @@ public class Heroe {
     private int energia;
     private int cofresAbiertos;
     private final int energiaMaxima;
+    private final Inventario inventario;
 
     /**
      * Constructor de la clase heroe, recibe su ubicacionInicial y
-     * su energiaInicial, los cofres abiertos empiezan en 0;
+     * su energiaInicial, los cofres abiertos empiezan en 0 y empieza
+     * con un inventario vacio.
      *
      * @param ubicacionInicial ubicacion donde empieza el heroe;
      * @param energiaInicial   energia con la que empieza el heroe;
@@ -31,6 +34,7 @@ public class Heroe {
         this.energia = energiaInicial;
         this.energiaMaxima = energiaInicial;
         this.cofresAbiertos = 0;
+        this.inventario = new Inventario();
     }
 
 
@@ -130,5 +134,12 @@ public class Heroe {
      */
     public int getEnergiaMaxima() {
         return energiaMaxima;
+    }
+
+    /**
+     * Getter que devuelve el inventario del heroe.
+     */
+    public Inventario getInventario() {
+        return inventario;
     }
 }
