@@ -142,7 +142,7 @@ public final class JuegoVisual implements AutoCloseable {
                 ventana.setLayout(new BorderLayout());
                 ventana.add(panel, BorderLayout.CENTER);
                 ventana.add(barraDeMensaje, BorderLayout.SOUTH);
-                ventana.setResizable(false);
+                ventana.setResizable(true);
                 ventana.pack();
                 ventana.setLocationRelativeTo(null);          // centrada en la pantalla
 
