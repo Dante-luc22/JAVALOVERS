@@ -61,4 +61,11 @@ public class Errante extends Monstruo {
         atacarYVolver(heroe);
     }
 
+    /**
+     * Getter del movimiento al azar.
+     */
+    protected Random getAzar() {
+        return azar;
+    }
+
 }

@@ -20,7 +20,8 @@ public class AguaComoPiso extends Efecto{
      * @param terreno      donde camina el heroe
      * @param costoActual  del terreno.
      * @param costoDelPiso lo que le saca el piso al heroe
-     * @return el costo actual del agua.
+     * @return el costo del piso si el terreno es agua; si no,
+     * costo actual sin cambios.
      */
     @Override
     public int ajustarCosto(Terreno terreno, int costoActual, int costoDelPiso) {
