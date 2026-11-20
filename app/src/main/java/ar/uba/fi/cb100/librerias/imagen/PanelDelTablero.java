@@ -27,23 +27,67 @@ final class PanelDelTablero extends JPanel {
         this.estado = estado;
         this.tamanio = tamanioDeCelda;
         setPreferredSize(new Dimension(estado.getColumnas() * tamanio, estado.getFilas() * tamanio));
-        setBackground(Color.WHITE);
+        setBackground(new Color(48, 48, 48));
         setFocusable(true);
     }
 
     @Override
     protected void paintComponent(Graphics graficos) {
         super.paintComponent(graficos);
-        Graphics2D g = (Graphics2D) graficos;
-        // Pixel-art: al agrandar una imagen chica, no suavizar (quedaría borrosa).
-        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        synchronized (estado) {
-            dibujarCeldas(g);
-            dibujarPersonajes(g);
+        Graphics2D g = (Graphics2D) graficos.create();
+
+        try {
+            // Pixel-art: conservar los bordes definidos de los sprites.
+            g.setRenderingHint(
+                    RenderingHints.KEY_INTERPOLATION,
+                    RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR
+            );
+
+            g.setRenderingHint(
+                    RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON
+            );
+
+            synchronized (estado) {
+
+                // Dimensiones originales del tablero.
+                int anchoTablero = estado.getColumnas() * tamanio;
+                int altoTablero = estado.getFilas() * tamanio;
+
+                // Evitar divisiones por cero.
+                if (anchoTablero <= 0 || altoTablero <= 0
+                        || getWidth() <= 0 || getHeight() <= 0) {
+                    return;
+                }
+
+                // Calcular la escala necesaria para que entre todo el tablero.
+                double escala = Math.min(
+                        (double) getWidth() / anchoTablero,
+                        (double) getHeight() / altoTablero
+                );
+
+                // Calcular el espacio sobrante para centrar el tablero.
+                double anchoDibujado = anchoTablero * escala;
+                double altoDibujado = altoTablero * escala;
+
+                double desplazamientoX = (getWidth() - anchoDibujado) / 2.0;
+                double desplazamientoY = (getHeight() - altoDibujado) / 2.0;
+
+                // Aplicar desplazamiento y escala.
+                g.translate(desplazamientoX, desplazamientoY);
+                g.scale(escala, escala);
+
+                // Dibujar utilizando las dimensiones originales.
+                dibujarCeldas(g);
+                dibujarPersonajes(g);
+            }
+
+        } finally {
+            g.dispose();
         }
     }
+
 
     private void dibujarCeldas(Graphics2D g) {
         for (int f = 1; f <= estado.getFilas(); f++) {
