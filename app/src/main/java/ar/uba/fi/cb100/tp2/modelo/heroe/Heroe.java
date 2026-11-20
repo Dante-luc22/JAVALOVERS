@@ -1,16 +1,25 @@
 package ar.uba.fi.cb100.tp2.modelo.heroe;
 
+import ar.uba.fi.cb100.tp2.modelo.efectos.Efecto;
+import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
+import ar.uba.fi.cb100.tp2.modelo.objetos.Inventario;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
+
+import java.util.ArrayList;
 
 public class Heroe {
 
     private Ubicacion ubicacion;
     private int energia;
     private int cofresAbiertos;
+    private final int energiaMaxima;
+    private final Inventario inventario;
+    private final ArrayList<Efecto> efectosActivos = new ArrayList<>();
 
     /**
      * Constructor de la clase heroe, recibe su ubicacionInicial y
-     * su energiaInicial, los cofres abiertos empiezan en 0;
+     * su energiaInicial, los cofres abiertos empiezan en 0 y empieza
+     * con un inventario vacio.
      *
      * @param ubicacionInicial ubicacion donde empieza el heroe;
      * @param energiaInicial   energia con la que empieza el heroe;
@@ -28,7 +37,9 @@ public class Heroe {
         }
         this.ubicacion = ubicacionInicial;
         this.energia = energiaInicial;
+        this.energiaMaxima = energiaInicial;
         this.cofresAbiertos = 0;
+        this.inventario = new Inventario();
     }
 
 
@@ -66,6 +77,23 @@ public class Heroe {
     }
 
     /**
+     * Metodo para sumar la cantidad de energia dada.
+     *
+     * @param cantidad energia a sumar
+     * @throws IllegalArgumentException si la cantidad dada es negativa.
+     */
+    public void sumarEnergia(int cantidad) {
+        if (cantidad < 0) {
+            throw new IllegalArgumentException(
+                    "La energia a sumar no puede ser negativa, se recibio: " + cantidad);
+        }
+        this.energia += cantidad;
+        if (energia > energiaMaxima) {
+            this.energia = energiaMaxima;
+        }
+    }
+
+    /**
      * Metodo para sumar 1 a la cantidad de cofres abiertos
      */
     public void sumarCofreAbierto(){
@@ -79,6 +107,47 @@ public class Heroe {
      */
     public boolean estaSinEnergia(){
         return this.energia == 0;
+    }
+
+
+    /**
+     * Metodo para agregar un efecto al heroe.
+     *
+     * @param efecto a agregar
+     * @throws IllegalArgumentException si el efeto es nulo.
+     */
+    public void agregarEfecto(Efecto efecto) {
+        if  (efecto == null) {
+            throw new IllegalArgumentException("El efecto no puede ser nulo.");
+        }
+        this.efectosActivos.add(efecto);
+    }
+
+    /**
+     * Sirve para ajustar el costo del terreno
+     *
+     * @param terreno      donde se mueve el heroe
+     * @param costoBase    del terrero.
+     * @param costoDelPiso el costo que le saca el piso al heroe
+     * @return el costo ajustado
+     */
+    public int ajustarCosto(Terreno terreno, int costoBase, int costoDelPiso) {
+        int costo = costoBase;
+        for (Efecto efecto : this.efectosActivos) {
+            costo = efecto.ajustarCosto(terreno, costo, costoDelPiso);
+        }
+        return costo;
+    }
+
+    /**
+     * Metodo para indicar que el heroe camino con el efecto
+     * activo.
+     */
+    public void pasarUnPaso() {
+        for (Efecto ef : this.efectosActivos) {
+            ef.pasarUnPaso();
+        }
+        this.efectosActivos.removeIf(Efecto::termino);
     }
 
 
@@ -104,5 +173,27 @@ public class Heroe {
      */
     public int getCofresAbiertos() {
         return cofresAbiertos;
+    }
+
+    /**
+     * Getter que devuelve la energia maxima del heroe.
+     */
+    public int getEnergiaMaxima() {
+        return energiaMaxima;
+    }
+
+    /**
+     * Getter que devuelve el inventario del heroe.
+     */
+    public Inventario getInventario() {
+        return inventario;
+    }
+
+    /**
+     * Getter que devuelve una copia de la lista de
+     * efectos activos.
+     */
+    public ArrayList<Efecto> getEfectosActivos() {
+        return new ArrayList<>(this.efectosActivos);
     }
 }
