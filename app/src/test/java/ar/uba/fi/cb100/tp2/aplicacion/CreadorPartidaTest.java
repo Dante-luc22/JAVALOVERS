@@ -2,6 +2,7 @@ package ar.uba.fi.cb100.tp2.aplicacion;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Map;
 
@@ -17,6 +18,15 @@ import ar.uba.fi.cb100.tp2.modelo.partida.ParametrosDeDificultad;
 import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
 import ar.uba.fi.cb100.tp2.modelo.valores.Dificultad;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CatalogoDeCofres;
+import ar.uba.fi.cb100.tp2.modelo.monstruos.CatalogoDeMonstruos;
+
+import java.util.HashSet;
+import java.util.Random;
+import java.util.Set;
+import java.util.List;
+
+
 
 /**
  * Tests de CreadorPartida con el generador real: que Fácil arme la partida
@@ -110,4 +120,40 @@ public class CreadorPartidaTest {
         }
         return texto.toString();
     }
+
+        @Test
+    void elCatalogoTieneLosCincoTiposDeMonstruo() {
+        CatalogoDeMonstruos catalogo = CreadorPartida.crearCatalogoDeMonstruos(new Random(1));
+
+        assertEquals(5, catalogo.cantidadDeTipos());
+        for (String tipo : List.of("ERRANTE", "CAZADOR", "DORMILON", "FANTASMA", "LADRON")) {
+            assertTrue(catalogo.estaRegistrado(tipo), tipo);
+        }
+    }
+
+    @Test
+    void elCatalogoTieneLosCofresTerminados() {
+        CatalogoDeCofres catalogo = CreadorPartida.crearCatalogoDeCofres();
+
+        for (String tipo : List.of("PUNTOS", "ZAPATOS_DE_AGUA", "BOTAS_IGNIFUGAS",
+                "POCION", "TRAMPA_DE_PINCHOS", "VENENO")) {
+            assertTrue(catalogo.estaRegistrado(tipo), tipo);
+        }
+    }
+
+    @Test
+    void conVariasSemillasAparecenDistintosTiposDeMonstruo() {
+        Set<String> tipos = new HashSet<>();
+        for (long semilla = 1; semilla <= 10; semilla++) {
+            for (Entidad entidad : crearFacil(semilla).getPlanoActual().getEntidades()) {
+                if (entidad.getSimbolo() == 'M') {
+                    tipos.add(entidad.getClass().getSimpleName());
+                }
+            }
+        }
+
+        assertTrue(tipos.size() > 1, "Siempre sale el mismo tipo: " + tipos);
+    }
+
+    
 }

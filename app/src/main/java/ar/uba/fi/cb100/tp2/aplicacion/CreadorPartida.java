@@ -22,6 +22,15 @@ import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Mazmorra;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Plano;
 import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeBotasIgnifugas;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDePocion;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeTrampaDePinchos;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeVeneno;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeZapatosDeAgua;
+import ar.uba.fi.cb100.tp2.modelo.monstruos.Cazador;
+import ar.uba.fi.cb100.tp2.modelo.monstruos.Dormilon;
+import ar.uba.fi.cb100.tp2.modelo.monstruos.Fantasma;
+import ar.uba.fi.cb100.tp2.modelo.monstruos.Ladron;
 
 /**
  * Arma una partida lista para jugar: genera los planos, los valida y carga,
@@ -31,6 +40,15 @@ public class CreadorPartida {
 
     /** Energía que quitan los monstruos básicos al alcanzar al héroe (regla 6). */
     private static final int DANIO_DE_LOS_BASICOS = 30;
+
+        /** El dormilón empieza a cazar cuando el héroe está a esta distancia (idea del enunciado). */
+    private static final int RADIO_DEL_DORMILON = 3;
+
+    /** Energía que devuelve la poción. A confirmar con Demián. */
+    private static final int ENERGIA_DE_LA_POCION = 20;
+
+    /** Energía que quita la trampa de pinchos. A confirmar con Demián. */
+    private static final int DANIO_DE_LOS_PINCHOS = 10;
 
     private final Configuracion configuracion;
     private final GeneradorDeLaberinto generador;
@@ -99,23 +117,34 @@ public class CreadorPartida {
     }
 
     /**
-     * @param azar el Random de la partida: el errante lo usa para moverse
-     * @return el catálogo con los tipos de monstruo del juego
+     * Los cinco tipos de monstruo. Todos quitan lo mismo al alcanzar; lo que
+     * los distingue es cómo se mueven o qué hacen al alcanzar.
      */
-    private CatalogoDeMonstruos crearCatalogoDeMonstruos(Random azar) {
+    static CatalogoDeMonstruos crearCatalogoDeMonstruos(Random azar) {
         CatalogoDeMonstruos catalogo = new CatalogoDeMonstruos();
-        catalogo.registrar("ERRANTE", posicion -> new Errante(posicion, DANIO_DE_LOS_BASICOS, azar));
+        catalogo.registrar("ERRANTE", p -> new Errante(p, DANIO_DE_LOS_BASICOS, azar));
+        catalogo.registrar("CAZADOR", p -> new Cazador(p, DANIO_DE_LOS_BASICOS));
+        catalogo.registrar("DORMILON", p -> new Dormilon(p, DANIO_DE_LOS_BASICOS, RADIO_DEL_DORMILON));
+        catalogo.registrar("FANTASMA", p -> new Fantasma(p, DANIO_DE_LOS_BASICOS));
+        catalogo.registrar("LADRON", p -> new Ladron(p, DANIO_DE_LOS_BASICOS, azar));
         return catalogo;
     }
 
-    /** @return el catálogo con los tipos de cofre del juego */
-    private CatalogoDeCofres crearCatalogoDeCofres() {
+    /**
+     * Los tipos de cofre terminados. Faltan Brújula, Pico, Repelente y
+     * Somnífero (Demián): se agrega una línea por cada uno.
+     */
+    static CatalogoDeCofres crearCatalogoDeCofres() {
         CatalogoDeCofres catalogo = new CatalogoDeCofres();
         catalogo.registrar("PUNTOS", CofreDePuntos::new);
+        catalogo.registrar("ZAPATOS_DE_AGUA", CofreDeZapatosDeAgua::new);
+        catalogo.registrar("BOTAS_IGNIFUGAS", CofreDeBotasIgnifugas::new);
+        catalogo.registrar("POCION", p -> new CofreDePocion(p, ENERGIA_DE_LA_POCION));
+        catalogo.registrar("TRAMPA_DE_PINCHOS", p -> new CofreDeTrampaDePinchos(p, DANIO_DE_LOS_PINCHOS));
+        catalogo.registrar("VENENO", CofreDeVeneno::new);
         return catalogo;
-
-        
-    }
+    } 
+    
 
         /**
      * Arma el JSON que recibe el generador para un plano (formato del Anexo B.2).
@@ -157,6 +186,6 @@ public class CreadorPartida {
         }
         return base;
     }
-
-
 }
+
+
