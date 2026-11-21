@@ -46,4 +46,19 @@ class UbicadorDeEscalerasTest {
         }
         return new Plano(tablero, entrada, null);
     }
+
+    @Test
+    void abreUnaParedConectadaAlCaminoDelOtroPiso() {
+        Posicion aislada = new Posicion(2, 3);
+        Posicion paredQueConecta = new Posicion(3, 4);
+
+        Plano inferior = crearPlano(new Posicion(2, 2),
+                aislada, new Posicion(3, 3), paredQueConecta);
+        Plano superior = crearPlano(new Posicion(4, 4));
+
+        assertEquals(Optional.of(paredQueConecta),
+                ubicador.prepararPosicionComun(inferior, superior));
+        assertEquals(Terreno.PISO, superior.getTablero().getTerreno(paredQueConecta));
+        assertEquals(Terreno.PARED, superior.getTablero().getTerreno(aislada));
+    }
 }
