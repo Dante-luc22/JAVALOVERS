@@ -26,7 +26,8 @@ public class Main {
 
     public static void main(String[] args) {
         EntradaConsola entrada = new EntradaConsola();
-        VistaGrafica vistaGrafica = null;
+        boolean sinPantalla = GraphicsEnvironment.isHeadless();
+        MenuGrafico menu = new MenuGrafico();
 
         try {
             Configuracion configuracion =
@@ -35,11 +36,11 @@ public class Main {
             Dificultad dificultad;
             boolean usarBmp;
 
-            if (GraphicsEnvironment.isHeadless()) {
+            if (sinPantalla) {
                 dificultad = elegirDificultad(entrada);
                 usarBmp = true;
             } else {
-                var opciones = new MenuGrafico().mostrarInicio();
+                var opciones = menu.mostrarInicio();
                 if (opciones.isEmpty()) {
                     return;
                 }
@@ -50,25 +51,35 @@ public class Main {
             }
 
             CreadorPartida creador = new CreadorPartida(configuracion, new GeneradorGrupoNN());
-            Partida partida = creador.crear(dificultad);
 
-            Vista vista;
-            if (usarBmp) {
-                vista = new VistaBmp(CARPETA_BMP, configuracion.energiaInicial(), entrada);
-            } else {
-                vistaGrafica = new VistaGrafica();
-                vista = vistaGrafica;
+            while (true) {
+                Partida partida = creador.crear(dificultad);
+                EstadoPartida fin = jugarPartida(
+                        partida, usarBmp, configuracion.energiaInicial(), entrada);
+                mostrarFinal(fin, partida, usarBmp);
+
+                if (sinPantalla || fin == EstadoPartida.EN_CURSO
+                        || !menu.mostrarResultado(fin, partida.puntaje())) {
+                    break;
+                }
             }
-
-            EstadoPartida fin = new ControladorJuego(partida, vista).jugar();
-            mostrarFinal(fin, partida, usarBmp);
         } catch (IllegalStateException e) {
-            System.out.println("No se pudo arrancar el juego: " + e.getMessage());
+            System.out.println("No se pudo ejecutar el juego: " + e.getMessage());
         } finally {
-            if (vistaGrafica != null) {
-                vistaGrafica.close();
-            }
             entrada.cerrar();
+        }
+    }
+
+    private static EstadoPartida jugarPartida(
+            Partida partida, boolean usarBmp, int energiaInicial, EntradaConsola entrada) {
+
+        if (usarBmp) {
+            Vista vista = new VistaBmp(CARPETA_BMP, energiaInicial, entrada);
+            return new ControladorJuego(partida, vista).jugar();
+        }
+
+        try (VistaGrafica vista = new VistaGrafica()) {
+            return new ControladorJuego(partida, vista).jugar();
         }
     }
 
@@ -77,11 +88,11 @@ public class Main {
      */
     private static Dificultad elegirDificultad(EntradaConsola entrada) {
         Dificultad[] opciones = Dificultad.values();
-        System.out.println("Elegí la dificultad:");
+        System.out.println("Elegi la dificultad:");
         for (int i = 0; i < opciones.length; i++) {
             System.out.println("  " + (i + 1) + ") " + opciones[i]);
         }
-        int elegida = entrada.leerEnteroEnRango("Opción:", 1, opciones.length);
+        int elegida = entrada.leerEnteroEnRango("Opcion:", 1, opciones.length);
         return opciones[elegida - 1];
     }
 
