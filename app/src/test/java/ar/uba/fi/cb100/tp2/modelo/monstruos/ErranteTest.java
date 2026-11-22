@@ -173,6 +173,11 @@ class ErranteTest {
     void actuarRechazaUnSubtipoQueDevuelvePosicionNula() {
         Monstruo roto = new Monstruo(CENTRO, DANIO) {
             @Override
+            public TipoDeMonstruo getTipoDeMonstruo() {
+                return TipoDeMonstruo.ERRANTE;
+            }
+
+            @Override
             protected Posicion decidirMovimiento(Plano plano, Posicion heroe) {
                 return null;
             }
