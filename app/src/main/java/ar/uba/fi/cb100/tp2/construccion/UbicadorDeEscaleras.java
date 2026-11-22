@@ -8,6 +8,40 @@ import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * <hr><hr>
+ * <h1>Ubicación de escaleras entre planos</h1>
+ * <hr><hr>
+ *
+ * Busca una posición interior común para conectar dos planos mediante
+ * escaleras, evitando entradas, salidas, entidades y posiciones reservadas.
+ * Si no encuentra una disponible, intenta habilitarla abriendo una pared
+ * junto a una celda transitable.
+ *
+ * <hr>
+ * <ul>
+ *   <li>{@code buscarPosicionComun} → Busca la primera posición transitable
+ *       y libre en ambos planos, dentro de sus dimensiones compartidas.
+ *       La variante interna permite excluir posiciones reservadas.</li>
+ *   <li>{@code prepararPosicionComun} → Busca una posición común y,
+ *       si no existe, intenta convertir una pared de uno de los planos
+ *       en piso. Permite indicar posiciones reservadas.</li>
+ *   <li>{@code estaDisponible} → Comprueba que una posición sea
+ *       transitable y esté libre.</li>
+ *   <li>{@code estaLibre} → Verifica que la posición no sea entrada
+ *       ni salida y que no contenga entidades.</li>
+ *   <li>{@code abrirParedSiConecta} → Convierte una pared en piso
+ *       si en el otro plano hay piso en esa posición, ambos lugares
+ *       están libres y la pared tiene algún vecino transitable.</li>
+ * </ul>
+ * <hr>
+ * Devuelve {@code Optional.empty()} si no encuentra o no puede habilitar
+ * una posición adecuada. Esta clase prepara la ubicación; no coloca
+ * las escaleras.
+ */
+
+
+
 public class UbicadorDeEscaleras {
 
     public Optional<Posicion> buscarPosicionComun(Plano inferior, Plano superior) {
