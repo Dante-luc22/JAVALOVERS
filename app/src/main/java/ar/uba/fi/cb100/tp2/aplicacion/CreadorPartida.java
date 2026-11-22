@@ -31,6 +31,7 @@ import ar.uba.fi.cb100.tp2.modelo.monstruos.Cazador;
 import ar.uba.fi.cb100.tp2.modelo.monstruos.Dormilon;
 import ar.uba.fi.cb100.tp2.modelo.monstruos.Fantasma;
 import ar.uba.fi.cb100.tp2.modelo.monstruos.Ladron;
+import ar.uba.fi.cb100.tp2.construccion.ConectorDeEscaleras;
 
 /**
  * Arma una partida lista para jugar: genera los planos, los valida y carga,
@@ -88,8 +89,24 @@ public class CreadorPartida {
         }
 
         Mazmorra mazmorra = new Mazmorra(planos, parametros.pisos());
+        conectarEscaleras(mazmorra, planos, parametros);
         Heroe heroe = new Heroe(mazmorra.getEntrada(), this.configuracion.energiaInicial());
         return new Partida(mazmorra, heroe, costosPorTerreno());
+    }
+
+        /**
+     * Une los pisos de cada tablero con escaleras (1-2, 2-3...). Lo hace el
+     * ConectorDeEscaleras de Facu; acá sólo se le pasa cada tablero por separado.
+     * En Fácil hay un solo piso y no se conecta nada.
+     */
+    private void conectarEscaleras(Mazmorra mazmorra, List<Plano> planos,
+                                   ParametrosDeDificultad parametros) {
+        ConectorDeEscaleras conector = new ConectorDeEscaleras();
+        int pisos = parametros.pisos();
+        for (int tablero = 1; tablero <= parametros.tableros(); tablero++) {
+            int desde = (tablero - 1) * pisos;
+            conector.conectarPisos(mazmorra, tablero, planos.subList(desde, desde + pisos));
+        }
     }
 
     /**
