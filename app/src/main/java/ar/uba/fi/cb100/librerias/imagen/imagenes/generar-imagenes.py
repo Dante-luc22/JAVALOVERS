@@ -38,7 +38,7 @@ PALETA = {
     'V': (60, 140, 65, 255),        # verde oscuro
     'b': (161, 136, 127, 255),      # madera puerta
     'B': (110, 85, 75, 255),        # madera oscura
-    'o': (205, 127, 65, 255),       # madera clara (largueros de la escalera)
+    'o': (205, 127, 65, 255),       # madera clara 
 }
 
 SPRITES = {
@@ -221,6 +221,24 @@ SPRITES = {
         "fFkookffffkookff",
         "ffkookffffkookff",
         "ffkkkkffffkkkkff",
+    ],
+    'cazador': [
+        "....kkkkk....G..",
+        "...kVVVVVk..GwG.",
+        "..kVvvvvvVk.kGk.",
+        "..kVkkkkkVk..B..",
+        "..kVkrkrkVk..B..",
+        "..kVkkkkkVk..B..",
+        "...kVkkkVk...B..",
+        "..kkVVVVVVkk.B..",
+        ".kVVvvmmvvVVkpk.",
+        ".kVvvvvmmvvVkpk.",
+        ".kVvvvvvmmVk.B..",
+        "..kVvvvvvvVk.B..",
+        "..kVVVVVVVVk.B..",
+        "...kkmkkmkk..B..",
+        "...kmmk.kmmk.B..",
+        "...kkkk.kkkk.k..",
     ],
 }
 
