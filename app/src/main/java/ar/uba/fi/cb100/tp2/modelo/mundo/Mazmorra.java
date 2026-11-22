@@ -2,6 +2,9 @@ package ar.uba.fi.cb100.tp2.modelo.mundo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
 
@@ -15,6 +18,12 @@ public class Mazmorra {
 
     private final List<Plano> planos;
     private final int pisosPorTablero;
+
+    /** Para cada celda con escalera o pasillo, adónde lleva. Tiene los dos sentidos. */
+    private final Map<Ubicacion, Ubicacion> destinos = new HashMap<>();
+
+    /** Cada conexión una sola vez, en el orden en que se conectó. */
+    private final List<Conexion> conexiones = new ArrayList<>();
 
     /**
      * @param planos          todos los planos, ordenados por tablero y después por piso
@@ -76,5 +85,66 @@ public class Mazmorra {
             }
         }
         throw new IllegalStateException("La mazmorra no tiene salida");
+    }
+
+        /**
+     * Une dos celdas de planos distintos con una escalera o un pasillo, en los
+     * dos sentidos: pisar cualquiera de las dos lleva a la otra.
+     *
+     * @param a una punta
+     * @param b la otra punta, en otro plano
+     * @throws IllegalArgumentException si alguna punta es nula, si están en el
+     *         mismo plano, si el plano no existe, si la celda no es transitable
+     *         o si ya tiene una conexión
+     */
+    public void conectar(Ubicacion a, Ubicacion b) {
+        Conexion conexion = new Conexion(a, b);
+        validarPunta(a);
+        validarPunta(b);
+        this.destinos.put(a, b);
+        this.destinos.put(b, a);
+        this.conexiones.add(conexion);
+    }
+
+    /**
+     * @param ubicacion la celda donde está el héroe
+     * @return adónde lleva la escalera o el pasillo de esa celda, o vacío si no hay
+     */
+    public Optional<Ubicacion> destinoDesde(Ubicacion ubicacion) {
+        return Optional.ofNullable(this.destinos.get(ubicacion));
+    }
+
+    /**
+     * @param tablero el tablero del plano, desde 1
+     * @param piso    el piso del plano, desde 1
+     * @return las conexiones que salen de ese plano, para dibujarlas
+     */
+    public List<Conexion> conexionesDelPlano(int tablero, int piso) {
+        List<Conexion> delPlano = new ArrayList<>();
+        for (Map.Entry<Ubicacion, Ubicacion> entrada : this.destinos.entrySet()) {
+            Ubicacion origen = entrada.getKey();
+            if (origen.tablero() == tablero && origen.piso() == piso) {
+                delPlano.add(new Conexion(origen, entrada.getValue()));
+            }
+        }
+        return delPlano;
+    }
+
+    /**
+     * @return cada conexión una sola vez, en el orden en que se conectó. Para
+     *         rearmarlas alcanza con llamar a conectar(origen, destino) por cada una.
+     */
+    public List<Conexion> getConexiones() {
+        return new ArrayList<>(this.conexiones);
+    }
+
+    private void validarPunta(Ubicacion punta) {
+        Plano plano = getPlano(punta);
+        if (!plano.getTablero().esTransitable(punta.posicion())) {
+            throw new IllegalArgumentException("Una escalera o pasillo no puede estar en una pared: " + punta);
+        }
+        if (this.destinos.containsKey(punta)) {
+            throw new IllegalArgumentException("Esa celda ya tiene una conexión: " + punta);
+        }
     }
 }
