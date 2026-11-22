@@ -9,7 +9,9 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 import ar.uba.fi.cb100.tp2.generador.GeneradorGrupoNN;
+import ar.uba.fi.cb100.tp2.modelo.mundo.Conexion;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Entidad;
+import ar.uba.fi.cb100.tp2.modelo.mundo.Mazmorra;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Plano;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Tablero;
 import ar.uba.fi.cb100.tp2.modelo.partida.Configuracion;
@@ -45,6 +47,42 @@ public class CreadorPartidaTest {
         return new CreadorPartida(configuracionCon(semilla), new GeneradorGrupoNN())
                 .crear(Dificultad.FACIL);
     }
+
+        private static Partida crear(Dificultad dificultad, Long semilla) {
+        return new CreadorPartida(configuracionCon(semilla), new GeneradorGrupoNN())
+                .crear(dificultad);
+    }
+
+        @Test
+    void facilNoTieneEscaleras() {
+        assertTrue(crearFacil(42L).getMazmorra().getConexiones().isEmpty());
+    }
+
+    @Test
+    void medioUneLosTresPisosConDosEscaleras() {
+        Mazmorra mazmorra = crear(Dificultad.MEDIO, 42L).getMazmorra();
+
+        assertEquals(2, mazmorra.getConexiones().size());
+        assertEquals(1, mazmorra.conexionesDelPlano(1, 1).size());
+        assertEquals(2, mazmorra.conexionesDelPlano(1, 2).size());
+        assertEquals(1, mazmorra.conexionesDelPlano(1, 3).size());
+    }
+
+    @Test
+    void cadaEscaleraUneLaMismaPosicionEnPisosSeguidos() {
+        for (Conexion escalera : crear(Dificultad.MEDIO, 42L).getMazmorra().getConexiones()) {
+            assertEquals(escalera.origen().posicion(), escalera.destino().posicion());
+            assertEquals(escalera.origen().tablero(), escalera.destino().tablero());
+            assertEquals(1, Math.abs(escalera.origen().piso() - escalera.destino().piso()));
+        }
+    }
+
+    @Test
+    void dificilConectaLosPisosDeCadaTablero() {
+        assertEquals(6, crear(Dificultad.DIFICIL, 42L).getMazmorra().getConexiones().size());
+    }
+
+    
 
     @Test
     void facilArmaUnPlanoDelTamanioDeLaConfiguracion() {
