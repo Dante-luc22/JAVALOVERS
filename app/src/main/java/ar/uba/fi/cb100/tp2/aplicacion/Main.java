@@ -12,6 +12,8 @@ import ar.uba.fi.cb100.tp2.vista.EntradaConsola;
 import ar.uba.fi.cb100.tp2.vista.Vista;
 import ar.uba.fi.cb100.tp2.vista.VistaBmp;
 import ar.uba.fi.cb100.tp2.vista.VistaGrafica;
+import java.awt.GraphicsEnvironment;
+import ar.uba.fi.cb100.tp2.vista.MenuGrafico;
 /**
  * Punto de entrada del juego. Arma las piezas y las conecta:
  * configuración → dificultad → partida → vista → controlador.
@@ -27,24 +29,39 @@ public class Main {
         VistaGrafica vistaGrafica = null;
 
         try {
-            Configuracion configuracion = LectorConfiguracion.leer(LectorConfiguracion.RUTA_POR_DEFECTO);
-            Dificultad dificultad = elegirDificultad(entrada);
-            int opcionVista = elegirVista(entrada);
+            Configuracion configuracion =
+                    LectorConfiguracion.leer(LectorConfiguracion.RUTA_POR_DEFECTO);
+
+            Dificultad dificultad;
+            boolean usarBmp;
+
+            if (GraphicsEnvironment.isHeadless()) {
+                dificultad = elegirDificultad(entrada);
+                usarBmp = true;
+            } else {
+                var opciones = new MenuGrafico().mostrarInicio();
+                if (opciones.isEmpty()) {
+                    return;
+                }
+
+                var inicio = opciones.get();
+                dificultad = inicio.dificultad();
+                usarBmp = inicio.modoVista() == MenuGrafico.ModoVista.BMP;
+            }
+
             CreadorPartida creador = new CreadorPartida(configuracion, new GeneradorGrupoNN());
             Partida partida = creador.crear(dificultad);
+
             Vista vista;
-            if (opcionVista == 1) {
-                vista = new VistaBmp(
-                        CARPETA_BMP,
-                        configuracion.energiaInicial(),
-                        entrada);
+            if (usarBmp) {
+                vista = new VistaBmp(CARPETA_BMP, configuracion.energiaInicial(), entrada);
             } else {
                 vistaGrafica = new VistaGrafica();
                 vista = vistaGrafica;
             }
 
             EstadoPartida fin = new ControladorJuego(partida, vista).jugar();
-            mostrarFinal(fin, partida, opcionVista == 1);
+            mostrarFinal(fin, partida, usarBmp);
         } catch (IllegalStateException e) {
             System.out.println("No se pudo arrancar el juego: " + e.getMessage());
         } finally {
@@ -66,13 +83,6 @@ public class Main {
         }
         int elegida = entrada.leerEnteroEnRango("Opción:", 1, opciones.length);
         return opciones[elegida - 1];
-    }
-    private static int elegirVista(EntradaConsola entrada) {
-        System.out.println("Elegí cómo querés jugar:");
-        System.out.println("  1) Vista BMP (consola)");
-        System.out.println("  2) Vista gráfica (ventana)");
-
-        return entrada.leerEnteroEnRango("Opción:", 1, 2);
     }
 
     private static void mostrarFinal(EstadoPartida fin, Partida partida, boolean mostrarBmp) {
