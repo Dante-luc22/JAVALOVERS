@@ -257,18 +257,38 @@ public class VistaGrafica implements Vista, AutoCloseable {
     }
 
     /**
-     * Determina la imagen de una entidad a partir de su símbolo.
+     * Determina la imagen de una entidad a partir de su símbolo. En el plano
+     * todos los monstruos son una 'M', así que para ellos se busca la imagen
+     * según su tipo (cazador.png, fantasma.png...).
      */
     private Path imagenDe(Entidad entidad) {
 
         return switch (entidad.getSimbolo()) {
             case 'C' -> imagen("tesoro.png");
-            case 'M' -> imagen("monstruo.png");
+            case 'M' -> imagenDeMonstruo(entidad.getTipo());
             default -> throw new IllegalArgumentException(
                     "Símbolo de entidad desconocido: " +
                             entidad.getSimbolo()
             );
         };
+    }
+
+    /**
+     * La imagen de un monstruo según su tipo: el nombre del tipo en minúsculas
+     * más ".png". Si ese tipo todavía no tiene imagen propia, usa la genérica
+     * (monstruo.png).
+     *
+     * @param tipo el nombre del tipo, por ejemplo "CAZADOR"
+     * @return la ruta de la imagen
+     */
+    private Path imagenDeMonstruo(String tipo) {
+
+        Path propia = this.carpetaImagenes.resolve(tipo.toLowerCase() + ".png");
+
+        if (Files.isRegularFile(propia)) {
+            return propia;
+        }
+        return imagen("monstruo.png");
     }
 
     /**
