@@ -9,8 +9,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import ar.uba.fi.cb100.librerias.JuegoVisual;
-import ar.uba.fi.cb100.librerias.Tecla;
+import ar.uba.fi.cb100.librerias.imagen.JuegoVisual;
+import ar.uba.fi.cb100.librerias.imagen.Tecla;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Entidad;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Plano;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Tablero;

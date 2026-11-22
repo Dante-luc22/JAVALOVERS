@@ -198,4 +198,11 @@ public class Partida {
     public Heroe getHeroe() {
         return this.heroe;
     }
+
+        /**
+     * @return la mazmorra de esta partida: planos y conexiones
+     */
+    public Mazmorra getMazmorra() {
+        return this.mazmorra;
+    }
 }
