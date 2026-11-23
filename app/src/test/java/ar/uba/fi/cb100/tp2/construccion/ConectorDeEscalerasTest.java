@@ -1,5 +1,6 @@
 package ar.uba.fi.cb100.tp2.construccion;
 
+import ar.uba.fi.cb100.tp2.modelo.mundo.Conexion;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Mazmorra;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Plano;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Tablero;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -17,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ConectorDeEscalerasTest {
 
-    private final ConectorDeEscaleras conector = new ConectorDeEscaleras();
+    private final ConectorDeEscaleras conector = new ConectorDeEscaleras(new Random(42L));
 
     @Test
     void conectaTresPisosEnAmbosSentidosSinReutilizarLaCeldaDelPisoDos() {
@@ -50,6 +52,26 @@ class ConectorDeEscalerasTest {
         assertThrows(IllegalStateException.class,
                 () -> conector.conectarPisos(mazmorra, 1, planos));
         assertTrue(mazmorra.getConexiones().isEmpty());
+    }
+
+    @Test
+    void laMismaSemillaRepiteLasConexiones() {
+        assertEquals(conexionesCon(42L), conexionesCon(42L));
+    }
+
+    private List<Conexion> conexionesCon(long semilla) {
+        Posicion entrada = new Posicion(2, 2);
+        Posicion a = new Posicion(2, 3);
+        Posicion b = new Posicion(2, 4);
+        Posicion c = new Posicion(3, 4);
+        List<Plano> planos = List.of(
+                crearPlano(entrada, a, b, c),
+                crearPlano(entrada, a, b, c),
+                crearPlano(entrada, a, b, c)
+        );
+        Mazmorra mazmorra = new Mazmorra(planos, 3);
+        new ConectorDeEscaleras(new Random(semilla)).conectarPisos(mazmorra, 1, planos);
+        return mazmorra.getConexiones();
     }
 
     private void assertConexion(Mazmorra mazmorra, int inferior, int superior, Posicion celda) {
