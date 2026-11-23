@@ -8,3 +8,6 @@ out/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# BMP que escribe el juego en cada paso
+salida/
