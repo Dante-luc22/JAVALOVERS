@@ -79,12 +79,11 @@ public class Partida {
 
     /**
      * Mueve al héroe una celda. Si hay una pared (o el borde) no hace nada y la
-     * acción no cuenta como paso. Si no, empieza el paso (suma un paso y corre la
-     * agenda), cobra el costo del terreno al que entra, avisa a las entidades de
-     * esa celda que el héroe llegó y, si
-     * la celda es una escalera o un pasillo, lo traslada al otro extremo (una
-     * sola vez). Si la partida sigue, mueve a los monstruos del plano donde
-     * quedó el héroe.
+     * acción no cuenta como paso. Si no, empieza el paso (suma un paso y corre
+     * la agenda), cobra el costo del terreno al que entra, avisa a las entidades
+     * de esa celda que el héroe llegó y, si la celda es una escalera o un
+     * pasillo, lo traslada al otro extremo (una sola vez). Si la partida sigue,
+     * mueve a los monstruos del plano donde quedó el héroe.
      * Una partida ya terminada no acepta más movimientos.
      *
      * @param direccion hacia dónde se mueve
@@ -107,11 +106,12 @@ public class Partida {
         // monstruos hacen que ya jueguen en este turno.
         this.empezarPaso();
 
-        this.heroe.restarEnergia(this.costoDe(plano.getTablero().getTerreno(destino)));
+        Terreno terreno = plano.getTablero().getTerreno(destino);
+        this.heroe.restarEnergia(this.heroe.ajustarCosto(terreno, this.costoDe(terreno), this.costoDe(Terreno.PISO)));
         Ubicacion ubicacionNueva = new Ubicacion(actual.tablero(), actual.piso(), destino);
         this.heroe.mover(ubicacionNueva);
-
         this.encontrarEntidades(plano, destino);
+
         this.trasladarSiHayConexion(ubicacionNueva);
         return this.cerrarTurno();
     }
@@ -127,6 +127,24 @@ public class Partida {
             return new ResultadoTurno(false, this.estadoActual());
         }
         this.empezarPaso();
+        return this.cerrarTurno();
+    }
+
+    /**
+     * Usa un objeto del inventario como la acción del paso: cuenta como un paso,
+     * no cuesta energía y los monstruos igual se mueven. Si el héroe no tiene
+     * ese objeto la acción no es válida y no cuenta como paso.
+     *
+     * @param id el id del objeto a usar (por ejemplo ZAPATOS_DE_AGUA)
+     * @return si la acción fue válida y cómo quedó la partida
+     */
+    public ResultadoTurno usarObjeto(String id) {
+        if (this.estadoActual() != EstadoPartida.EN_CURSO
+                || id == null || id.isBlank() || !this.heroe.getInventario().contiene(id)) {
+            return new ResultadoTurno(false, this.estadoActual());
+        }
+        this.empezarPaso();
+        this.heroe.getInventario().usar(id, this.heroe, this.agenda);
         return this.cerrarTurno();
     }
 
