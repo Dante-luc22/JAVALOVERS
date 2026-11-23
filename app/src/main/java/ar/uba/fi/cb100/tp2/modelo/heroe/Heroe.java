@@ -139,15 +139,8 @@ public class Heroe {
         return costo;
     }
 
-    /**
-     * Metodo para indicar que el heroe camino con el efecto
-     * activo.
-     */
-    public void pasarUnPaso() {
-        for (Efecto ef : this.efectosActivos) {
-            ef.pasarUnPaso();
-        }
-        this.efectosActivos.removeIf(Efecto::termino);
+    public void quitarEfecto(Efecto efecto) {
+        efectosActivos.remove(efecto);
     }
 
 
