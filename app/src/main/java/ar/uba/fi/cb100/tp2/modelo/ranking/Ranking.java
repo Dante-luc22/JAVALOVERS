@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.TreeSet;
+import java.time.LocalDateTime;
 
 import ar.uba.fi.cb100.tp2.modelo.valores.Dificultad;
 
@@ -48,6 +49,12 @@ public class Ranking {
             throw new IllegalArgumentException("La entrada no puede ser nula.");
         }
         this.arbolesPorDificultad.get(entrada.dificultad()).add(entrada);
+    }
+
+    /** Registra una partida terminada con un puntaje mínimo de cero. */
+    public void registrarPartida(
+            String nombre, int puntaje, Dificultad dificultad, LocalDateTime fecha) {
+        registrar(new EntradaDeRanking(nombre, Math.max(0, puntaje), dificultad, fecha));
     }
 
     /**

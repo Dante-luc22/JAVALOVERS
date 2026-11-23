@@ -153,4 +153,12 @@ class RankingTest {
     void rechazaPedirElTopDeUnaDificultadNula() {
         assertThrows(IllegalArgumentException.class, () -> this.ranking.obtenerTop10(null));
     }
+
+    @Test
+    void registraEnCeroUnaPartidaConPuntajeNegativo() {
+        this.ranking.registrarPartida("Facu", -40, Dificultad.FACIL, INICIO);
+
+        assertEquals(List.of(0),
+                puntajes(this.ranking.obtenerTop10(Dificultad.FACIL)));
+    }
 }
