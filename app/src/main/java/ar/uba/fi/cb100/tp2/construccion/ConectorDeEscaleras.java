@@ -7,12 +7,18 @@ import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
 
 import java.util.List;
 import java.util.Set;
+import java.util.Random;
 
 public class ConectorDeEscaleras {
 
+    private final UbicadorDeEscaleras ubicador;
+
+    public ConectorDeEscaleras(Random azar) {
+        this.ubicador = new UbicadorDeEscaleras(azar);
+    }
+
     /** Conecta los planos de un tablero, ordenados desde el primer piso. */
     public void conectarPisos(Mazmorra mazmorra, int tablero, List<Plano> planos) {
-        UbicadorDeEscaleras ubicador = new UbicadorDeEscaleras();
         Set<Posicion> reservadas = Set.of();
 
         for (int piso = 1; piso < planos.size(); piso++) {
