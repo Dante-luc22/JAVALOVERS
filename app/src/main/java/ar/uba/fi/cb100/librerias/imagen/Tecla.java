@@ -1,4 +1,4 @@
-package ar.uba.fi.cb100.librerias;
+package ar.uba.fi.cb100.librerias.imagen;
 
 import java.awt.event.KeyEvent;
 
@@ -11,7 +11,7 @@ import java.awt.event.KeyEvent;
  * {@link JuegoVisual#esperarTecla()} cuando el usuario cerró la ventana, para
  * que el ciclo del juego pueda terminar sin quedarse esperando para siempre.
  */
-public enum Tecla {
+public enum Tecla { 
 
     ARRIBA(-1, 0),
     ABAJO(1, 0),

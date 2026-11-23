@@ -1,4 +1,4 @@
-package ar.uba.fi.cb100.librerias;
+package ar.uba.fi.cb100.librerias.imagen;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
