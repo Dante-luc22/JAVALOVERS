@@ -10,13 +10,14 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import java.util.Optional;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UbicadorDePasillosTest {
 
-    private final UbicadorDePasillos ubicador = new UbicadorDePasillos();
+    private final UbicadorDePasillos ubicador = new UbicadorDePasillos(new Random(42L));
 
     @ParameterizedTest
     @CsvSource({
@@ -51,6 +52,22 @@ class UbicadorDePasillosTest {
         Plano plano = crearPlano(new Posicion(1, 6));
 
         assertTrue(ubicador.buscarExtremo(plano, Direccion.DERECHA).isEmpty());
+    }
+
+    @Test
+    void usaElAzarRecibidoParaElegirElExtremo() {
+        Plano plano = crearPlano(new Posicion(2, 6), new Posicion(3, 6));
+        Random azarQueEligeLaUltima = new Random(42L) {
+            @Override
+            public int nextInt(int limite) {
+                return limite - 1;
+            }
+        };
+
+        var ubicadorConAzarControlado = new UbicadorDePasillos(azarQueEligeLaUltima);
+
+        assertEquals(Optional.of(new Posicion(3, 7)),
+                ubicadorConAzarControlado.buscarExtremo(plano, Direccion.DERECHA));
     }
 
     private Plano crearPlano(Posicion... pisos) {
