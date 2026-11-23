@@ -6,9 +6,15 @@ import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
 import ar.uba.fi.cb100.tp2.modelo.valores.Direccion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
 
+import java.util.Random;
+
 public class ConectorDePasillos {
 
-    private final UbicadorDePasillos ubicador = new UbicadorDePasillos();
+    private final UbicadorDePasillos ubicador;
+
+    public ConectorDePasillos(Random azar) {
+        this.ubicador = new UbicadorDePasillos(azar);
+    }
 
     /**
      * Usa el tablero y el piso de cada ubicación para identificar los planos.

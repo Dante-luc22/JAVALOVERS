@@ -6,13 +6,22 @@ import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
 import ar.uba.fi.cb100.tp2.modelo.valores.Direccion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 /** Busca celdas del borde que puedan servir como extremos de un pasillo. */
 public class UbicadorDePasillos {
 
+    private final Random azar;
+
+    public UbicadorDePasillos(Random azar) {
+        this.azar = azar;
+    }
+
     /**
-     * Devuelve la primera pared del lado elegido que tiene una vecina interior
+     * Sortea una pared del lado elegido que tenga una vecina interior
      * transitable. La búsqueda excluye las esquinas y conserva el tablero.
      */
     public Optional<Posicion> buscarExtremo(Plano plano, Direccion lado) {
@@ -27,6 +36,7 @@ public class UbicadorDePasillos {
         boolean bordeVertical = lado == Direccion.IZQUIERDA || lado == Direccion.DERECHA;
         int limite = bordeVertical ? filas : columnas;
 
+        List<Posicion> candidatas = new ArrayList<>();
         for (int indice = 2; indice < limite; indice++) {
             Posicion borde = switch (lado) {
                 case ARRIBA -> new Posicion(1, indice);
@@ -42,10 +52,13 @@ public class UbicadorDePasillos {
 
             if (tablero.getTerreno(borde) == Terreno.PARED
                     && tablero.esTransitable(interior)) {
-                return Optional.of(borde);
+                candidatas.add(borde);
             }
         }
 
-        return Optional.empty();
+        if (candidatas.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(candidatas.get(azar.nextInt(candidatas.size())));
     }
 }
