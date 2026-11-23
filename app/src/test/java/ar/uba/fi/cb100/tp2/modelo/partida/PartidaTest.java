@@ -14,6 +14,7 @@ import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDePuntos;
 import ar.uba.fi.cb100.tp2.modelo.eventos.Agenda;
 import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
 import ar.uba.fi.cb100.tp2.modelo.monstruos.Monstruo;
+import ar.uba.fi.cb100.tp2.modelo.monstruos.TipoDeMonstruo;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Entidad;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Mazmorra;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Plano;
@@ -46,6 +47,11 @@ class PartidaTest {
             super(inicio, DANIO_DEL_MONSTRUO);
             this.destino = destino;
             this.turnosJugados = 0;
+        }
+
+        @Override
+        public TipoDeMonstruo getTipoDeMonstruo() {
+            return TipoDeMonstruo.ERRANTE;
         }
 
         @Override

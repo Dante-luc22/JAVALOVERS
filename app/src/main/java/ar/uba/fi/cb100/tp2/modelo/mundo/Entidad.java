@@ -69,6 +69,18 @@ public abstract class Entidad {
      * @return el símbolo de la entidad
      */
     public abstract char getSimbolo();
+
+    /**
+     * El nombre del tipo concreto de la entidad, por ejemplo "CAZADOR". La vista
+     * lo usa para elegir la imagen sin preguntar de qué clase es (sin instanceof).
+     * Por defecto es el símbolo; los monstruos lo reemplazan con su tipo, porque
+     * en el plano todos tienen el mismo símbolo, 'M'.
+     *
+     * @return el nombre del tipo de la entidad
+     */
+    public String getTipo() {
+        return String.valueOf(this.getSimbolo());
+    }
 }
 
 

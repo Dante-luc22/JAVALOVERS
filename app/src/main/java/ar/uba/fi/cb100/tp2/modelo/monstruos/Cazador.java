@@ -66,6 +66,14 @@ public class Cazador extends Monstruo{
 
 
     /**
+     * @return el tipo de este monstruo, para que la vista elija su imagen
+     */
+    @Override
+    public TipoDeMonstruo getTipoDeMonstruo() {
+        return TipoDeMonstruo.CAZADOR;
+    }
+
+    /**
      * Metodo para decidir el movimiento del cazador en el plano,
      * busca la mejor celda para alcanzar al heroe.
      *
