@@ -4,6 +4,7 @@ package ar.uba.fi.cb100.tp2.vista;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -11,6 +12,7 @@ import java.util.Set;
 
 import ar.uba.fi.cb100.librerias.imagen.JuegoVisual;
 import ar.uba.fi.cb100.librerias.imagen.Tecla;
+import ar.uba.fi.cb100.tp2.modelo.mundo.Conexion;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Entidad;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Plano;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Tablero;
@@ -19,6 +21,7 @@ import ar.uba.fi.cb100.tp2.modelo.partida.Accion;
 import ar.uba.fi.cb100.tp2.modelo.partida.EstadoPartida;
 import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
+import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
 
 /**
  * Vista gráfica del juego.
@@ -102,7 +105,14 @@ public class VistaGrafica implements Vista, AutoCloseable {
 
         Tablero tablero = plano.getTablero();
 
-        String[] grilla = construirGrilla(plano);
+        Ubicacion ubicacionHeroe = partida.getHeroe().getUbicacion();
+        Set<Posicion> escaleras = new HashSet<>();
+        for (Conexion conexion : partida.getMazmorra()
+                .conexionesDelPlano(ubicacionHeroe.tablero(), ubicacionHeroe.piso())) {
+            escaleras.add(conexion.origen().posicion());
+        }
+
+        String[] grilla = construirGrilla(plano, escaleras);
 
         this.juego = new JuegoVisual(
                 "La fuga de la mazmorra",
@@ -134,8 +144,9 @@ public class VistaGrafica implements Vista, AutoCloseable {
 
     /**
      * Construye la grilla gráfica a partir del tablero del modelo.
+     * Las celdas con escalera o pasillo se marcan con 'E' (se dibujan como puerta).
      */
-    private String[] construirGrilla(Plano plano) {
+    private String[] construirGrilla(Plano plano, Set<Posicion> escaleras) {
 
         Tablero tablero = plano.getTablero();
 
@@ -157,6 +168,8 @@ public class VistaGrafica implements Vista, AutoCloseable {
 
                 if (salida != null && salida.equals(posicion)) {
                     simbolo = 'S';
+                } else if (escaleras.contains(posicion)) {
+                    simbolo = 'E';
                 } else {
                     simbolo = simboloDe(
                             tablero.getTerreno(posicion)
@@ -182,6 +195,8 @@ public class VistaGrafica implements Vista, AutoCloseable {
         this.juego.definirCelda('~', imagen("agua.png"));
         this.juego.definirCelda('^', imagen("lava.png"));
         this.juego.definirCelda('S', imagen("salida.png"));
+        // Provisorio: la escalera se dibuja como la puerta hasta tener su propia imagen.
+        this.juego.definirCelda('E', imagen("puerta.png"));
     }
 
     /**
