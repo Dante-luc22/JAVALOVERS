@@ -72,6 +72,11 @@ public class Partida {
         return costo;
     }
 
+    /** @return la agenda de eventos futuros de esta partida */
+    public Agenda getAgenda() {
+        return this.agenda;
+    }
+
     /**
      * Mueve al héroe una celda. Si hay una pared (o el borde) no hace nada y la
      * acción no cuenta como paso. Si no, empieza el paso (suma un paso y corre la
