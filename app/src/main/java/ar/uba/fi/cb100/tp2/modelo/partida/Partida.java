@@ -2,6 +2,7 @@ package ar.uba.fi.cb100.tp2.modelo.partida;
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Optional;
 
 import ar.uba.fi.cb100.tp2.modelo.eventos.Agenda;
 import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
@@ -74,8 +75,10 @@ public class Partida {
     /**
      * Mueve al héroe una celda. Si hay una pared (o el borde) no hace nada y la
      * acción no cuenta como paso. Si no, cobra el costo del terreno al que entra,
-     * suma un paso, avisa a las entidades de esa celda que el héroe llegó y,
-     * si la partida sigue, mueve a los monstruos.
+     * suma un paso, avisa a las entidades de esa celda que el héroe llegó y, si
+     * la celda es una escalera o un pasillo, lo traslada al otro extremo (una
+     * sola vez). Si la partida sigue, mueve a los monstruos del plano donde
+     * quedó el héroe.
      * Una partida ya terminada no acepta más movimientos.
      *
      * @param direccion hacia dónde se mueve
@@ -94,15 +97,12 @@ public class Partida {
         }
 
         this.heroe.restarEnergia(this.costoDe(plano.getTablero().getTerreno(destino)));
-        this.heroe.mover(new Ubicacion(actual.tablero(), actual.piso(), destino));
+        Ubicacion ubicacionNueva = new Ubicacion(actual.tablero(), actual.piso(), destino);
+        this.heroe.mover(ubicacionNueva);
         this.pasos++;
 
-        for (Entidad entidad : plano.obtenerEntidades(destino)) {
-            entidad.alEncontrarseConHeroe(this.heroe, this.agenda);
-            if (entidad.debeSalirDelPlano()) {
-                plano.quitarEntidad(entidad);
-            }
-        }
+        this.encontrarEntidades(plano, destino);
+        this.trasladarSiHayConexion(ubicacionNueva);
         return this.cerrarTurno();
     }
 
@@ -133,6 +133,37 @@ public class Partida {
     /** @return el puntaje de la partida hasta ahora */
     public int puntaje() {
         return calcularPuntaje(this.heroe.getCofresAbiertos(), this.heroe.getEnergia(), this.pasos);
+    }
+
+    /**
+     * Avisa a las entidades de una celda que el héroe llegó, y saca del plano
+     * a las que ya cumplieron su papel (un cofre abierto).
+     */
+    private void encontrarEntidades(Plano plano, Posicion posicion) {
+        for (Entidad entidad : plano.obtenerEntidades(posicion)) {
+            entidad.alEncontrarseConHeroe(this.heroe, this.agenda);
+            if (entidad.debeSalirDelPlano()) {
+                plano.quitarEntidad(entidad);
+            }
+        }
+    }
+
+    /**
+     * Si el héroe está parado en una escalera o un pasillo y la partida sigue,
+     * lo pone en el otro extremo y le avisa a las entidades de esa celda.
+     * Mira una sola vez, justo después del movimiento: como el destino también
+     * es una conexión, el héroe no rebota; para volver tiene que salir de la
+     * celda y pisarla de nuevo.
+     */
+    private void trasladarSiHayConexion(Ubicacion pisada) {
+        if (this.estadoActual() != EstadoPartida.EN_CURSO) {
+            return;
+        }
+        Optional<Ubicacion> destino = this.mazmorra.destinoDesde(pisada);
+        if (destino.isPresent()) {
+            this.heroe.mover(destino.get());
+            this.encontrarEntidades(this.getPlanoActual(), destino.get().posicion());
+        }
     }
 
     /**
