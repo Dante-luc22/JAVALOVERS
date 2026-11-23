@@ -74,8 +74,9 @@ public class Partida {
 
     /**
      * Mueve al héroe una celda. Si hay una pared (o el borde) no hace nada y la
-     * acción no cuenta como paso. Si no, cobra el costo del terreno al que entra,
-     * suma un paso, avisa a las entidades de esa celda que el héroe llegó y, si
+     * acción no cuenta como paso. Si no, empieza el paso (suma un paso y corre la
+     * agenda), cobra el costo del terreno al que entra, avisa a las entidades de
+     * esa celda que el héroe llegó y, si
      * la celda es una escalera o un pasillo, lo traslada al otro extremo (una
      * sola vez). Si la partida sigue, mueve a los monstruos del plano donde
      * quedó el héroe.
@@ -96,10 +97,14 @@ public class Partida {
             return new ResultadoTurno(false, this.estadoActual());
         }
 
+        // Primero empieza el paso: un efecto que vence en este paso ya no
+        // cuenta para este movimiento, y los eventos que despiertan
+        // monstruos hacen que ya jueguen en este turno.
+        this.empezarPaso();
+
         this.heroe.restarEnergia(this.costoDe(plano.getTablero().getTerreno(destino)));
         Ubicacion ubicacionNueva = new Ubicacion(actual.tablero(), actual.piso(), destino);
         this.heroe.mover(ubicacionNueva);
-        this.pasos++;
 
         this.encontrarEntidades(plano, destino);
         this.trasladarSiHayConexion(ubicacionNueva);
@@ -116,7 +121,7 @@ public class Partida {
         if (this.estadoActual() != EstadoPartida.EN_CURSO) {
             return new ResultadoTurno(false, this.estadoActual());
         }
-        this.pasos++;
+        this.empezarPaso();
         return this.cerrarTurno();
     }
 
@@ -133,6 +138,16 @@ public class Partida {
     /** @return el puntaje de la partida hasta ahora */
     public int puntaje() {
         return calcularPuntaje(this.heroe.getCofresAbiertos(), this.heroe.getEnergia(), this.pasos);
+    }
+
+    /**
+     * Arranca un paso válido: lo cuenta y ejecuta los eventos de la agenda
+     * cuyo momento llegó. Se llama después de validar la acción y antes de
+     * hacerla.
+     */
+    private void empezarPaso() {
+        this.pasos++;
+        this.agenda.ejecutarLosQueVencen(this.pasos, this);
     }
 
     /**
