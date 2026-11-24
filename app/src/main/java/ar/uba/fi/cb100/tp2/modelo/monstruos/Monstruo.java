@@ -122,6 +122,16 @@ public abstract class Monstruo extends Entidad {
     }
 
 
+    /**
+     * Manda al monstruo de vuelta a su posicion inicial porque lo repelio
+     * un efecto externo (por ejemplo, el cofre de repelente). No
+     * le hace nada al heroe.
+     */
+    public final void repeler() {
+        volverAlInicio();
+    }
+
+
     // ================ GETTERS SIMPLES ================= //
 
     /**
