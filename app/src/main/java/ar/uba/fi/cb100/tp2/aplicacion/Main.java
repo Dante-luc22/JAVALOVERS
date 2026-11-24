@@ -38,7 +38,8 @@ public class Main {
                 Dificultad dificultad = elegirDificultad(entrada);
                 CreadorPartida creador = new CreadorPartida(configuracion, new GeneradorGrupoNN());
                 Partida partida = creador.crear(dificultad);
-                EstadoPartida fin = jugarPartida(partida, true, configuracion.energiaInicial(), entrada);
+                EstadoPartida fin = jugarPartida(
+                        partida, true, configuracion.energiaInicial(), entrada);
                 mostrarFinal(fin, partida, true);
                 return;
             }
@@ -48,6 +49,7 @@ public class Main {
                 if (opciones.isEmpty()) {
                     break;
                 }
+
                 jugarDesdeMenu(configuracion, opciones.get(), menu, entrada);
             }
         } catch (IllegalStateException e) {
@@ -63,20 +65,27 @@ public class Main {
 
         Long semillaElegida = opciones.semilla();
         long semilla = semillaElegida == null ? new Random().nextLong() : semillaElegida;
+
         Configuracion configuracionPartida = new Configuracion(
-                configuracion.energiaInicial(), configuracion.costos(),
-                semilla, configuracion.dificultades()
+                configuracion.energiaInicial(),
+                configuracion.costos(),
+                semilla,
+                configuracion.dificultades()
         );
-        CreadorPartida creador = new CreadorPartida(configuracionPartida, new GeneradorGrupoNN());
+
+        CreadorPartida creador =
+                new CreadorPartida(configuracionPartida, new GeneradorGrupoNN());
         boolean usarBmp = opciones.modoVista() == MenuGrafico.ModoVista.BMP;
 
         Partida partida;
         EstadoPartida fin;
         do {
             partida = creador.crear(opciones.dificultad());
-            fin = jugarPartida(partida, usarBmp, configuracionPartida.energiaInicial(), entrada);
+            fin = jugarPartida(
+                    partida, usarBmp, configuracionPartida.energiaInicial(), entrada);
             mostrarFinal(fin, partida, usarBmp);
-        } while (fin != EstadoPartida.EN_CURSO && menu.mostrarResultado(fin, partida.puntaje()));
+        } while (fin != EstadoPartida.EN_CURSO
+                && menu.mostrarResultado(fin, partida.puntaje(), semilla));
     }
 
     private static EstadoPartida jugarPartida(
@@ -99,6 +108,7 @@ public class Main {
         for (int i = 0; i < opciones.length; i++) {
             System.out.println("  " + (i + 1) + ") " + opciones[i]);
         }
+
         int elegida = entrada.leerEnteroEnRango("Opcion:", 1, opciones.length);
         return opciones[elegida - 1];
     }

@@ -88,16 +88,38 @@ public final class MenuGrafico {
     }
 
     /** Devuelve true si el jugador elige reintentar. */
-    public boolean mostrarResultado(EstadoPartida estado, int puntaje) {
+    public boolean mostrarResultado(EstadoPartida estado, int puntaje, long semilla) {
         if (estado == EstadoPartida.EN_CURSO) {
             return false;
         }
 
         return enHiloGrafico(() -> {
             String titulo = estado == EstadoPartida.GANADA ? "¡Ganaste!" : "Perdiste";
+
+            JTextField campoSemilla = new JTextField(Long.toString(semilla), 20);
+            campoSemilla.setEditable(false);
+
+            JLabel etiquetaSemilla = new JLabel("Semilla");
+            etiquetaSemilla.setLabelFor(campoSemilla);
+
+            JButton copiar = new JButton("Copiar");
+            copiar.addActionListener(e -> {
+                campoSemilla.selectAll();
+                campoSemilla.copy();
+            });
+
+            JPanel filaSemilla = new JPanel(new BorderLayout(8, 0));
+            filaSemilla.add(etiquetaSemilla, BorderLayout.WEST);
+            filaSemilla.add(campoSemilla, BorderLayout.CENTER);
+            filaSemilla.add(copiar, BorderLayout.EAST);
+
+            JPanel contenido = new JPanel(new BorderLayout(0, 10));
+            contenido.add(new JLabel("Puntaje: " + puntaje), BorderLayout.NORTH);
+            contenido.add(filaSemilla, BorderLayout.CENTER);
+
             Object[] acciones = {"Reintentar", "Menú principal"};
             int opcion = JOptionPane.showOptionDialog(
-                    null, "Puntaje: " + puntaje, titulo,
+                    null, contenido, titulo,
                     JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE,
                     null, acciones, acciones[0]
             );
