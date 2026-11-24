@@ -4,8 +4,10 @@ import ar.uba.fi.cb100.tp2.modelo.monstruos.TipoDeMonstruo;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
@@ -19,7 +21,7 @@ import java.util.Map;
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListCellRenderer;
-import javax.swing.ImageIcon;
+import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -58,10 +60,11 @@ final class EnciclopediaMonstruos extends JPanel {
     private record Ficha(TipoDeMonstruo tipo, String nombre, String descripcion) {
     }
 
-    private record Retrato(ImageIcon miniatura, ImageIcon imagen) {
+    private record Retrato(Icon miniatura, Icon imagen) {
     }
 
     private final Map<TipoDeMonstruo, Retrato> retratos = new EnumMap<>(TipoDeMonstruo.class);
+    private double escala = 1.0;
 
     EnciclopediaMonstruos() {
         super(new BorderLayout(10, 0));
@@ -124,6 +127,7 @@ final class EnciclopediaMonstruos extends JPanel {
 
     private JList<Ficha> crearLista() {
         JList<Ficha> lista = new JList<>(FICHAS);
+        lista.setFont(new Font("Georgia", Font.BOLD, 14));
         lista.setBackground(FONDO);
         lista.setSelectionBackground(SELECCION);
         lista.setSelectionForeground(TEXTO);
@@ -140,7 +144,7 @@ final class EnciclopediaMonstruos extends JPanel {
             Retrato retrato = retratos.get(ficha.tipo());
             fila.setIcon(retrato == null ? null : retrato.miniatura());
             fila.setIconTextGap(8);
-            fila.setFont(new Font("Georgia", Font.BOLD, 14));
+            fila.setFont(origen.getFont());
             fila.setBorder(tieneFoco
                     ? BorderFactory.createCompoundBorder(
                     BorderFactory.createMatteBorder(0, 2, 0, 0, DORADO),
@@ -168,7 +172,7 @@ final class EnciclopediaMonstruos extends JPanel {
             try {
                 BufferedImage imagen = ImageIO.read(ruta.toFile());
                 if (imagen != null) {
-                    retratos.put(ficha.tipo(), new Retrato(escalar(imagen, 24), escalar(imagen, 96)));
+                    retratos.put(ficha.tipo(), new Retrato(new Sprite(imagen, 24), new Sprite(imagen, 96)));
                 }
             } catch (IOException error) {
                 // La ficha textual sigue disponible aunque falte el sprite.
@@ -176,19 +180,43 @@ final class EnciclopediaMonstruos extends JPanel {
         }
     }
 
-    private static ImageIcon escalar(BufferedImage imagen, int lado) {
-        BufferedImage resultado = new BufferedImage(lado, lado, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D pincel = resultado.createGraphics();
-        try {
-            pincel.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-                    RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-            double escala = (double) lado / Math.max(imagen.getWidth(), imagen.getHeight());
-            int ancho = (int) Math.round(imagen.getWidth() * escala);
-            int alto = (int) Math.round(imagen.getHeight() * escala);
-            pincel.drawImage(imagen, (lado - ancho) / 2, (lado - alto) / 2, ancho, alto, null);
-        } finally {
-            pincel.dispose();
+    void ajustarEscala(double factor) {
+        escala = factor;
+    }
+
+    private final class Sprite implements Icon {
+        private final BufferedImage imagen;
+        private final int ladoBase;
+
+        private Sprite(BufferedImage imagen, int ladoBase) {
+            this.imagen = imagen;
+            this.ladoBase = ladoBase;
         }
-        return new ImageIcon(resultado);
+
+        @Override
+        public int getIconWidth() {
+            return (int) Math.round(ladoBase * escala);
+        }
+
+        @Override
+        public int getIconHeight() {
+            return getIconWidth();
+        }
+
+        @Override
+        public void paintIcon(Component componente, Graphics g, int x, int y) {
+            int lado = getIconWidth();
+            double proporcion = (double) lado / Math.max(imagen.getWidth(), imagen.getHeight());
+            int ancho = (int) Math.round(imagen.getWidth() * proporcion);
+            int alto = (int) Math.round(imagen.getHeight() * proporcion);
+            Graphics2D pincel = (Graphics2D) g.create();
+            try {
+                pincel.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                        RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+                pincel.drawImage(imagen, x + (lado - ancho) / 2, y + (lado - alto) / 2, ancho, alto, null);
+            } finally {
+                pincel.dispose();
+            }
+        }
     }
 }

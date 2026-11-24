@@ -13,14 +13,21 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.Frame;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.LayoutManager;
 import java.awt.RenderingHints;
+import java.awt.SecondaryLoop;
 import java.awt.Shape;
+import java.awt.Toolkit;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -35,8 +42,9 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
-import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -44,6 +52,9 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.border.Border;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.basic.BasicButtonUI;
 import javax.swing.table.DefaultTableModel;
 
@@ -55,6 +66,8 @@ public final class MenuGrafico {
     private static final Color BORDE = new Color(119, 110, 100);
     private static final Color TEXTO = new Color(249, 239, 217);
     private static final Color DORADO = new Color(229, 177, 99);
+    private static final int ANCHO_BASE = 920;
+    private static final int ALTO_BASE = 530;
     private static final int ALTO_ENCICLOPEDIA = 346;
 
     private static final DateTimeFormatter FORMATO_FECHA =
@@ -129,11 +142,12 @@ public final class MenuGrafico {
 
     private final class Navegacion {
 
-        private final JDialog ventana = new JDialog((Frame) null, "Escape de la mazmorra", true);
+        private final JFrame ventana = new JFrame("Escape de la mazmorra");
         private final CardLayout distribucion = new CardLayout();
         private final JPanel tarjetas = new JPanel(distribucion);
         private final JPanel ranking = new JPanel(new BorderLayout());
         private OpcionesInicio resultado;
+        private double escala = 1.0;
 
         private Navegacion(Long semillaConfigurada) {
             tarjetas.setOpaque(false);
@@ -148,19 +162,50 @@ public final class MenuGrafico {
             TituloMazmorra titulo = new TituloMazmorra();
             contenido.add(titulo, BorderLayout.NORTH);
             contenido.add(tarjetas, BorderLayout.CENTER);
-            contenido.setPreferredSize(new Dimension(920, 530));
+            contenido.setPreferredSize(new Dimension(ANCHO_BASE, ALTO_BASE));
 
-            ventana.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+            ventana.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             ventana.setContentPane(contenido);
             ventana.pack();
             int altoMinimo = titulo.getPreferredSize().height + ALTO_ENCICLOPEDIA + 12
                     + ventana.getInsets().top + ventana.getInsets().bottom;
             ventana.setMinimumSize(new Dimension(760, altoMinimo));
             ventana.setLocationRelativeTo(null);
+            contenido.addComponentListener(new ComponentAdapter() {
+                @Override
+                public void componentResized(ComponentEvent evento) {
+                    actualizarEscala(contenido, titulo);
+                }
+            });
+        }
+
+        private void actualizarEscala(JPanel contenido, TituloMazmorra titulo) {
+            double nueva = Math.min((double) contenido.getWidth() / ANCHO_BASE,
+                    (double) contenido.getHeight() / ALTO_BASE);
+            if (nueva <= 0 || nueva == escala) {
+                return;
+            }
+
+            escala = nueva;
+            Escala.aplicar(titulo, escala);
+            Escala.aplicar(tarjetas, escala);
+            contenido.revalidate();
+            contenido.repaint();
         }
 
         private Optional<OpcionesInicio> mostrar() {
+            // Espera la selección con el menú abierto y los eventos de Swing activos.
+            SecondaryLoop espera = Toolkit.getDefaultToolkit()
+                    .getSystemEventQueue().createSecondaryLoop();
+            ventana.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosed(WindowEvent evento) {
+                    espera.exit();
+                }
+            });
+
             ventana.setVisible(true);
+            espera.enter();
             return Optional.ofNullable(resultado);
         }
 
@@ -313,6 +358,7 @@ public final class MenuGrafico {
         private void abrirRanking() {
             ranking.removeAll();
             ranking.add(pagina("Ranking", contenidoRanking()), BorderLayout.CENTER);
+            Escala.aplicar(ranking, escala);
             ranking.revalidate();
             ranking.repaint();
             irA(Pantalla.RANKING);
@@ -434,6 +480,108 @@ public final class MenuGrafico {
         return boton;
     }
 
+    private static final class Escala {
+
+        private static final Object MEDIDAS_ORIGINALES = new Object();
+
+        private record Medidas(Font fuente, Dimension preferida, Border borde,
+                               Dimension separaciones, int anchoCelda, int altoFila) {
+            private Medidas(JComponent vista) {
+                this(vista.getFont(), vista.isPreferredSizeSet() ? vista.getPreferredSize() : null,
+                        vista.getBorder(), separacionesDe(vista.getLayout()),
+                        vista instanceof JList<?> lista ? lista.getFixedCellWidth() : -1,
+                        vista instanceof JList<?> lista ? lista.getFixedCellHeight()
+                                : vista instanceof JTable tabla ? tabla.getRowHeight() : -1);
+            }
+        }
+
+        private static void aplicar(JComponent vista, double factor) {
+            Medidas base = (Medidas) vista.getClientProperty(MEDIDAS_ORIGINALES);
+            if (base == null) {
+                base = new Medidas(vista);
+                vista.putClientProperty(MEDIDAS_ORIGINALES, base);
+            }
+            if (base.fuente() != null) {
+                vista.setFont(base.fuente().deriveFont((float) (base.fuente().getSize2D() * factor)));
+            }
+            if (base.preferida() != null) {
+                vista.setPreferredSize(new Dimension(pixeles(base.preferida().width, factor),
+                        pixeles(base.preferida().height, factor)));
+            }
+            vista.setBorder(escalarBorde(base.borde(), factor));
+            separar(vista.getLayout(), base.separaciones(), factor);
+
+            if (vista instanceof EnciclopediaMonstruos enciclopedia) {
+                enciclopedia.ajustarEscala(factor);
+            }
+            if (vista instanceof JList<?> lista && base.altoFila() > 0) {
+                lista.setFixedCellHeight(pixeles(base.altoFila(), factor));
+                if (base.anchoCelda() > 0) {
+                    lista.setFixedCellWidth(pixeles(base.anchoCelda(), factor));
+                }
+            }
+            if (vista instanceof JTable tabla) {
+                tabla.setRowHeight(pixeles(base.altoFila(), factor));
+            }
+
+            for (Component hijo : vista.getComponents()) {
+                if (hijo instanceof JComponent componente) {
+                    aplicar(componente, factor);
+                }
+            }
+        }
+
+        private static Border escalarBorde(Border borde, double factor) {
+            if (borde instanceof CompoundBorder compuesto) {
+                return BorderFactory.createCompoundBorder(
+                        escalarBorde(compuesto.getOutsideBorder(), factor),
+                        escalarBorde(compuesto.getInsideBorder(), factor));
+            }
+            if (borde != null && borde.getClass() == EmptyBorder.class) {
+                Insets margen = ((EmptyBorder) borde).getBorderInsets();
+                return BorderFactory.createEmptyBorder(
+                        pixeles(margen.top, factor), pixeles(margen.left, factor),
+                        pixeles(margen.bottom, factor), pixeles(margen.right, factor));
+            }
+            return borde;
+        }
+
+        private static Dimension separacionesDe(LayoutManager layout) {
+            if (layout instanceof GridLayout grilla) {
+                return new Dimension(grilla.getHgap(), grilla.getVgap());
+            }
+            if (layout instanceof BorderLayout borde) {
+                return new Dimension(borde.getHgap(), borde.getVgap());
+            }
+            if (layout instanceof FlowLayout flujo) {
+                return new Dimension(flujo.getHgap(), flujo.getVgap());
+            }
+            return null;
+        }
+
+        private static void separar(LayoutManager layout, Dimension separaciones, double factor) {
+            if (separaciones == null) {
+                return;
+            }
+            int horizontal = pixeles(separaciones.width, factor);
+            int vertical = pixeles(separaciones.height, factor);
+            if (layout instanceof GridLayout grilla) {
+                grilla.setHgap(horizontal);
+                grilla.setVgap(vertical);
+            } else if (layout instanceof BorderLayout borde) {
+                borde.setHgap(horizontal);
+                borde.setVgap(vertical);
+            } else if (layout instanceof FlowLayout flujo) {
+                flujo.setHgap(horizontal);
+                flujo.setVgap(vertical);
+            }
+        }
+
+        private static int pixeles(int base, double factor) {
+            return (int) Math.round(base * factor);
+        }
+    }
+
     private static final class FondoMazmorra extends JPanel {
 
         private final BufferedImage panorama = cargarPanorama();
@@ -481,23 +629,30 @@ public final class MenuGrafico {
 
         private static final String TITULO = "ESCAPE DE LA MAZMORRA";
         private static final String GRUPO = "JAVALOVERS";
+        private static final int ALTO = 145;
 
         private TituloMazmorra() {
-            setPreferredSize(new Dimension(0, 145));
+            setPreferredSize(new Dimension(0, ALTO));
         }
 
         @Override
         protected void paintComponent(Graphics g) {
+            if (getWidth() <= 0 || getHeight() <= 0) {
+                return;
+            }
             Graphics2D pincel = (Graphics2D) g.create();
             try {
+                double proporcion = (double) getHeight() / ALTO;
+                double anchoDisponible = getWidth() / proporcion;
+                pincel.scale(proporcion, proporcion);
                 pincel.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 pincel.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
                 Font fuente = new Font("Georgia", Font.BOLD, 54);
                 Shape letras = fuente.createGlyphVector(pincel.getFontRenderContext(), TITULO).getOutline();
                 var caja = letras.getBounds2D();
-                double escala = Math.min(1.0, (getWidth() - 84.0) / caja.getWidth());
-                double x = (getWidth() - caja.getWidth() * escala) / 2 - caja.getX() * escala;
+                double escala = Math.min(1.0, (anchoDisponible - 84.0) / caja.getWidth());
+                double x = (anchoDisponible - caja.getWidth() * escala) / 2 - caja.getX() * escala;
                 AffineTransform posicion = AffineTransform.getTranslateInstance(x, 86);
                 posicion.scale(escala, escala);
                 Shape frente = posicion.createTransformedShape(letras);
@@ -517,7 +672,7 @@ public final class MenuGrafico {
 
                 pincel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
                 int ancho = pincel.getFontMetrics().stringWidth(GRUPO);
-                int centro = getWidth() / 2;
+                int centro = (int) Math.round(anchoDisponible / 2);
                 pincel.setColor(new Color(12, 14, 21));
                 pincel.fillRect(centro - ancho / 2 - 14, 105, ancho + 28, 24);
                 pincel.setColor(DORADO);
@@ -551,8 +706,10 @@ public final class MenuGrafico {
         protected void paintComponent(Graphics g) {
             Graphics2D pincel = (Graphics2D) g.create();
             try {
-                int ancho = getWidth();
-                int alto = getHeight();
+                double escala = getFont().getSize2D() / 15.0;
+                pincel.scale(escala, escala);
+                int ancho = (int) Math.round(getWidth() / escala);
+                int alto = (int) Math.round(getHeight() / escala);
                 boolean resaltado = getModel().isRollover() || isFocusOwner();
                 boolean activo = principal || isSelected();
                 Color arriba = activo ? new Color(121, 76, 39) : new Color(58, 67, 81);
