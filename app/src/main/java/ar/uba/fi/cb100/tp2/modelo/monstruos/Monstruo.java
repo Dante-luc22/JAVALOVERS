@@ -108,7 +108,7 @@ public abstract class Monstruo extends Entidad {
      * el monstruo lo alcanza. Si el monstruo esta dormido,
      * al pasar por encima el heroe lo despierta del todo.
      * Si el heroe tiene escudo, el monstruo no le hace nada, el heroe
-     * gasta escudo y vuelve al inicio.
+     * gasta escudo y el monstruo vuelve al inicio.
      *
      * @param heroe  el héroe
      * @param agenda la agenda, para efectos que vencen más adelante

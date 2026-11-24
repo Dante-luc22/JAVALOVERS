@@ -172,7 +172,7 @@ public class Heroe {
      * @throws IllegalStateException si no hay escudos para usar.
      */
     public void usarEscudo() {
-        if (this.escudos < 0) {
+        if (this.escudos <= 0) {
             throw new IllegalStateException(
                     "Deben haber escudos para usar.");
         }
