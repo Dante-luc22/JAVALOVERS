@@ -8,7 +8,7 @@ import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 
 /**
  * Cofre que afecta a los monstruos: al abrirse programa en la agenda que
- * todos los monstrios del plano vuelvan a su posicion inicial. Actua
+ * todos los monstruos del plano vuelvan a su posicion inicial. Actua
  * al empezar el proximo paso, no en el momento que se abre.
  */
 public class CofreDeRepelente extends Cofre{
