@@ -4,6 +4,12 @@ import ar.uba.fi.cb100.tp2.modelo.monstruos.Monstruo;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Entidad;
 import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
 
+
+/**
+ * Clase Repeler Monstruos, sirve para indicarle al evento que
+ * si una entidad es un monstruo, lo envie al inicio con el
+ * metodo repeler()
+ */
 public class RepelerMonstruos implements Evento {
 
     /**
