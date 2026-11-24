@@ -6,6 +6,8 @@ import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Random;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * Inventario del heroe. Se utilizaron tablas hash id -> cantidad, con un objeto
@@ -32,6 +34,45 @@ public class Inventario {
         objetos.put(objeto.getId(), objeto);
         cantidades.put(objeto.getId(), cantidades.getOrDefault(objeto.getId(), 0) + 1);
     }
+
+    /**
+     * Restaura una entrada del inventario desde una partida guardada.
+     *
+     * A diferencia de agregar(), este método establece directamente
+     * la cantidad original del objeto.
+     *
+     * Se conserva el orden de inserción mediante LinkedHashMap.
+     *
+     * @param objeto objeto concreto que se incorpora
+     * @param cantidad cantidad que tenía al guardar la partida
+     * @throws IllegalArgumentException si el objeto es nulo,
+     *         la cantidad no es positiva o el ID ya existe
+     */
+    public void restaurar(Objeto objeto, int cantidad) {
+
+        if (objeto == null) {
+            throw new IllegalArgumentException(
+                    "El objeto no puede ser nulo."
+            );
+        }
+        if (cantidad <= 0) {
+            throw new IllegalArgumentException(
+                    "La cantidad a restaurar debe ser positiva."
+            );
+        }
+        String id = objeto.getId();
+        validarId(id);
+        if (this.objetos.containsKey(id)
+                || this.cantidades.containsKey(id)) {
+            throw new IllegalArgumentException(
+                    "El objeto " + id + " ya existe en el inventario."
+            );
+        }
+
+        this.objetos.put(id, objeto);
+        this.cantidades.put(id, cantidad);
+    }
+
 
     /**
      * Metodo para saber la cantidad de un objeto en el inventario
@@ -140,4 +181,19 @@ public class Inventario {
             throw new IllegalArgumentException("El id no puede ser vacio.");
         }
     }
+
+    /**
+     * Devuelve una copia de las cantidades del inventario,
+     * conservando el orden de inserción de los identificadores.
+     *
+     * El mapa devuelto no permite modificaciones.
+     *
+     * @return identificadores y cantidades de los objetos
+     */
+    public Map<String, Integer> getCantidades() {
+        return Collections.unmodifiableMap(
+                new LinkedHashMap<>(this.cantidades)
+        );
+    }
+
 }
