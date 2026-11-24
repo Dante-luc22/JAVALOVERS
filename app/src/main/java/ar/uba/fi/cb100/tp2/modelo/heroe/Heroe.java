@@ -6,6 +6,7 @@ import ar.uba.fi.cb100.tp2.modelo.objetos.Inventario;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Heroe {
 
@@ -41,6 +42,74 @@ public class Heroe {
         this.cofresAbiertos = 0;
         this.inventario = new Inventario();
     }
+
+
+    /**
+     * Constructor para reconstruir un héroe desde una partida guardada.
+     *
+     * A diferencia del constructor inicial, conserva todos los valores
+     * que tenía el héroe al momento de guardar la partida.
+     *
+     * @param ubicacion ubicación actual del héroe
+     * @param energia energía disponible
+     * @param energiaMaxima energía máxima
+     * @param cofresAbiertos cantidad de cofres abiertos
+     * @param inventario inventario previamente reconstruido
+     * @param efectosActivos efectos que todavía están vigentes
+     */
+    public Heroe(
+            Ubicacion ubicacion,
+            int energia,
+            int energiaMaxima,
+            int cofresAbiertos,
+            Inventario inventario,
+            List<Efecto> efectosActivos) {
+
+        if (ubicacion == null) {
+            throw new IllegalArgumentException(
+                    "La ubicación del héroe no puede ser nula.");
+        }
+
+        if (energiaMaxima <= 0) {
+            throw new IllegalArgumentException(
+                    "La energía máxima debe ser mayor que cero.");
+        }
+
+        if (energia < 0 || energia > energiaMaxima) {
+            throw new IllegalArgumentException(
+                    "La energía actual debe estar entre cero y la energía máxima.");
+        }
+
+        if (cofresAbiertos < 0) {
+            throw new IllegalArgumentException(
+                    "La cantidad de cofres abiertos no puede ser negativa.");
+        }
+
+        if (inventario == null) {
+            throw new IllegalArgumentException(
+                    "El inventario no puede ser nulo.");
+        }
+
+        if (efectosActivos == null) {
+            throw new IllegalArgumentException(
+                    "La lista de efectos activos no puede ser nula.");
+        }
+
+        if (efectosActivos.contains(null)) {
+            throw new IllegalArgumentException(
+                    "La lista de efectos no puede contener valores nulos.");
+        }
+
+        this.ubicacion = ubicacion;
+        this.energia = energia;
+        this.energiaMaxima = energiaMaxima;
+        this.cofresAbiertos = cofresAbiertos;
+        this.inventario = inventario;
+
+        // Se conserva la lista interna, sin compartir la colección recibida.
+        this.efectosActivos.addAll(efectosActivos);
+    }
+
 
 
     /**
