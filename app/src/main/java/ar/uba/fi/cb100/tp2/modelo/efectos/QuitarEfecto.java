@@ -9,7 +9,7 @@ public class QuitarEfecto implements Evento {
 
     public QuitarEfecto(Efecto efecto) {
         if (efecto == null) {
-            throw new IllegalArgumentException("El efecto no puede ser nulo");
+            throw new IllegalArgumentException("El efecto no puede ser nulo.");
         }
         this.efecto = efecto;
     }

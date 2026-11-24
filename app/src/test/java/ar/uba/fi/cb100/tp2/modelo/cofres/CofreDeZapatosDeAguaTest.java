@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -12,7 +14,11 @@ import org.junit.jupiter.api.Test;
 
 import ar.uba.fi.cb100.tp2.modelo.eventos.Agenda;
 import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
+import ar.uba.fi.cb100.tp2.modelo.mundo.Mazmorra;
+import ar.uba.fi.cb100.tp2.modelo.mundo.Plano;
+import ar.uba.fi.cb100.tp2.modelo.mundo.Tablero;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
+import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
 import ar.uba.fi.cb100.tp2.modelo.objetos.ZapatosDeAgua;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
@@ -33,8 +39,18 @@ class CofreDeZapatosDeAguaTest {
 
     @BeforeEach
     void crear() {
-        this.heroe = new Heroe(new Ubicacion(0, 0, LUGAR), 100);
+        this.heroe = new Heroe(new Ubicacion(1, 1, LUGAR), 100);
         this.cofre = new CofreDeZapatosDeAgua(LUGAR);
+    }
+
+    /** Una partida mínima (un plano con una celda de piso) para que la agenda pueda ejecutar eventos. */
+    private Partida partidaMinima() {
+        Posicion celda = new Posicion(2, 2);
+        Tablero tablero = new Tablero(3, 3);
+        tablero.setTerreno(celda, Terreno.PISO);
+        Plano plano = new Plano(tablero, celda, celda);
+        return new Partida(new Mazmorra(List.of(plano), 1), this.heroe,
+                Map.of(Terreno.PISO, 1, Terreno.AGUA, 3, Terreno.LAVA, 8));
     }
 
     // =================== EL COFRE =================== //
@@ -111,14 +127,24 @@ class CofreDeZapatosDeAguaTest {
 
     @Test
     void elEfectoDura20Pasos() {
-        new ZapatosDeAgua().usar(this.heroe, new Agenda());
+        Agenda agenda = new Agenda();
+        Partida partida = partidaMinima();
+        new ZapatosDeAgua().usar(this.heroe, agenda);
 
-        for (int paso = 1; paso <= 19; paso++) {
-            this.heroe.pasarUnPaso();
-        }
+        agenda.ejecutarLosQueVencen(19, partida);
         assertEquals(PISO, this.heroe.ajustarCosto(Terreno.AGUA, AGUA, PISO));
 
-        this.heroe.pasarUnPaso();
+        agenda.ejecutarLosQueVencen(20, partida);
         assertEquals(AGUA, this.heroe.ajustarCosto(Terreno.AGUA, AGUA, PISO));
+        assertTrue(this.heroe.getEfectosActivos().isEmpty());
+    }
+
+    @Test
+    void programaSuVencimientoEnLaAgenda() {
+        Agenda agenda = new Agenda();
+        new ZapatosDeAgua().usar(this.heroe, agenda);
+
+        assertEquals(1, agenda.getPendientes().size());
+        assertEquals(20, agenda.getPendientes().get(0).paso());
     }
 }

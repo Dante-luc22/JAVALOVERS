@@ -9,13 +9,15 @@ import org.junit.jupiter.api.Test;
 
 import ar.uba.fi.cb100.tp2.modelo.efectos.AguaComoPiso;
 import ar.uba.fi.cb100.tp2.modelo.efectos.Efecto;
+import ar.uba.fi.cb100.tp2.modelo.efectos.Envenenado;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
 
 /**
  * Tests de los efectos activos del héroe: se aplican en cadena, en el orden
- * en que se activaron, y se borran al vencer.
+ * en que se activaron, y se sacan con quitarEfecto (que es lo que hace el
+ * evento QuitarEfecto cuando la agenda lo ejecuta).
  * Costos de prueba: piso 1, agua 3, lava 8.
  */
 class HeroeEfectosTest {
@@ -23,18 +25,6 @@ class HeroeEfectosTest {
     private static final int PISO = 1;
     private static final int AGUA = 3;
     private static final int LAVA = 8;
-
-    /** Un efecto de prueba que suma 1 al costo de cualquier terreno (como el veneno). */
-    private static class MasUno extends Efecto {
-        MasUno(int duracion) {
-            super(duracion);
-        }
-
-        @Override
-        public int ajustarCosto(Terreno terreno, int costoActual, int costoDelPiso) {
-            return costoActual + 1;
-        }
-    }
 
     private Heroe heroe;
 
@@ -56,17 +46,11 @@ class HeroeEfectosTest {
         assertEquals(LAVA, this.heroe.ajustarCosto(Terreno.LAVA, LAVA, PISO));
     }
 
-    @Test
-    void pasarUnPasoSinEfectosNoFalla() {
-        this.heroe.pasarUnPaso();
-        assertTrue(this.heroe.getEfectosActivos().isEmpty());
-    }
-
     // =================== AGREGAR Y AJUSTAR =================== //
 
     @Test
     void conAguaComoPisoElAguaCuestaComoPiso() {
-        this.heroe.agregarEfecto(new AguaComoPiso(20));
+        this.heroe.agregarEfecto(new AguaComoPiso());
 
         assertEquals(PISO, this.heroe.ajustarCosto(Terreno.AGUA, AGUA, PISO));
         assertEquals(LAVA, this.heroe.ajustarCosto(Terreno.LAVA, LAVA, PISO));
@@ -79,79 +63,91 @@ class HeroeEfectosTest {
 
     @Test
     void losEfectosSeAplicanEnCadena() {
-        // Zapatos primero (agua → 1) y después +1 → 2.
+        // Zapatos primero (agua → 1) y después veneno → 2.
         // Si cada efecto recibiera el costo base, daría 4.
-        this.heroe.agregarEfecto(new AguaComoPiso(20));
-        this.heroe.agregarEfecto(new MasUno(20));
+        this.heroe.agregarEfecto(new AguaComoPiso());
+        this.heroe.agregarEfecto(new Envenenado());
 
         assertEquals(2, this.heroe.ajustarCosto(Terreno.AGUA, AGUA, PISO));
     }
 
     @Test
     void elOrdenDeLosEfectosImporta() {
-        // +1 primero (agua → 4) y después zapatos → 1.
-        this.heroe.agregarEfecto(new MasUno(20));
-        this.heroe.agregarEfecto(new AguaComoPiso(20));
+        // Veneno primero (agua → 4) y después zapatos → 1.
+        this.heroe.agregarEfecto(new Envenenado());
+        this.heroe.agregarEfecto(new AguaComoPiso());
 
         assertEquals(PISO, this.heroe.ajustarCosto(Terreno.AGUA, AGUA, PISO));
     }
 
     @Test
-    void dosEfectosIgualesSeSuman() {
-        this.heroe.agregarEfecto(new MasUno(5));
-        this.heroe.agregarEfecto(new MasUno(5));
+    void dosVenenosSeSuman() {
+        this.heroe.agregarEfecto(new Envenenado());
+        this.heroe.agregarEfecto(new Envenenado());
 
         assertEquals(LAVA + 2, this.heroe.ajustarCosto(Terreno.LAVA, LAVA, PISO));
     }
 
-    // =================== VENCIMIENTO =================== //
+    // =================== QUITAR =================== //
 
     @Test
-    void elEfectoDuraExactamenteSusPasos() {
-        this.heroe.agregarEfecto(new AguaComoPiso(3));
+    void quitarElEfectoVuelveAlCostoNormal() {
+        Efecto zapatos = new AguaComoPiso();
+        this.heroe.agregarEfecto(zapatos);
 
-        for (int paso = 1; paso <= 2; paso++) {
-            this.heroe.pasarUnPaso();
-            assertEquals(PISO, this.heroe.ajustarCosto(Terreno.AGUA, AGUA, PISO),
-                    "Vencio antes de tiempo, en el paso " + paso);
-        }
-        this.heroe.pasarUnPaso();
-
-        assertEquals(AGUA, this.heroe.ajustarCosto(Terreno.AGUA, AGUA, PISO));
-        assertTrue(this.heroe.getEfectosActivos().isEmpty());
-    }
-
-    @Test
-    void dosEfectosQueVencenJuntosSeBorranLosDos() {
-        // Borrar dentro del for haría que se saltee el segundo
-        // (o tiraría ConcurrentModificationException).
-        this.heroe.agregarEfecto(new AguaComoPiso(1));
-        this.heroe.agregarEfecto(new MasUno(1));
-
-        this.heroe.pasarUnPaso();
+        this.heroe.quitarEfecto(zapatos);
 
         assertTrue(this.heroe.getEfectosActivos().isEmpty());
         assertEquals(AGUA, this.heroe.ajustarCosto(Terreno.AGUA, AGUA, PISO));
     }
 
     @Test
-    void venceUnoYElOtroSigue() {
-        this.heroe.agregarEfecto(new MasUno(1));
-        this.heroe.agregarEfecto(new AguaComoPiso(5));
+    void quitarUnoNoTocaLosOtros() {
+        Efecto zapatos = new AguaComoPiso();
+        this.heroe.agregarEfecto(zapatos);
+        this.heroe.agregarEfecto(new Envenenado());
 
-        this.heroe.pasarUnPaso();
+        this.heroe.quitarEfecto(zapatos);
 
         assertEquals(1, this.heroe.getEfectosActivos().size());
+        assertEquals(AGUA + 1, this.heroe.ajustarCosto(Terreno.AGUA, AGUA, PISO));
+    }
+
+    @Test
+    void quitarSacaEseEfectoExactoYNoOtroIgual() {
+        // Dos zapatos usados: al vencer el primero, el segundo sigue activo.
+        Efecto primeros = new AguaComoPiso();
+        Efecto segundos = new AguaComoPiso();
+        this.heroe.agregarEfecto(primeros);
+        this.heroe.agregarEfecto(segundos);
+
+        this.heroe.quitarEfecto(primeros);
+
+        assertEquals(1, this.heroe.getEfectosActivos().size());
+        assertTrue(this.heroe.getEfectosActivos().get(0) == segundos);
         assertEquals(PISO, this.heroe.ajustarCosto(Terreno.AGUA, AGUA, PISO));
+    }
+
+    @Test
+    void quitarUnEfectoQueNoTieneNoFalla() {
+        this.heroe.agregarEfecto(new AguaComoPiso());
+
+        this.heroe.quitarEfecto(new AguaComoPiso());
+
+        assertEquals(1, this.heroe.getEfectosActivos().size());
+    }
+
+    @Test
+    void quitarEfectoRechazaNulo() {
+        assertThrows(IllegalArgumentException.class, () -> this.heroe.quitarEfecto(null));
     }
 
     @Test
     void getEfectosActivosDevuelveUnaCopia() {
-        this.heroe.agregarEfecto(new AguaComoPiso(20));
+        this.heroe.agregarEfecto(new AguaComoPiso());
 
         this.heroe.getEfectosActivos().clear();
 
         assertEquals(1, this.heroe.getEfectosActivos().size());
-        assertEquals(PISO, this.heroe.ajustarCosto(Terreno.AGUA, AGUA, PISO));
     }
 }

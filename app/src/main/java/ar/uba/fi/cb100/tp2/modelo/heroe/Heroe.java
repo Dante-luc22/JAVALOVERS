@@ -140,6 +140,9 @@ public class Heroe {
     }
 
     public void quitarEfecto(Efecto efecto) {
+        if (efecto == null) {
+            throw new IllegalArgumentException("El efecto no puede ser nulo.");
+        }
         efectosActivos.remove(efecto);
     }
 
