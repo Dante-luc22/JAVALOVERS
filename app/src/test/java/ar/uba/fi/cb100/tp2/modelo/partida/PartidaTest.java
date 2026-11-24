@@ -294,6 +294,16 @@ class PartidaTest {
         assertEquals(1, partida.getPasos());
     }
 
+    @Test
+    void esperarRecuperaUnPuntoDeEnergia() {
+        Partida partida = partidaConEnergia(100);
+        this.heroe.restarEnergia(2);
+
+        partida.esperar();
+
+        assertEquals(99, this.heroe.getEnergia());
+    }
+
     // =================== TURNO DE LOS MONSTRUOS =================== //
 
     @Test
