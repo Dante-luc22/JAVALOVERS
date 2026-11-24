@@ -426,7 +426,7 @@ public class VistaGrafica implements Vista, AutoCloseable {
     /**
      * Busca las imágenes tanto desde la raíz del proyecto como desde app/.
      */
-    private static Path buscarCarpetaImagenes() {
+    static Path buscarCarpetaImagenes() {
 
         Path[] candidatas = {
                 Path.of(

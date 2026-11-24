@@ -40,7 +40,6 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -56,6 +55,7 @@ public final class MenuGrafico {
     private static final Color BORDE = new Color(119, 110, 100);
     private static final Color TEXTO = new Color(249, 239, 217);
     private static final Color DORADO = new Color(229, 177, 99);
+    private static final int ALTO_ENCICLOPEDIA = 346;
 
     private static final DateTimeFormatter FORMATO_FECHA =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -145,14 +145,17 @@ public final class MenuGrafico {
             tarjetas.add(ranking, Pantalla.RANKING.name());
 
             JPanel contenido = new FondoMazmorra();
-            contenido.add(new TituloMazmorra(), BorderLayout.NORTH);
+            TituloMazmorra titulo = new TituloMazmorra();
+            contenido.add(titulo, BorderLayout.NORTH);
             contenido.add(tarjetas, BorderLayout.CENTER);
             contenido.setPreferredSize(new Dimension(920, 530));
 
             ventana.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
             ventana.setContentPane(contenido);
             ventana.pack();
-            ventana.setMinimumSize(new Dimension(760, 510));
+            int altoMinimo = titulo.getPreferredSize().height + ALTO_ENCICLOPEDIA + 12
+                    + ventana.getInsets().top + ventana.getInsets().bottom;
+            ventana.setMinimumSize(new Dimension(760, altoMinimo));
             ventana.setLocationRelativeTo(null);
         }
 
@@ -257,32 +260,54 @@ public final class MenuGrafico {
         }
 
         private JPanel enciclopedia() {
-            JTabbedPane pestanas = new JTabbedPane();
-            pestanas.addTab("Monstruos", ficha("""
-                    ERRANTE — Se mueve al azar por las celdas transitables.
+            CardLayout distribucionFichas = new CardLayout();
+            JPanel fichas = new JPanel(distribucionFichas);
+            fichas.add(new EnciclopediaMonstruos(), "monstruos");
+            fichas.add(ficha("""
+                    Cofre de puntos — Suma los 100 puntos de apertura.
 
-                    CAZADOR — Busca un camino hacia el héroe.
+                    Poción — Recupera energía al abrir el cofre.
 
-                    DORMILÓN — Persigue al héroe cuando lo detecta cerca.
+                    Pinchos — Quitan energía al abrir el cofre.
 
-                    FANTASMA — Puede atravesar paredes y se mueve en turnos alternos.
+                    Veneno — Aumenta temporalmente el costo de movimiento.
 
-                    LADRÓN — Si alcanza al héroe, puede robarle un objeto del inventario.
-                    """));
-            pestanas.addTab("Cofres y objetos", ficha("""
-                    COFRE DE PUNTOS — Suma los 100 puntos de apertura.
+                    Zapatos de agua — Al usarlos, el agua cuesta como el piso.
 
-                    POCIÓN — Recupera energía al abrir el cofre.
+                    Botas ignífugas — Al usarlas, la lava cuesta como el piso.
+                    """), "cofres");
 
-                    PINCHOS — Quitan energía al abrir el cofre.
+            JButton monstruos = new BotonMazmorra("Monstruos", false);
+            JButton cofres = new BotonMazmorra("Cofres y objetos", false);
+            Font fuentePestanas = new Font("Georgia", Font.BOLD, 15);
+            monstruos.setFont(fuentePestanas);
+            cofres.setFont(fuentePestanas);
+            monstruos.setSelected(true);
+            monstruos.addActionListener(e -> {
+                distribucionFichas.show(fichas, "monstruos");
+                monstruos.setSelected(true);
+                cofres.setSelected(false);
+            });
+            cofres.addActionListener(e -> {
+                distribucionFichas.show(fichas, "cofres");
+                cofres.setSelected(true);
+                monstruos.setSelected(false);
+            });
 
-                    VENENO — Aumenta temporalmente el costo de movimiento.
+            JPanel pestanas = new JPanel(new GridLayout(1, 2, 9, 0));
+            pestanas.setOpaque(false);
+            pestanas.add(monstruos);
+            pestanas.add(cofres);
 
-                    ZAPATOS DE AGUA — Al usarlos, el agua cuesta como el piso.
+            JPanel contenido = new JPanel(new BorderLayout(0, 9));
+            contenido.setOpaque(false);
+            contenido.add(pestanas, BorderLayout.NORTH);
+            contenido.add(fichas, BorderLayout.CENTER);
 
-                    BOTAS IGNÍFUGAS — Al usarlas, la lava cuesta como el piso.
-                    """));
-            return pagina("Enciclopedia", pestanas);
+            JLabel encabezado = new JLabel("Enciclopedia");
+            encabezado.setFont(new Font("Georgia", Font.BOLD, 28));
+            encabezado.setForeground(DORADO);
+            return pagina(encabezado, contenido, new Dimension(600, ALTO_ENCICLOPEDIA));
         }
 
         private void abrirRanking() {
@@ -341,14 +366,18 @@ public final class MenuGrafico {
         }
 
         private JPanel pagina(String titulo, Component cuerpo, JButton... acciones) {
+            return pagina(texto(titulo, 22), cuerpo, new Dimension(550, 296), acciones);
+        }
+
+        private JPanel pagina(JLabel titulo, Component cuerpo, Dimension tamano, JButton... acciones) {
             JPanel pagina = new JPanel(new BorderLayout(0, 14));
             pagina.setBackground(PANEL);
             pagina.setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createLineBorder(BORDE),
                     BorderFactory.createEmptyBorder(15, 18, 14, 18)
             ));
-            pagina.setPreferredSize(new Dimension(550, 296));
-            pagina.add(texto(titulo, 22), BorderLayout.NORTH);
+            pagina.setPreferredSize(tamano);
+            pagina.add(titulo, BorderLayout.NORTH);
             pagina.add(cuerpo, BorderLayout.CENTER);
 
             JPanel pie = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
@@ -389,10 +418,14 @@ public final class MenuGrafico {
         detalle.setEditable(false);
         detalle.setLineWrap(true);
         detalle.setWrapStyleWord(true);
-        detalle.setFont(detalle.getFont().deriveFont(14f));
+        detalle.setBackground(FONDO);
+        detalle.setForeground(TEXTO);
+        detalle.setFont(new Font("Georgia", Font.PLAIN, 15));
         detalle.setBorder(BorderFactory.createEmptyBorder(12, 14, 10, 14));
         detalle.setCaretPosition(0);
-        return new JScrollPane(detalle);
+        JScrollPane panel = new JScrollPane(detalle);
+        panel.setBorder(BorderFactory.createLineBorder(BORDE));
+        return panel;
     }
 
     private static JButton boton(String texto, boolean principal, Runnable accion) {
@@ -521,8 +554,9 @@ public final class MenuGrafico {
                 int ancho = getWidth();
                 int alto = getHeight();
                 boolean resaltado = getModel().isRollover() || isFocusOwner();
-                Color arriba = principal ? new Color(121, 76, 39) : new Color(58, 67, 81);
-                Color abajo = principal ? new Color(66, 40, 29) : new Color(33, 40, 51);
+                boolean activo = principal || isSelected();
+                Color arriba = activo ? new Color(121, 76, 39) : new Color(58, 67, 81);
+                Color abajo = activo ? new Color(66, 40, 29) : new Color(33, 40, 51);
                 if (resaltado) {
                     arriba = arriba.brighter();
                 }
@@ -534,7 +568,7 @@ public final class MenuGrafico {
                 pincel.fillRect(2, 3, ancho - 2, alto - 3);
                 pincel.setPaint(new GradientPaint(0, 0, arriba, 0, Math.max(1, alto - 4), abajo));
                 pincel.fillRect(1, 1, ancho - 3, alto - 5);
-                pincel.setColor(principal || resaltado ? DORADO : BORDE);
+                pincel.setColor(activo || resaltado ? DORADO : BORDE);
                 pincel.drawRect(1, 1, ancho - 4, alto - 6);
                 pincel.fillRect(4, 4, 3, 3);
                 pincel.fillRect(ancho - 8, 4, 3, 3);
