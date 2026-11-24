@@ -1,6 +1,7 @@
 package ar.uba.fi.cb100.tp2.modelo.ranking;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -42,33 +43,67 @@ class EntradaDeRankingTest {
     }
 
     @Test
+    void rechazaUnNombreDeMenosDeTresCaracteres() {
+        assertThrows(IllegalArgumentException.class, () -> entrada("JU", 100, HOY));
+        assertThrows(IllegalArgumentException.class, () -> entrada("", 100, HOY));
+    }
+
+    @Test
+    void rechazaUnNombreDeMasDeTresCaracteres() {
+        assertThrows(IllegalArgumentException.class, () -> entrada("JUAN", 100, HOY));
+    }
+
+    @Test
+    void rechazaUnNombreConEspacios() {
+        assertThrows(IllegalArgumentException.class, () -> entrada("J A", 100, HOY));
+    }
+
+    @Test
+    void aceptaUnNombreDeExactamenteTresCaracteres() {
+        assertEquals("JCP", entrada("JCP", 100, HOY).nombre());
+        assertEquals("A1!", entrada("A1!", 100, HOY).nombre());
+    }
+
+    @Test
+    void esNombreValidoSoloConTresCaracteresSinEspacios() {
+        assertTrue(EntradaDeRanking.esNombreValido("JCP"));
+        assertTrue(EntradaDeRanking.esNombreValido("A1!"));
+        assertFalse(EntradaDeRanking.esNombreValido(null));
+        assertFalse(EntradaDeRanking.esNombreValido(""));
+        assertFalse(EntradaDeRanking.esNombreValido("JU"));
+        assertFalse(EntradaDeRanking.esNombreValido("JUAN"));
+        assertFalse(EntradaDeRanking.esNombreValido("J A"));
+        assertFalse(EntradaDeRanking.esNombreValido("   "));
+    }
+
+    @Test
     void rechazaUnaDificultadNula() {
         assertThrows(IllegalArgumentException.class,
-                () -> new EntradaDeRanking("Juan", 100, null, HOY));
+                () -> new EntradaDeRanking("JUA", 100, null, HOY));
     }
 
     @Test
     void rechazaUnaFechaNula() {
         assertThrows(IllegalArgumentException.class,
-                () -> new EntradaDeRanking("Juan", 100, Dificultad.FACIL, null));
+                () -> new EntradaDeRanking("JUA", 100, Dificultad.FACIL, null));
     }
 
     @Test
     void rechazaUnPuntajeNegativo() {
-        assertThrows(IllegalArgumentException.class, () -> entrada("Juan", -1, HOY));
+        assertThrows(IllegalArgumentException.class, () -> entrada("JUA", -1, HOY));
     }
 
     @Test
     void aceptaUnPuntajeCero() {
-        EntradaDeRanking entrada = entrada("Juan", 0, HOY);
+        EntradaDeRanking entrada = entrada("JUA", 0, HOY);
 
         assertEquals(0, entrada.puntaje());
     }
 
     @Test
     void elPuntajeMasAltoVaPrimero() {
-        EntradaDeRanking mejor = entrada("Juan", 300, HOY);
-        EntradaDeRanking peor = entrada("Facu", 100, AYER);
+        EntradaDeRanking mejor = entrada("JUA", 300, HOY);
+        EntradaDeRanking peor = entrada("FAC", 100, AYER);
 
         assertTrue(mejor.compareTo(peor) < 0);
         assertTrue(peor.compareTo(mejor) > 0);
@@ -76,8 +111,8 @@ class EntradaDeRankingTest {
 
     @Test
     void conElMismoPuntajeVaPrimeroLaQueSeLogroAntes() {
-        EntradaDeRanking anterior = entrada("Juan", 200, AYER);
-        EntradaDeRanking posterior = entrada("Facu", 200, HOY);
+        EntradaDeRanking anterior = entrada("JUA", 200, AYER);
+        EntradaDeRanking posterior = entrada("FAC", 200, HOY);
 
         assertTrue(anterior.compareTo(posterior) < 0);
         assertTrue(posterior.compareTo(anterior) > 0);
@@ -85,8 +120,8 @@ class EntradaDeRankingTest {
 
     @Test
     void conElMismoPuntajeYLaMismaFechaDesempataElNombre() {
-        EntradaDeRanking facu = entrada("Facu", 200, HOY);
-        EntradaDeRanking juan = entrada("Juan", 200, HOY);
+        EntradaDeRanking facu = entrada("FAC", 200, HOY);
+        EntradaDeRanking juan = entrada("JUA", 200, HOY);
 
         assertTrue(facu.compareTo(juan) < 0);
         assertTrue(juan.compareTo(facu) > 0);
@@ -94,8 +129,8 @@ class EntradaDeRankingTest {
 
     @Test
     void dosEntradasConLosMismosDatosSonIgualesComparanCeroYTienenElMismoHash() {
-        EntradaDeRanking una = entrada("Juan", 200, HOY);
-        EntradaDeRanking otra = entrada("Juan", 200, HOY);
+        EntradaDeRanking una = entrada("JUA", 200, HOY);
+        EntradaDeRanking otra = entrada("JUA", 200, HOY);
 
         assertEquals(una, otra);
         assertEquals(0, una.compareTo(otra));
@@ -104,12 +139,12 @@ class EntradaDeRankingTest {
 
     @Test
     void dosEntradasQueDifierenEnUnSoloCampoNuncaComparanCero() {
-        EntradaDeRanking base = new EntradaDeRanking("Juan", 200, Dificultad.FACIL, HOY);
+        EntradaDeRanking base = new EntradaDeRanking("JUA", 200, Dificultad.FACIL, HOY);
         List<EntradaDeRanking> distintas = List.of(
-                new EntradaDeRanking("Facu", 200, Dificultad.FACIL, HOY),
-                new EntradaDeRanking("Juan", 201, Dificultad.FACIL, HOY),
-                new EntradaDeRanking("Juan", 200, Dificultad.MEDIO, HOY),
-                new EntradaDeRanking("Juan", 200, Dificultad.FACIL, AYER));
+                new EntradaDeRanking("FAC", 200, Dificultad.FACIL, HOY),
+                new EntradaDeRanking("JUA", 201, Dificultad.FACIL, HOY),
+                new EntradaDeRanking("JUA", 200, Dificultad.MEDIO, HOY),
+                new EntradaDeRanking("JUA", 200, Dificultad.FACIL, AYER));
 
         for (EntradaDeRanking distinta : distintas) {
             assertNotEquals(base, distinta);
@@ -122,10 +157,10 @@ class EntradaDeRankingTest {
 
     @Test
     void ordenarUnaListaDejaElOrdenDelRanking() {
-        EntradaDeRanking primera = entrada("Juan", 500, HOY);
-        EntradaDeRanking segunda = entrada("Facu", 300, AYER);
-        EntradaDeRanking tercera = entrada("Mati", 300, HOY);
-        EntradaDeRanking cuarta = entrada("Owen", 0, AYER);
+        EntradaDeRanking primera = entrada("JUA", 500, HOY);
+        EntradaDeRanking segunda = entrada("FAC", 300, AYER);
+        EntradaDeRanking tercera = entrada("MAT", 300, HOY);
+        EntradaDeRanking cuarta = entrada("OWE", 0, AYER);
         List<EntradaDeRanking> entradas = new ArrayList<>(List.of(tercera, cuarta, primera, segunda));
 
         Collections.sort(entradas);
