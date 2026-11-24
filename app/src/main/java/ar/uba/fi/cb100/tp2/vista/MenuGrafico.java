@@ -1,6 +1,7 @@
 package ar.uba.fi.cb100.tp2.vista;
 
 import ar.uba.fi.cb100.tp2.modelo.partida.EstadoPartida;
+import ar.uba.fi.cb100.tp2.modelo.ranking.EntradaDeRanking;
 import ar.uba.fi.cb100.tp2.modelo.valores.Dificultad;
 
 import java.awt.BorderLayout;
@@ -9,6 +10,7 @@ import java.awt.GridLayout;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import javax.swing.BorderFactory;
@@ -60,21 +62,90 @@ public final class MenuGrafico {
         });
     }
 
-    /** Devuelve true cuando el jugador elige iniciar otra partida con las mismas opciones. */
-    public boolean mostrarResultado(EstadoPartida estado, int puntaje) {
+    /** Lo que elige el jugador en el diálogo del final de la partida. */
+    public enum Decision {
+        /** Jugar otra partida con las mismas opciones. */
+        REINTENTAR,
+        /** Volver al menú de inicio para elegir otras opciones. */
+        MENU_PRINCIPAL,
+        /** Terminar el juego, también si cierra el diálogo. */
+        SALIR
+    }
+
+    /**
+     * Muestra el final de la partida con los botones "Guardar en el ranking",
+     * "Reintentar", "Menú principal" y "Salir". El de guardar pide un nombre de
+     * exactamente tres caracteres, se lo pasa a {@code guardarEnRanking} y
+     * desaparece: el puntaje de una partida se guarda una sola vez.
+     *
+     * @param estado           cómo terminó la partida
+     * @param puntaje          el puntaje final
+     * @param guardarEnRanking qué hacer con el nombre elegido, que ya es válido
+     * @return lo que eligió el jugador; SALIR si la partida sigue en curso
+     */
+    public Decision mostrarResultado(EstadoPartida estado, int puntaje, Consumer<String> guardarEnRanking) {
         if (estado == EstadoPartida.EN_CURSO) {
-            return false;
+            return Decision.SALIR;
         }
 
         return enHiloGrafico(() -> {
             String titulo = estado == EstadoPartida.GANADA ? "¡Ganaste!" : "Perdiste";
-            JPanel contenido = panelConTitulo(titulo);
-            contenido.add(new JLabel("Puntaje: " + puntaje), BorderLayout.CENTER);
-            Object[] botones = {"Reintentar", "Salir"};
-            int opcion = JOptionPane.showOptionDialog(null, contenido, "Fin de la partida",
-                    JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, botones, botones[0]);
-            return opcion == 0;
+            String nombreGuardado = null;
+            while (true) {
+                boolean yaGuardado = nombreGuardado != null;
+                JPanel contenido = panelConTitulo(titulo);
+                String detalle = "Puntaje: " + puntaje
+                        + (yaGuardado ? "   (guardado como " + nombreGuardado + ")" : "");
+                contenido.add(new JLabel(detalle), BorderLayout.CENTER);
+                Object[] botones = yaGuardado
+                        ? new Object[]{"Reintentar", "Menú principal", "Salir"}
+                        : new Object[]{"Guardar en el ranking", "Reintentar", "Menú principal", "Salir"};
+                int opcion = JOptionPane.showOptionDialog(null, contenido, "Fin de la partida",
+                        JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, botones, botones[0]);
+
+                if (opcion < 0 || opcion >= botones.length) {
+                    return Decision.SALIR;
+                }
+                if ("Guardar en el ranking".equals(botones[opcion])) {
+                    Optional<String> nombre = pedirNombre();
+                    if (nombre.isPresent()) {
+                        guardarEnRanking.accept(nombre.get());
+                        nombreGuardado = nombre.get();
+                    }
+                    continue;
+                }
+                if ("Reintentar".equals(botones[opcion])) {
+                    return Decision.REINTENTAR;
+                }
+                if ("Menú principal".equals(botones[opcion])) {
+                    return Decision.MENU_PRINCIPAL;
+                }
+                return Decision.SALIR;
+            }
         });
+    }
+
+    /**
+     * Pide el nombre del ranking hasta que tenga exactamente tres caracteres,
+     * como en un arcade. Devuelve vacío si el jugador cancela.
+     */
+    private Optional<String> pedirNombre() {
+        String aviso = "Tu nombre para el ranking (" + EntradaDeRanking.LARGO_DEL_NOMBRE
+                + " caracteres, sin espacios):";
+        while (true) {
+            String texto = JOptionPane.showInputDialog(null, aviso, "Ranking", JOptionPane.PLAIN_MESSAGE);
+            if (texto == null) {
+                return Optional.empty();
+            }
+            String nombre = texto.strip();
+            if (EntradaDeRanking.esNombreValido(nombre)) {
+                return Optional.of(nombre);
+            }
+            JOptionPane.showMessageDialog(null,
+                    "El nombre tiene que tener exactamente " + EntradaDeRanking.LARGO_DEL_NOMBRE
+                            + " caracteres, sin espacios.",
+                    "Nombre inválido", JOptionPane.WARNING_MESSAGE);
+        }
     }
 
     private JPanel panelConTitulo(String titulo) {
