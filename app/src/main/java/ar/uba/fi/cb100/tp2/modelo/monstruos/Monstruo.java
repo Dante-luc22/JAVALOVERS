@@ -138,8 +138,24 @@ public abstract class Monstruo extends Entidad {
         return danio;
     }
 
-        @Override
+    @Override
     public final char getSimbolo() {
         return 'M';
+    }
+
+    /**
+     * Cada tipo de monstruo dice cuál es. En el plano todos son una 'M', así que
+     * esto es lo que permite saber cuál tocó al sortearlos.
+     *
+     * @return el tipo de este monstruo
+     */
+    public abstract TipoDeMonstruo getTipoDeMonstruo();
+
+    /**
+     * @return el nombre del tipo de este monstruo, por ejemplo "CAZADOR"
+     */
+    @Override
+    public final String getTipo() {
+        return this.getTipoDeMonstruo().name();
     }
 }

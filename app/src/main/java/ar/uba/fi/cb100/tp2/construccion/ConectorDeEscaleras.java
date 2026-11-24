@@ -7,12 +7,40 @@ import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
 
 import java.util.List;
 import java.util.Set;
+import java.util.Random;
+
+/**
+ * <hr><hr>
+ * <h2>Conexión entre pisos de un tablero</h2>
+ * <hr><hr>
+ *
+ * Conecta los pisos consecutivos de un tablero mediante escaleras.
+ * Cada escalera ocupa la misma fila y columna en los dos pisos.
+ * El ubicador utiliza el {@code Random} recibido por constructor.
+ *
+ * <hr>
+ * <ul>
+ *   <li>{@code conectarPisos} → Recorre los planos en orden de piso.
+ *       Para cada par consecutivo, pide una posición al
+ *       {@code UbicadorDeEscaleras} y registra ambos extremos mediante
+ *       {@code Mazmorra.conectar}.</li>
+ * </ul>
+ * <hr>
+ *
+ * La celda usada en el piso compartido se reserva para la siguiente
+ * búsqueda. Si un par de pisos no se puede unir, se lanza
+ * {@code IllegalStateException}.
+ */
 
 public class ConectorDeEscaleras {
 
-    /** Conecta los planos de un tablero, ordenados desde el primer piso. */
+    private final UbicadorDeEscaleras ubicador;
+
+    public ConectorDeEscaleras(Random azar) {
+        this.ubicador = new UbicadorDeEscaleras(azar);
+    }
+
     public void conectarPisos(Mazmorra mazmorra, int tablero, List<Plano> planos) {
-        UbicadorDeEscaleras ubicador = new UbicadorDeEscaleras();
         Set<Posicion> reservadas = Set.of();
 
         for (int piso = 1; piso < planos.size(); piso++) {
