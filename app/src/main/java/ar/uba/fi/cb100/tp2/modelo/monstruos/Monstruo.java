@@ -107,6 +107,8 @@ public abstract class Monstruo extends Entidad {
      * Lo que pasa cuando el héroe pisa su celda, en este caso
      * el monstruo lo alcanza. Si el monstruo esta dormido,
      * al pasar por encima el heroe lo despierta del todo.
+     * Si el heroe tiene escudo, el monstruo no le hace nada, el heroe
+     * gasta escudo y vuelve al inicio.
      *
      * @param heroe  el héroe
      * @param agenda la agenda, para efectos que vencen más adelante
@@ -119,6 +121,11 @@ public abstract class Monstruo extends Entidad {
         }
         if (estaAdormecido()) {
             despertarDelTodo();
+            return;
+        }
+        if (heroe.tieneEscudo()) {
+            heroe.usarEscudo();
+            volverAlInicio();
             return;
         }
         alAlcanzarAlHeroe(heroe, agenda);
