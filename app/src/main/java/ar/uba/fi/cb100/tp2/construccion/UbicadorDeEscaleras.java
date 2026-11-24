@@ -15,47 +15,40 @@ import java.util.function.Predicate;
 
 /**
  * <hr><hr>
- * <h1>Ubicación de escaleras entre planos</h1>
+ * <h2>Ubicación de escaleras entre planos</h2>
  * <hr><hr>
  *
- * Busca una posición interior común para conectar dos planos mediante
- * una escalera. Excluye entradas, salidas, entidades y posiciones
- * reservadas. Entre las candidatas válidas, prioriza las que no son
- * vecinas ortogonales de una posición reservada. Si todas son vecinas,
- * elige entre ellas.
- *
- * El sorteo utiliza el {@code Random} recibido por constructor. Al
- * reconstruir la mazmorra con la misma semilla, se pueden reproducir
- * las posiciones de las escaleras.
+ * Prepara una posición interior común para una escalera entre dos planos.
+ * Excluye entradas, salidas, entidades y posiciones reservadas. Entre
+ * las candidatas válidas, prioriza las que no son vecinas ortogonales de
+ * una posición reservada. Si todas son vecinas, sortea entre ellas.
  *
  * <hr>
  * <ul>
- *   <li>{@code buscarPosicionComun} → Sortea una posición transitable
- *       y libre en ambos planos, dentro de sus dimensiones compartidas.
- *       La variante interna permite excluir posiciones reservadas.</li>
+ *   <li>{@code buscarPosicionComun} → Sortea una posición transitable y
+ *       libre en ambos planos. La variante interna recibe las reservas.</li>
  *   <li>{@code prepararPosicionComun} → Busca primero una posición común.
- *       Si no encuentra ninguna, sortea una posición donde pueda abrir
- *       una pared y convierte únicamente esa pared en piso.</li>
- *   <li>{@code elegirPosicion} → Reúne las posiciones válidas y sortea
- *       una. Si hay candidatas separadas de las reservadas, limita el
- *       sorteo a esas candidatas.</li>
- *   <li>{@code esVecinaDeReservada} → Comprueba si alguna posición
- *       reservada está arriba, abajo, a la izquierda o a la derecha
- *       de la candidata.</li>
- *   <li>{@code estaDisponible} → Comprueba que una posición sea
- *       transitable y esté libre.</li>
- *   <li>{@code estaLibre} → Verifica que la posición no sea entrada
- *       ni salida y que no contenga entidades.</li>
- *   <li>{@code puedeAbrirPared} → Comprueba que haya piso en un plano
- *       y pared en el otro, que la posición esté libre en ambos y
- *       que la pared tenga una vecina transitable.</li>
+ *       Si no encuentra ninguna, sortea una pared que pueda abrirse y
+ *       convierte únicamente la pared elegida en piso.</li>
+ *   <li>{@code elegirPosicion} → Reúne las candidatas válidas y las que
+ *       están separadas de las reservas. Si hay candidatas separadas,
+ *       el sorteo se hace entre ellas.</li>
+ *   <li>{@code esVecinaDeReservada} → Comprueba si la candidata tiene
+ *       una posición reservada entre sus cuatro vecinas ortogonales.</li>
+ *   <li>{@code estaDisponible} → Comprueba que la posición sea transitable
+ *       y esté libre.</li>
+ *   <li>{@code estaLibre} → Verifica que la posición no sea entrada ni
+ *       salida y que no contenga entidades.</li>
+ *   <li>{@code puedeAbrirPared} → Verifica que haya piso en un plano
+ *       y pared en el otro, que ambas posiciones estén libres y que la
+ *       pared tenga una vecina transitable.</li>
  * </ul>
  * <hr>
  *
- * Devuelve {@code Optional.empty()} si no encuentra una posición
- * adecuada. El ubicador prepara la celda y {@code ConectorDeEscaleras}
- * registra la conexión entre los pisos.
+ * El sorteo usa el {@code Random} recibido por constructor. Si no hay
+ * una posición adecuada, se devuelve {@code Optional.empty()}.
  */
+
 public class UbicadorDeEscaleras {
 
     private final Random azar;

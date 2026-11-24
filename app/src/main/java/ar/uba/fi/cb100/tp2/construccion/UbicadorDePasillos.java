@@ -11,7 +11,28 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
-/** Busca celdas del borde que puedan servir como extremos de un pasillo. */
+/**
+ * <hr><hr>
+ * <h2>Ubicación de extremos de pasillos</h2>
+ * <hr><hr>
+ *
+ * Busca paredes en el borde de un plano que puedan servir como extremos
+ * de un pasillo. Una pared es válida si su vecina hacia el interior es
+ * transitable. La búsqueda excluye las esquinas y los extremos que ya
+ * fueron abiertos.
+ *
+ * <hr>
+ * <ul>
+ *   <li>{@code buscarExtremo} → Recorre el lado indicado, reúne las
+ *       paredes válidas y sortea una con el {@code Random} recibido
+ *       por constructor.</li>
+ * </ul>
+ * <hr>
+ *
+ * Devuelve {@code Optional.empty()} si el lado no tiene candidatas.
+ * La búsqueda conserva el terreno del tablero.
+ */
+
 public class UbicadorDePasillos {
 
     private final Random azar;
@@ -20,10 +41,7 @@ public class UbicadorDePasillos {
         this.azar = azar;
     }
 
-    /**
-     * Sortea una pared del lado elegido que tenga una vecina interior
-     * transitable. La búsqueda excluye las esquinas y conserva el tablero.
-     */
+
     public Optional<Posicion> buscarExtremo(Plano plano, Direccion lado) {
         Tablero tablero = plano.getTablero();
         int filas = tablero.getFilas();
