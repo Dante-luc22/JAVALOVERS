@@ -1,6 +1,9 @@
 package ar.uba.fi.cb100.tp2.modelo.cofres;
 
+import ar.uba.fi.cb100.tp2.modelo.efectos.AguaComoPiso;
+import ar.uba.fi.cb100.tp2.modelo.efectos.Efecto;
 import ar.uba.fi.cb100.tp2.modelo.efectos.Envenenado;
+import ar.uba.fi.cb100.tp2.modelo.efectos.QuitarEfecto;
 import ar.uba.fi.cb100.tp2.modelo.eventos.Agenda;
 import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
@@ -29,6 +32,8 @@ public class CofreDeVeneno extends Cofre{
      */
     @Override
     protected void abrir(Heroe heroe, Agenda agenda){
-        heroe.agregarEfecto(new Envenenado(DURACION));
+        Efecto efecto = new Envenenado();
+        heroe.agregarEfecto(efecto);
+        agenda.programar(DURACION, new QuitarEfecto(efecto));
     }
 }

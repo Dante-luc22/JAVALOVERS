@@ -16,6 +16,7 @@ public class Heroe {
     private final int energiaMaxima;
     private final Inventario inventario;
     private final ArrayList<Efecto> efectosActivos = new ArrayList<>();
+    private int escudos = 0;
 
     /**
      * Constructor de la clase heroe, recibe su ubicacionInicial y
@@ -209,14 +210,42 @@ public class Heroe {
     }
 
     /**
-     * Metodo para indicar que el heroe camino con el efecto
-     * activo.
+     * Elimina un efecto dentro de los efectos activos.
+     *
+     * @param efecto a quitar
      */
-    public void pasarUnPaso() {
-        for (Efecto ef : this.efectosActivos) {
-            ef.pasarUnPaso();
+    public void quitarEfecto(Efecto efecto) {
+        if (efecto == null) {
+            throw new IllegalArgumentException("El efecto no puede ser nulo.");
         }
-        this.efectosActivos.removeIf(Efecto::termino);
+        efectosActivos.remove(efecto);
+    }
+
+    /**
+     * Agrega 1 a la cantidad de escudos.
+     */
+    public void agregarEscudo() {
+        this.escudos++;
+    }
+
+    /**
+     * @return true si tiene escudos
+     */
+    public boolean tieneEscudo() {
+        return this.escudos > 0;
+    }
+
+    /**
+     * Le resta 1 a los escudos disponibles.
+     *
+     * @throws IllegalStateException si no hay escudos para usar.
+     */
+    public void usarEscudo() {
+        if (this.escudos <= 0) {
+            throw new IllegalStateException(
+                    "Deben haber escudos para usar.");
+        }
+        this.escudos--;
     }
 
 
@@ -264,5 +293,12 @@ public class Heroe {
      */
     public ArrayList<Efecto> getEfectosActivos() {
         return new ArrayList<>(this.efectosActivos);
+    }
+
+    /**
+     * Getter que devuelve la cantidad de escudos.
+     */
+    public int getEscudos() {
+        return escudos;
     }
 }

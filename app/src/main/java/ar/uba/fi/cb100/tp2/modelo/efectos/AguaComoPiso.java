@@ -4,15 +4,6 @@ import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
 
 public class AguaComoPiso extends Efecto{
 
-    /**
-     * Constructor de la clase, usa super para enviar la duracion
-     * al padre.
-     *
-     * @param duracion del efecto
-     */
-    public AguaComoPiso(int duracion) {
-        super(duracion);
-    }
 
     /**
      * Metodo para ajustar el costo del terreno

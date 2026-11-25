@@ -8,7 +8,7 @@ public class CofreDePuntos extends Cofre{
 
     /**
      * Constructor del cofre de puntos, recibe la posicion
-     * done va a estar
+     * donde va a estar
      *
      * @param posicion del cofre
      */

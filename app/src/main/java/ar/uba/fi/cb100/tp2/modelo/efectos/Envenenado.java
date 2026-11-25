@@ -10,16 +10,6 @@ import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
 public class Envenenado extends Efecto {
 
     /**
-     * Constructor de Envenenado, inicia con la duracion
-     * del efecto.
-     *
-     * @param duracion del efecto.
-     */
-    public Envenenado(int duracion) {
-        super(duracion);
-    }
-
-    /**
      * Metodo para ajustar el costo al tener este efecto.
      *
      * @param terreno      donde camina el heroe
