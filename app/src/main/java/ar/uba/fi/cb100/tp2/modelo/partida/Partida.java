@@ -116,7 +116,8 @@ public class Partida {
         if (this.estadoActual() != EstadoPartida.EN_CURSO) {
             return new ResultadoTurno(false, this.estadoActual());
         }
-        this.pasos++;
+
+        this.empezarPaso();
         this.heroe.sumarEnergia(1);
         return this.cerrarTurno();
     }
