@@ -195,17 +195,40 @@ public class Heroe {
     }
 
     /**
-     * Sirve para ajustar el costo del terreno
+     * Aplica primero los efectos que cambian el terreno y después lo que
+     * suman o restan, asi el resultado no depende del orden en que
+     * se activaron.
      *
-     * @param terreno      donde se mueve el heroe
+     * @param terreno      el terreno que pisa el heroe
      * @param costoBase    del terrero.
-     * @param costoDelPiso el costo que le saca el piso al heroe
+     * @param costoDelPiso lo que cuesta pisar el piso, para los efectos
+     *                     que hacen que otro terreno cueste igual.
      * @return el costo ajustado
      */
     public int ajustarCosto(Terreno terreno, int costoBase, int costoDelPiso) {
-        int costo = costoBase;
-        for (Efecto efecto : this.efectosActivos) {
-            costo = efecto.ajustarCosto(terreno, costo, costoDelPiso);
+        int costo = aplicarEfectos(terreno, costoBase, costoDelPiso, true);
+
+        costo = aplicarEfectos(terreno, costo, costoDelPiso, false);
+
+        return costo;
+    }
+
+    /**
+     * Aplica en cadena solo los efectos del grupo indicado.
+     *
+     * @param terreno          el terreno que pisa el heroe
+     * @param costo            del que se parte (el que dejo el grupo anterior)
+     * @param costoDelPiso     lo que cuesta pisar el piso, para los efectos
+     *                         que hacen que otro terreno cueste igual.
+     * @param cambianElTerreno true para aplicar solo los que cambian el terreno;
+     *                         false para aplicar todo lo demas.
+     * @return el costo despues de aplicar ese grupo.
+     */
+    private int aplicarEfectos(Terreno terreno, int costo, int costoDelPiso, boolean cambianElTerreno) {
+        for  (Efecto efecto : this.efectosActivos) {
+            if (efecto.cambiaElTerreno() == cambianElTerreno) {
+                costo = efecto.ajustarCosto(terreno, costo, costoDelPiso);
+            }
         }
         return costo;
     }
