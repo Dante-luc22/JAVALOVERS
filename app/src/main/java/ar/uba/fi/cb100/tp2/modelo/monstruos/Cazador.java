@@ -3,10 +3,12 @@ package ar.uba.fi.cb100.tp2.modelo.monstruos;
 import ar.uba.fi.cb100.tp2.modelo.eventos.Agenda;
 import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Plano;
+import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 
 import java.util.ArrayDeque;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Clase Cazador, se mueve una celda por paso, por el camino mas corto hacia el heroe.
@@ -14,14 +16,23 @@ import java.util.HashMap;
  */
 public class Cazador extends Monstruo{
 
+    private final Map<Terreno, Integer> costos;
+
     /**
-     * Constructor del cazador que hereda la posicion inicial y el danio
+     * Constructor del cazador que hereda la posicion inicial y el danio.
+     * Inicia el Map de costos con una copia del parametro pasado
      *
      * @param posicionInicial del cazador.
      * @param danio           que realiza el cazador.
+     * @param costos          energia que cuesta entrar en cada terreno.
      */
-    public Cazador(Posicion posicionInicial, int danio) {
+    public Cazador(Posicion posicionInicial, int danio, Map<Terreno, Integer> costos) {
+        if (costos == null) {
+            throw new IllegalArgumentException(
+                    "Los costos no pueden ser nulos.");
+        }
         super(posicionInicial, danio);
+        this.costos = new HashMap<>(costos);
     }
 
     /**
@@ -118,5 +129,12 @@ public class Cazador extends Monstruo{
     @Override
     protected void alAlcanzarAlHeroe(Heroe heroe, Agenda agenda){
         atacarYVolver(heroe);
+    }
+
+    /**
+     * Getter de los costos.
+     */
+    protected Map<Terreno, Integer> getCostos(){
+        return this.costos;
     }
 }

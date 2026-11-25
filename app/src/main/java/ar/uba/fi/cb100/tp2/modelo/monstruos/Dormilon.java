@@ -1,9 +1,11 @@
 package ar.uba.fi.cb100.tp2.modelo.monstruos;
 
 import ar.uba.fi.cb100.tp2.modelo.mundo.Plano;
+import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Clase Dormilon, es un cazador que a veces no caza, se queda quieto mientras el
@@ -20,14 +22,15 @@ public class Dormilon extends Cazador{
      * @param posicionInicial del dormilon.
      * @param danio           que realiza el dormilon.
      * @param radio           radio para alcanzar al heroe.
+     * @param costos          energia que cuesta entrar en cada terreno.
      * @throws IllegalArgumentException si el radio dado es menor o igual a 0.
      */
-    public Dormilon(Posicion posicionInicial, int danio, int radio) {
+    public Dormilon(Posicion posicionInicial, int danio,Map<Terreno, Integer> costos ,int radio) {
         if (radio <= 0) {
             throw new IllegalArgumentException(
                     "El radio debe ser mayor que 0.");
         }
-        super(posicionInicial, danio);
+        super(posicionInicial, danio, costos);
         this.radio = radio;
     }
 
