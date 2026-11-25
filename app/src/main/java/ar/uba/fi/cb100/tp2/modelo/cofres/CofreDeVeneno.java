@@ -34,6 +34,6 @@ public class CofreDeVeneno extends Cofre{
     protected void abrir(Heroe heroe, Agenda agenda){
         Efecto efecto = new Envenenado();
         heroe.agregarEfecto(efecto);
-        agenda.programar(DURACION, new QuitarEfecto(efecto));
+        agenda.programar(DURACION, new QuitarEfecto(efecto.getTipo()));
     }
 }
