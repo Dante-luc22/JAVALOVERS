@@ -1,6 +1,6 @@
 package ar.uba.fi.cb100.tp2.modelo.eventos;
 
-import ar.uba.fi.cb100.tp2.modelo.monstruos.Monstruo;
+
 import ar.uba.fi.cb100.tp2.modelo.mundo.Entidad;
 import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
 
@@ -14,9 +14,7 @@ public class AdormecerMonstruos implements Evento {
     @Override
     public void ejecutar(Partida partida) {
         for (Entidad e : partida.getPlanoActual().getEntidades()) {
-            if (e instanceof Monstruo monstruo) {
-                monstruo.adormecer();
-            }
+            e.adormecer();
         }
     }
 }

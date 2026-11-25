@@ -26,6 +26,9 @@ import ar.uba.fi.cb100.tp2.modelo.monstruos.Dormilon;
 import ar.uba.fi.cb100.tp2.modelo.monstruos.Fantasma;
 import ar.uba.fi.cb100.tp2.modelo.monstruos.Ladron;
 import ar.uba.fi.cb100.tp2.construccion.ConectorDeEscaleras;
+import ar.uba.fi.cb100.tp2.construccion.ConectorDePasillos;
+import ar.uba.fi.cb100.tp2.modelo.valores.Direccion;
+import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
 
 /**
  * Arma una partida lista para jugar: genera los planos, los valida y carga,
@@ -84,7 +87,9 @@ public class CreadorPartida {
 
         Mazmorra mazmorra = new Mazmorra(planos, parametros.pisos());
         conectarEscaleras(mazmorra, planos, parametros, semilla);
+        conectarPasillos(mazmorra, planos, parametros, semilla);
         Heroe heroe = new Heroe(mazmorra.getEntrada(), this.configuracion.energiaInicial());
+   
         return new Partida(mazmorra, heroe, costosPorTerreno());
     }
 
@@ -101,6 +106,45 @@ public class CreadorPartida {
             int desde = (tablero - 1) * pisos;
             conector.conectarPisos(mazmorra, tablero, planos.subList(desde, desde + pisos));
         }
+    }
+
+    /**
+     * Une los tableros con pasillos en el piso 1: sale por el borde de ABAJO de
+     * un tablero y entra por el de ARRIBA del siguiente. Con 3 o más tableros,
+     * el último se une con el primero y forman un ciclo (Difícil). Con un solo
+     * tablero (Fácil y Medio) no hace nada.
+     * Se usan esos bordes porque, con el generador actual, en planos de 15×20 la
+     * columna junto al borde derecho queda siempre pared y no entra un pasillo.
+     *
+     * @throws IllegalStateException si no hay lugar para un pasillo en algún borde
+     */
+    private void conectarPasillos(Mazmorra mazmorra, List<Plano> planos,
+                                  ParametrosDeDificultad parametros, long semilla) {
+        int tableros = parametros.tableros();
+        if (tableros < 2) {
+            return;
+        }
+        ConectorDePasillos conector = new ConectorDePasillos(new Random(semilla));
+        int ultimo = (tableros >= 3) ? tableros : tableros - 1;
+        for (int tablero = 1; tablero <= ultimo; tablero++) {
+            int siguiente = (tablero % tableros) + 1;
+            boolean unido = conector.conectar(mazmorra,
+                    pisoUno(planos, parametros, tablero), Direccion.ABAJO,
+                    pisoUno(planos, parametros, siguiente), Direccion.ARRIBA);
+            if (!unido) {
+                throw new IllegalStateException(
+                        "No hay lugar para el pasillo del tablero " + tablero + " al " + siguiente);
+            }
+        }
+    }
+
+    /**
+     * El piso 1 de un tablero, como referencia para el conector de pasillos
+     * (que sólo usa el tablero y el piso; la posición es la entrada del plano).
+     */
+    private static Ubicacion pisoUno(List<Plano> planos, ParametrosDeDificultad parametros, int tablero) {
+        Plano plano = planos.get((tablero - 1) * parametros.pisos());
+        return new Ubicacion(tablero, 1, plano.getEntrada());
     }
 
     /**
