@@ -144,6 +144,7 @@ public abstract class Monstruo extends Entidad {
      * un efecto externo (por ejemplo, el cofre de repelente). No
      * le hace nada al heroe.
      */
+    @Override
     public final void repeler() {
         volverAlInicio();
     }
@@ -152,6 +153,7 @@ public abstract class Monstruo extends Entidad {
     /**
      * Metodo que suma 1 al contador de adormecimientos.
      */
+    @Override
     public final void adormecer() {
         adormecimientos++;
     }
@@ -161,6 +163,7 @@ public abstract class Monstruo extends Entidad {
      * baja de 0 ya que puede haver despertado antes, si el heroe
      * lo piso y el evento de despertar de la agenda llega igual.
      */
+    @Override
     public final void despertar() {
         if (adormecimientos > 0) {
             adormecimientos--;
