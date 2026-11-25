@@ -5,6 +5,7 @@ import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Collections;
 import java.util.Map;
@@ -147,6 +148,14 @@ public class Inventario {
         }
         Objeto objeto = quitar(id);
         objeto.usar(heroe, agenda);
+    }
+
+    /**
+     * @return el id del objeto que se guardó primero, o vacío si el inventario
+     *         está vacío. Sirve para "usar el próximo objeto" sin menú.
+     */
+    public Optional<String> primerId() {
+        return cantidades.keySet().stream().findFirst();
     }
 
     /**

@@ -2,6 +2,7 @@ package ar.uba.fi.cb100.tp2.modelo.partida;
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Collections;
 
 import ar.uba.fi.cb100.tp2.modelo.eventos.Agenda;
@@ -149,9 +150,11 @@ public class Partida {
 
     /**
      * Mueve al héroe una celda. Si hay una pared (o el borde) no hace nada y la
-     * acción no cuenta como paso. Si no, cobra el costo del terreno al que entra,
-     * suma un paso, avisa a las entidades de esa celda que el héroe llegó y,
-     * si la partida sigue, mueve a los monstruos.
+     * acción no cuenta como paso. Si no, empieza el paso (suma un paso y corre
+     * la agenda), cobra el costo del terreno al que entra, avisa a las entidades
+     * de esa celda que el héroe llegó y, si la celda es una escalera o un
+     * pasillo, lo traslada al otro extremo (una sola vez). Si la partida sigue,
+     * mueve a los monstruos del plano donde quedó el héroe.
      * Una partida ya terminada no acepta más movimientos.
      *
      * @param direccion hacia dónde se mueve
@@ -169,16 +172,18 @@ public class Partida {
             return new ResultadoTurno(false, this.estadoActual());
         }
 
-        this.heroe.restarEnergia(this.costoDe(plano.getTablero().getTerreno(destino)));
-        this.heroe.mover(new Ubicacion(actual.tablero(), actual.piso(), destino));
-        this.pasos++;
+        // Primero empieza el paso: un efecto que vence en este paso ya no
+        // cuenta para este movimiento, y los eventos que despiertan
+        // monstruos hacen que ya jueguen en este turno.
+        this.empezarPaso();
 
-        for (Entidad entidad : plano.obtenerEntidades(destino)) {
-            entidad.alEncontrarseConHeroe(this.heroe, this.agenda);
-            if (entidad.debeSalirDelPlano()) {
-                plano.quitarEntidad(entidad);
-            }
-        }
+        Terreno terreno = plano.getTablero().getTerreno(destino);
+        this.heroe.restarEnergia(this.heroe.ajustarCosto(terreno, this.costoDe(terreno), this.costoDe(Terreno.PISO)));
+        Ubicacion ubicacionNueva = new Ubicacion(actual.tablero(), actual.piso(), destino);
+        this.heroe.mover(ubicacionNueva);
+        this.encontrarEntidades(plano, destino);
+
+        this.trasladarSiHayConexion(ubicacionNueva);
         return this.cerrarTurno();
     }
 
@@ -192,7 +197,25 @@ public class Partida {
         if (this.estadoActual() != EstadoPartida.EN_CURSO) {
             return new ResultadoTurno(false, this.estadoActual());
         }
-        this.pasos++;
+        this.empezarPaso();
+        return this.cerrarTurno();
+    }
+
+    /**
+     * Usa un objeto del inventario como la acción del paso: cuenta como un paso,
+     * no cuesta energía y los monstruos igual se mueven. Si el héroe no tiene
+     * ese objeto la acción no es válida y no cuenta como paso.
+     *
+     * @param id el id del objeto a usar (por ejemplo ZAPATOS_DE_AGUA)
+     * @return si la acción fue válida y cómo quedó la partida
+     */
+    public ResultadoTurno usarObjeto(String id) {
+        if (this.estadoActual() != EstadoPartida.EN_CURSO
+                || id == null || id.isBlank() || !this.heroe.getInventario().contiene(id)) {
+            return new ResultadoTurno(false, this.estadoActual());
+        }
+        this.empezarPaso();
+        this.heroe.getInventario().usar(id, this.heroe, this.agenda);
         return this.cerrarTurno();
     }
 
@@ -209,6 +232,47 @@ public class Partida {
     /** @return el puntaje de la partida hasta ahora */
     public int puntaje() {
         return calcularPuntaje(this.heroe.getCofresAbiertos(), this.heroe.getEnergia(), this.pasos);
+    }
+
+    /**
+     * Arranca un paso válido: lo cuenta y ejecuta los eventos de la agenda
+     * cuyo momento llegó. Se llama después de validar la acción y antes de
+     * hacerla.
+     */
+    private void empezarPaso() {
+        this.pasos++;
+        this.agenda.ejecutarLosQueVencen(this.pasos, this);
+    }
+
+    /**
+     * Avisa a las entidades de una celda que el héroe llegó, y saca del plano
+     * a las que ya cumplieron su papel (un cofre abierto).
+     */
+    private void encontrarEntidades(Plano plano, Posicion posicion) {
+        for (Entidad entidad : plano.obtenerEntidades(posicion)) {
+            entidad.alEncontrarseConHeroe(this.heroe, this.agenda);
+            if (entidad.debeSalirDelPlano()) {
+                plano.quitarEntidad(entidad);
+            }
+        }
+    }
+
+    /**
+     * Si el héroe está parado en una escalera o un pasillo y la partida sigue,
+     * lo pone en el otro extremo y le avisa a las entidades de esa celda.
+     * Mira una sola vez, justo después del movimiento: como el destino también
+     * es una conexión, el héroe no rebota; para volver tiene que salir de la
+     * celda y pisarla de nuevo.
+     */
+    private void trasladarSiHayConexion(Ubicacion pisada) {
+        if (this.estadoActual() != EstadoPartida.EN_CURSO) {
+            return;
+        }
+        Optional<Ubicacion> destino = this.mazmorra.destinoDesde(pisada);
+        if (destino.isPresent()) {
+            this.heroe.mover(destino.get());
+            this.encontrarEntidades(this.getPlanoActual(), destino.get().posicion());
+        }
     }
 
     /**
