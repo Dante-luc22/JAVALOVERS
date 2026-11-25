@@ -20,9 +20,11 @@ import ar.uba.fi.cb100.tp2.modelo.partida.ParametrosDeDificultad;
 import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
 import ar.uba.fi.cb100.tp2.modelo.valores.Dificultad;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
+import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
 import ar.uba.fi.cb100.tp2.modelo.cofres.CatalogoDeCofres;
 import ar.uba.fi.cb100.tp2.modelo.monstruos.CatalogoDeMonstruos;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
@@ -77,9 +79,66 @@ public class CreadorPartidaTest {
         }
     }
 
+       @Test
+    void dificilTieneSeisEscalerasYTresPasillos() {
+        List<Conexion> conexiones = crear(Dificultad.DIFICIL, 42L).getMazmorra().getConexiones();
+
+        assertEquals(9, conexiones.size());
+        assertEquals(3, pasillos(conexiones).size());
+    }
+
     @Test
-    void dificilConectaLosPisosDeCadaTablero() {
-        assertEquals(6, crear(Dificultad.DIFICIL, 42L).getMazmorra().getConexiones().size());
+    void losPasillosUnenLosTresTablerosEnCiclo() {
+        Set<String> uniones = new HashSet<>();
+        for (Conexion pasillo : pasillos(crear(Dificultad.DIFICIL, 42L).getMazmorra().getConexiones())) {
+            uniones.add(pasillo.origen().tablero() + "-" + pasillo.destino().tablero());
+        }
+
+        assertEquals(Set.of("1-2", "2-3", "3-1"), uniones);
+    }
+
+    @Test
+    void losPasillosEstanEnElBordeDelPisoUnoYSonTransitables() {
+        Mazmorra mazmorra = crear(Dificultad.DIFICIL, 42L).getMazmorra();
+
+        for (Conexion pasillo : pasillos(mazmorra.getConexiones())) {
+            for (Ubicacion punta : List.of(pasillo.origen(), pasillo.destino())) {
+                assertEquals(1, punta.piso());
+                Tablero tablero = mazmorra.getPlano(punta).getTablero();
+                Posicion p = punta.posicion();
+                assertTrue(p.columna() == 1 || p.columna() == tablero.getColumnas(), "no está en el borde: " + punta);
+                assertTrue(tablero.esTransitable(p));
+            }
+        }
+    }
+
+    @Test
+    void medioNoTienePasillos() {
+        assertTrue(pasillos(crear(Dificultad.MEDIO, 42L).getMazmorra().getConexiones()).isEmpty());
+    }
+
+    @Test
+    void laMismaSemillaPoneLosMismosPasillos() {
+        assertEquals(crear(Dificultad.DIFICIL, 7L).getMazmorra().getConexiones(),
+                crear(Dificultad.DIFICIL, 7L).getMazmorra().getConexiones());
+    }
+
+    @Test
+    void dificilSeArmaConDistintasSemillas() {
+        for (long semilla = 1; semilla <= 10; semilla++) {
+            assertEquals(3, pasillos(crear(Dificultad.DIFICIL, semilla).getMazmorra().getConexiones()).size());
+        }
+    }
+
+    /** Las conexiones entre tableros distintos (las escaleras son del mismo tablero). */
+    private static List<Conexion> pasillos(List<Conexion> conexiones) {
+        List<Conexion> pasillos = new ArrayList<>();
+        for (Conexion conexion : conexiones) {
+            if (conexion.origen().tablero() != conexion.destino().tablero()) {
+                pasillos.add(conexion);
+            }
+        }
+        return pasillos;
     }
 
     
