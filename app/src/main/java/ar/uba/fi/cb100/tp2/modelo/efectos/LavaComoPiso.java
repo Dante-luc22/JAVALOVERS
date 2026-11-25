@@ -28,4 +28,12 @@ public class LavaComoPiso extends Efecto {
     public TipoDeEfecto getTipo() {
         return TipoDeEfecto.LAVA_COMO_PISO;
     }
+
+    /**
+     * @return true: hace que la lava cueste como piso.
+     */
+    @Override
+    public boolean cambiaElTerreno() {
+        return true;
+    }
 }

@@ -30,4 +30,12 @@ public class AguaComoPiso extends Efecto{
     public TipoDeEfecto getTipo() {
         return TipoDeEfecto.AGUA_COMO_PISO;
     }
+
+    /**
+     * @return true: hace que el agua cueste como piso.
+     */
+    @Override
+    public boolean cambiaElTerreno() {
+        return true;
+    }
 }

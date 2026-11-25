@@ -22,4 +22,16 @@ public abstract class Efecto {
      */
     public abstract TipoDeEfecto getTipo();
 
+    /**
+     * Indica si el efecto hace que un terreno cueste como otro (por
+     * ejemplo, el agua como piso). Estos efectos se aplican antes que
+     * los que suman o restan, para que no pisen su resultado
+     *
+     * @return true si reemplaza el costo de un terreno; false por
+     * defecto
+     */
+    public boolean cambiaElTerreno() {
+        return false;
+    }
+
 }
