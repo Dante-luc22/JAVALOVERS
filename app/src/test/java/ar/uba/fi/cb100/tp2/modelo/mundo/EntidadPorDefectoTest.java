@@ -44,7 +44,7 @@ class EntidadPorDefectoTest {
         }
         this.plano = new Plano(tablero, new Posicion(2, 2), new Posicion(2, 7));
         this.cofre = new CofreDePuntos(POSICION_DEL_COFRE);
-        this.cazador = new Cazador(INICIO_DEL_CAZADOR, 30);
+        this.cazador = new Cazador(INICIO_DEL_CAZADOR, 30, COSTOS);
         this.plano.agregarEntidad(this.cofre);
         this.plano.agregarEntidad(this.cazador);
         Mazmorra mazmorra = new Mazmorra(List.of(this.plano), 1);
