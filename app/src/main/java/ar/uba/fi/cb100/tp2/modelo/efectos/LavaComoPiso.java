@@ -20,4 +20,12 @@ public class LavaComoPiso extends Efecto {
         }
         return costoActual;
     }
+
+    /**
+     * @return "LAVA_COMO_PISO"
+     */
+    @Override
+    public TipoDeEfecto getTipo() {
+        return TipoDeEfecto.LAVA_COMO_PISO;
+    }
 }

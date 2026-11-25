@@ -21,4 +21,12 @@ public class Envenenado extends Efecto {
     public int ajustarCosto(Terreno terreno, int costoActual, int costoDelPiso){
         return costoActual + 1;
     }
+
+    /**
+     * @return "ENVENENADO"
+     */
+    @Override
+    public TipoDeEfecto getTipo() {
+        return TipoDeEfecto.ENVENENADO;
+    }
 }
