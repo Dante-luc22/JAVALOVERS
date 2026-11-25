@@ -6,13 +6,12 @@ import java.util.Random;
 import java.util.ArrayList;
 import java.util.List;
 
+import ar.uba.fi.cb100.tp2.modelo.cofres.*;
 import com.google.gson.JsonObject;
 
 import ar.uba.fi.cb100.tp2.modelo.partida.ParametrosDeDificultad;
 import ar.uba.fi.cb100.tp2.modelo.valores.Dificultad;
 import ar.uba.fi.cb100.tp2.generador.GeneradorDeLaberinto;
-import ar.uba.fi.cb100.tp2.modelo.cofres.CatalogoDeCofres;
-import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDePuntos;
 import ar.uba.fi.cb100.tp2.modelo.monstruos.CatalogoDeMonstruos;
 import ar.uba.fi.cb100.tp2.modelo.monstruos.Errante;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
@@ -22,11 +21,6 @@ import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Mazmorra;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Plano;
 import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
-import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeBotasIgnifugas;
-import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDePocion;
-import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeTrampaDePinchos;
-import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeVeneno;
-import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeZapatosDeAgua;
 import ar.uba.fi.cb100.tp2.modelo.monstruos.Cazador;
 import ar.uba.fi.cb100.tp2.modelo.monstruos.Dormilon;
 import ar.uba.fi.cb100.tp2.modelo.monstruos.Fantasma;
@@ -159,6 +153,10 @@ public class CreadorPartida {
         catalogo.registrar("POCION", p -> new CofreDePocion(p, ENERGIA_DE_LA_POCION));
         catalogo.registrar("TRAMPA_DE_PINCHOS", p -> new CofreDeTrampaDePinchos(p, DANIO_DE_LOS_PINCHOS));
         catalogo.registrar("VENENO", CofreDeVeneno::new);
+        catalogo.registrar("REPELENTE", CofreDeRepelente::new);
+        catalogo.registrar("SOMNIFERO", CofreDeSomnifero::new);
+        catalogo.registrar("PICO", CofreDePico::new);
+        catalogo.registrar("ESCUDO", CofreDeEscudo::new);
         return catalogo;
     }
 
