@@ -14,4 +14,12 @@ public abstract class Efecto {
      */
     public abstract int ajustarCosto(Terreno terreno, int costoActual, int costoDelPiso);
 
+    /**
+     * Cada efecto dice de que tipo es. Permite quitarlo por tipo
+     * cuando vence, y guardarlo.
+     *
+     * @return el tipo de este efecto.
+     */
+    public abstract TipoDeEfecto getTipo();
+
 }

@@ -30,6 +30,6 @@ public class ZapatosDeAgua extends Objeto{
     public void usar(Heroe heroe, Agenda agenda){
         Efecto efecto = new AguaComoPiso();
         heroe.agregarEfecto(efecto);
-        agenda.programar(DURACION, new QuitarEfecto(efecto));
+        agenda.programar(DURACION, new QuitarEfecto(efecto.getTipo()));
     }
 }

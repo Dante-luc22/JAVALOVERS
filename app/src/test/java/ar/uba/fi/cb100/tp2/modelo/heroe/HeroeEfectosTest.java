@@ -10,14 +10,15 @@ import org.junit.jupiter.api.Test;
 import ar.uba.fi.cb100.tp2.modelo.efectos.AguaComoPiso;
 import ar.uba.fi.cb100.tp2.modelo.efectos.Efecto;
 import ar.uba.fi.cb100.tp2.modelo.efectos.Envenenado;
+import ar.uba.fi.cb100.tp2.modelo.efectos.TipoDeEfecto;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
 
 /**
  * Tests de los efectos activos del héroe: se aplican en cadena, en el orden
- * en que se activaron, y se sacan con quitarEfecto (que es lo que hace el
- * evento QuitarEfecto cuando la agenda lo ejecuta).
+ * en que se activaron, y se sacan por tipo con quitarEfecto (que es lo que
+ * hace el evento QuitarEfecto cuando la agenda lo ejecuta).
  * Costos de prueba: piso 1, agua 3, lava 8.
  */
 class HeroeEfectosTest {
@@ -92,10 +93,9 @@ class HeroeEfectosTest {
 
     @Test
     void quitarElEfectoVuelveAlCostoNormal() {
-        Efecto zapatos = new AguaComoPiso();
-        this.heroe.agregarEfecto(zapatos);
+        this.heroe.agregarEfecto(new AguaComoPiso());
 
-        this.heroe.quitarEfecto(zapatos);
+        this.heroe.quitarEfecto(TipoDeEfecto.AGUA_COMO_PISO);
 
         assertTrue(this.heroe.getEfectosActivos().isEmpty());
         assertEquals(AGUA, this.heroe.ajustarCosto(Terreno.AGUA, AGUA, PISO));
@@ -103,38 +103,65 @@ class HeroeEfectosTest {
 
     @Test
     void quitarUnoNoTocaLosOtros() {
-        Efecto zapatos = new AguaComoPiso();
-        this.heroe.agregarEfecto(zapatos);
+        this.heroe.agregarEfecto(new AguaComoPiso());
         this.heroe.agregarEfecto(new Envenenado());
 
-        this.heroe.quitarEfecto(zapatos);
+        this.heroe.quitarEfecto(TipoDeEfecto.AGUA_COMO_PISO);
 
         assertEquals(1, this.heroe.getEfectosActivos().size());
+        assertEquals(TipoDeEfecto.ENVENENADO, this.heroe.getEfectosActivos().get(0).getTipo());
         assertEquals(AGUA + 1, this.heroe.ajustarCosto(Terreno.AGUA, AGUA, PISO));
     }
 
     @Test
-    void quitarSacaEseEfectoExactoYNoOtroIgual() {
-        // Dos zapatos usados: al vencer el primero, el segundo sigue activo.
+    void conDosDelMismoTipoQuitaUnoSolo() {
+        // Dos zapatos usados: al vencer el primero, el otro sigue activo.
+        this.heroe.agregarEfecto(new AguaComoPiso());
+        this.heroe.agregarEfecto(new AguaComoPiso());
+
+        this.heroe.quitarEfecto(TipoDeEfecto.AGUA_COMO_PISO);
+
+        assertEquals(1, this.heroe.getEfectosActivos().size());
+        assertEquals(PISO, this.heroe.ajustarCosto(Terreno.AGUA, AGUA, PISO));
+    }
+
+    @Test
+    void quitaElPrimeroDeEseTipo() {
         Efecto primeros = new AguaComoPiso();
         Efecto segundos = new AguaComoPiso();
         this.heroe.agregarEfecto(primeros);
         this.heroe.agregarEfecto(segundos);
 
-        this.heroe.quitarEfecto(primeros);
+        this.heroe.quitarEfecto(TipoDeEfecto.AGUA_COMO_PISO);
 
-        assertEquals(1, this.heroe.getEfectosActivos().size());
         assertTrue(this.heroe.getEfectosActivos().get(0) == segundos);
-        assertEquals(PISO, this.heroe.ajustarCosto(Terreno.AGUA, AGUA, PISO));
     }
 
     @Test
-    void quitarUnEfectoQueNoTieneNoFalla() {
+    void quitaPorTipoAunqueElEfectoSeaOtroObjeto() {
+        // Lo que pasa al retomar una partida guardada: el efecto del héroe es
+        // un objeto nuevo, y el evento solo conoce su tipo.
         this.heroe.agregarEfecto(new AguaComoPiso());
 
-        this.heroe.quitarEfecto(new AguaComoPiso());
+        this.heroe.quitarEfecto(new AguaComoPiso().getTipo());
+
+        assertTrue(this.heroe.getEfectosActivos().isEmpty());
+    }
+
+    @Test
+    void quitarUnTipoQueNoTieneNoFallaNiTocaLosOtros() {
+        this.heroe.agregarEfecto(new AguaComoPiso());
+
+        this.heroe.quitarEfecto(TipoDeEfecto.LAVA_COMO_PISO);
 
         assertEquals(1, this.heroe.getEfectosActivos().size());
+    }
+
+    @Test
+    void quitarSinEfectosNoFalla() {
+        this.heroe.quitarEfecto(TipoDeEfecto.ENVENENADO);
+
+        assertTrue(this.heroe.getEfectosActivos().isEmpty());
     }
 
     @Test

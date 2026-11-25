@@ -22,8 +22,9 @@ import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
 
 /**
- * Tests de QuitarEfecto: el evento que, al ejecutarlo la agenda, saca un
- * efecto del héroe de la partida.
+ * Tests de QuitarEfecto: el evento que, al ejecutarlo la agenda, saca del
+ * héroe un efecto del tipo que guarda. Guarda el tipo y no el objeto, para
+ * que siga andando después de guardar y retomar la partida.
  */
 class QuitarEfectoTest {
 
@@ -47,26 +48,55 @@ class QuitarEfectoTest {
     }
 
     @Test
-    void constructorRechazaEfectoNulo() {
+    void constructorRechazaTipoNulo() {
         assertThrows(IllegalArgumentException.class, () -> new QuitarEfecto(null));
     }
 
     @Test
-    void alEjecutarseSacaElEfectoDelHeroe() {
-        Efecto zapatos = new AguaComoPiso();
-        this.heroe.agregarEfecto(zapatos);
+    void guardaElTipoQueRecibe() {
+        // Es lo que necesita la persistencia para escribirlo en el JSON.
+        QuitarEfecto evento = new QuitarEfecto(TipoDeEfecto.LAVA_COMO_PISO);
 
-        new QuitarEfecto(zapatos).ejecutar(this.partida);
+        assertEquals(TipoDeEfecto.LAVA_COMO_PISO, evento.getTipo());
+    }
+
+    @Test
+    void alEjecutarseSacaElEfectoDelHeroe() {
+        this.heroe.agregarEfecto(new AguaComoPiso());
+
+        new QuitarEfecto(TipoDeEfecto.AGUA_COMO_PISO).ejecutar(this.partida);
 
         assertTrue(this.heroe.getEfectosActivos().isEmpty());
     }
 
     @Test
+    void sacaElEfectoAunqueElHeroeTengaOtroObjetoDelMismoTipo() {
+        // Simula retomar una partida: el evento se creó con un efecto, pero
+        // el héroe tiene otro objeto nuevo del mismo tipo.
+        Efecto original = new AguaComoPiso();
+        QuitarEfecto evento = new QuitarEfecto(original.getTipo());
+        this.heroe.agregarEfecto(new AguaComoPiso());
+
+        evento.ejecutar(this.partida);
+
+        assertTrue(this.heroe.getEfectosActivos().isEmpty());
+    }
+
+    @Test
+    void conDosDelMismoTipoSacaUnoSolo() {
+        this.heroe.agregarEfecto(new AguaComoPiso());
+        this.heroe.agregarEfecto(new AguaComoPiso());
+
+        new QuitarEfecto(TipoDeEfecto.AGUA_COMO_PISO).ejecutar(this.partida);
+
+        assertEquals(1, this.heroe.getEfectosActivos().size());
+    }
+
+    @Test
     void saleDeLaAgendaRecienCuandoLlegaSuPaso() {
         Agenda agenda = new Agenda();
-        Efecto zapatos = new AguaComoPiso();
-        this.heroe.agregarEfecto(zapatos);
-        agenda.programar(3, new QuitarEfecto(zapatos));
+        this.heroe.agregarEfecto(new AguaComoPiso());
+        agenda.programar(3, new QuitarEfecto(TipoDeEfecto.AGUA_COMO_PISO));
 
         agenda.ejecutarLosQueVencen(2, this.partida);
         assertEquals(1, this.heroe.getEfectosActivos().size());
@@ -78,16 +108,14 @@ class QuitarEfectoTest {
     @Test
     void dosEfectosVencenCadaUnoEnSuPaso() {
         Agenda agenda = new Agenda();
-        Efecto zapatos = new AguaComoPiso();
-        Efecto veneno = new Envenenado();
-        this.heroe.agregarEfecto(zapatos);
-        this.heroe.agregarEfecto(veneno);
-        agenda.programar(5, new QuitarEfecto(zapatos));
-        agenda.programar(2, new QuitarEfecto(veneno));
+        this.heroe.agregarEfecto(new AguaComoPiso());
+        this.heroe.agregarEfecto(new Envenenado());
+        agenda.programar(5, new QuitarEfecto(TipoDeEfecto.AGUA_COMO_PISO));
+        agenda.programar(2, new QuitarEfecto(TipoDeEfecto.ENVENENADO));
 
         agenda.ejecutarLosQueVencen(2, this.partida);
         assertEquals(1, this.heroe.getEfectosActivos().size());
-        assertTrue(this.heroe.getEfectosActivos().get(0) == zapatos);
+        assertEquals(TipoDeEfecto.AGUA_COMO_PISO, this.heroe.getEfectosActivos().get(0).getTipo());
 
         agenda.ejecutarLosQueVencen(5, this.partida);
         assertTrue(this.heroe.getEfectosActivos().isEmpty());
@@ -96,12 +124,21 @@ class QuitarEfectoTest {
     @Test
     void quedaRegistradoEnLaAgendaConSuPaso() {
         Agenda agenda = new Agenda();
-        agenda.programar(20, new QuitarEfecto(new AguaComoPiso()));
+        agenda.programar(20, new QuitarEfecto(TipoDeEfecto.AGUA_COMO_PISO));
 
         List<EventoProgramado> pendientes = agenda.getPendientes();
 
         assertEquals(1, pendientes.size());
         assertEquals(20, pendientes.get(0).paso());
         assertTrue(pendientes.get(0).evento() instanceof QuitarEfecto);
+    }
+
+    // =================== TIPO DE CADA EFECTO =================== //
+
+    @Test
+    void cadaEfectoDiceSuTipo() {
+        assertEquals(TipoDeEfecto.AGUA_COMO_PISO, new AguaComoPiso().getTipo());
+        assertEquals(TipoDeEfecto.LAVA_COMO_PISO, new LavaComoPiso().getTipo());
+        assertEquals(TipoDeEfecto.ENVENENADO, new Envenenado().getTipo());
     }
 }
