@@ -3,6 +3,7 @@ package ar.uba.fi.cb100.tp2.modelo.partida;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Collections;
 
 import ar.uba.fi.cb100.tp2.modelo.eventos.Agenda;
 import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
@@ -44,6 +45,57 @@ public class Partida {
         this.pasos = 0;
     }
 
+    /**
+     * Constructor para reconstruir una partida guardada.
+     *
+     * Conserva los pasos y la agenda recuperados, sin inicializar
+     * una partida nueva.
+     *
+     * @param mazmorra mazmorra reconstruida
+     * @param heroe héroe reconstruido
+     * @param costos costos efectivos de la partida
+     * @param pasos cantidad de pasos realizados
+     * @param agenda agenda restaurada con sus eventos pendientes
+     */
+    public Partida(
+            Mazmorra mazmorra,
+            Heroe heroe,
+            Map<Terreno, Integer> costos,
+            int pasos,
+            Agenda agenda) {
+
+        if (mazmorra == null) {
+            throw new IllegalArgumentException(
+                    "La mazmorra no puede ser nula.");
+        }
+        if (heroe == null) {
+            throw new IllegalArgumentException(
+                    "El héroe no puede ser nulo.");
+        }
+        if (costos == null) {
+            throw new IllegalArgumentException(
+                    "Los costos no pueden ser nulos.");
+        }
+        if (pasos < 0) {
+            throw new IllegalArgumentException(
+                    "Los pasos no pueden ser negativos.");
+        }
+        if (agenda == null) {
+            throw new IllegalArgumentException(
+                    "La agenda no puede ser nula.");
+        }
+
+        this.mazmorra = mazmorra;
+        this.heroe = heroe;
+
+        this.costos = new EnumMap<>(Terreno.class);
+        this.costos.putAll(costos);
+
+        this.agenda = agenda;
+        this.pasos = pasos;
+    }
+
+
     /** @return cuántos pasos se dieron; las acciones inválidas no cuentan */
     public int getPasos() {
         return this.pasos;
@@ -60,6 +112,30 @@ public class Partida {
     }
 
     /**
+     * Devuelve una copia de los costos efectivos de la partida.
+     *
+     * @return costos asociados a cada terreno
+     */
+    public Map<Terreno, Integer> getCostos() {
+        return Collections.unmodifiableMap(
+                new EnumMap<>(this.costos)
+        );
+    }
+
+    /**
+     * Devuelve la agenda de eventos de la partida.
+     *
+     * Se utiliza para consultar y restaurar los eventos pendientes
+     * durante el proceso de persistencia.
+     *
+     * @return agenda de la partida
+     */
+    public Agenda getAgenda() {
+        return this.agenda;
+    }
+
+
+    /**
      * @param terreno el terreno al que entra el héroe
      * @return cuánta energía cuesta entrar ahí
      * @throws IllegalArgumentException si ese terreno no tiene costo (la pared no se pisa)
@@ -70,11 +146,6 @@ public class Partida {
             throw new IllegalArgumentException("El terreno " + terreno + " no tiene costo");
         }
         return costo;
-    }
-
-    /** @return la agenda de eventos futuros de esta partida */
-    public Agenda getAgenda() {
-        return this.agenda;
     }
 
     /**

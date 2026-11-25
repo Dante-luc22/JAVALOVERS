@@ -147,4 +147,24 @@ public class Mazmorra {
             throw new IllegalArgumentException("Esa celda ya tiene una conexión: " + punta);
         }
     }
+
+    /**
+     * Devuelve una copia de la lista de planos,
+     * conservando el orden original.
+     *
+     * @return planos ordenados por tablero y piso
+     */
+    public List<Plano> getPlanos() {
+        return new ArrayList<>(this.planos);
+    }
+
+    /**
+     * Devuelve la cantidad de pisos que tiene cada tablero.
+     *
+     * @return pisos por tablero
+     */
+    public int getPisosPorTablero() {
+        return this.pisosPorTablero;
+    }
+
 }

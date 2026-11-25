@@ -10,6 +10,7 @@ public abstract class Monstruo extends Entidad {
 
     private final Posicion posicionInicial;
     private final int danio;
+    private int adormecimientos = 0;
 
     /**
      * Constructor de clase Monstruo, recibe su posicion y danio inicial
@@ -17,10 +18,10 @@ public abstract class Monstruo extends Entidad {
      * @param posicionInicial posicion donde empieza el monstruo
      * @param danio           danio predeterminado que hace un monstruo
      * @throws IllegalArgumentException si la posicion inicial es nula y
-     *         si el danio es menor o igual a 0.
+     *                                  si el danio es menor o igual a 0.
      */
     protected Monstruo(Posicion posicionInicial, int danio) {
-        if  (posicionInicial == null) {
+        if (posicionInicial == null) {
             throw new IllegalArgumentException(
                     "La posicion inicial no puede ser nula");
         }
@@ -41,7 +42,7 @@ public abstract class Monstruo extends Entidad {
      * @param plano lugar del plano donde se va a mover;
      * @param heroe posicion del heroe;
      * @return la posicion a la que se va a mover el monstruo. Nunca devuelve
-     *         null y puede devolver la misma ubicacion si el monstruo esta quieto;
+     * null y puede devolver la misma ubicacion si el monstruo esta quieto;
      */
     protected abstract Posicion decidirMovimiento(Plano plano, Posicion heroe);
 
@@ -62,7 +63,7 @@ public abstract class Monstruo extends Entidad {
      * @param heroe heroe a atacar
      * @throws IllegalArgumentException si el heroe dado es nulo
      */
-    protected void atacarYVolver(Heroe heroe){
+    protected void atacarYVolver(Heroe heroe) {
         if (heroe == null) {
             throw new IllegalArgumentException("El heroe no puede ser nulo");
         }
@@ -73,13 +74,14 @@ public abstract class Monstruo extends Entidad {
 
     /**
      * Lo que hace en cada paso del juego, en este caso el monstruo
-     * se mueve
+     * se mueve. Si el monstruo esta dormido, no hace nada (no ataca
+     * ni se mueve).
      *
      * @param plano el plano donde está
      * @param heroe el héroe, para saber dónde está
      */
     @Override
-    public final void actuar(Plano plano, Heroe heroe){
+    public final void actuar(Plano plano, Heroe heroe) {
         if (plano == null) {
             throw new IllegalArgumentException(
                     "El plano no puede ser nulo");
@@ -87,6 +89,9 @@ public abstract class Monstruo extends Entidad {
         if (heroe == null) {
             throw new IllegalArgumentException(
                     "El heroe no puede ser nulo");
+        }
+        if (estaAdormecido()) {
+            return;
         }
         Posicion posicionHeroe = heroe.getUbicacion().posicion();
         Posicion nuevaPosicion = decidirMovimiento(plano, posicionHeroe);
@@ -100,16 +105,28 @@ public abstract class Monstruo extends Entidad {
 
     /**
      * Lo que pasa cuando el héroe pisa su celda, en este caso
-     * el monstruo lo alcanza
+     * el monstruo lo alcanza. Si el monstruo esta dormido,
+     * al pasar por encima el heroe lo despierta del todo.
+     * Si el heroe tiene escudo, el monstruo no le hace nada, el heroe
+     * gasta escudo y el monstruo vuelve al inicio.
      *
      * @param heroe  el héroe
      * @param agenda la agenda, para efectos que vencen más adelante
      */
     @Override
-    public final void alEncontrarseConHeroe(Heroe heroe, Agenda agenda){
+    public final void alEncontrarseConHeroe(Heroe heroe, Agenda agenda) {
         if (heroe == null) {
             throw new IllegalArgumentException(
                     "El heroe recibido no puede ser nulo");
+        }
+        if (estaAdormecido()) {
+            despertarDelTodo();
+            return;
+        }
+        if (heroe.tieneEscudo()) {
+            heroe.usarEscudo();
+            volverAlInicio();
+            return;
         }
         alAlcanzarAlHeroe(heroe, agenda);
     }
@@ -117,10 +134,52 @@ public abstract class Monstruo extends Entidad {
     /**
      * Devuelve el monstruo a su posicion inicial.
      */
-    protected void volverAlInicio(){
+    protected void volverAlInicio() {
         setPosicion(posicionInicial);
     }
 
+
+    /**
+     * Manda al monstruo de vuelta a su posicion inicial porque lo repelio
+     * un efecto externo (por ejemplo, el cofre de repelente). No
+     * le hace nada al heroe.
+     */
+    public final void repeler() {
+        volverAlInicio();
+    }
+
+
+    /**
+     * Metodo que suma 1 al contador de adormecimientos.
+     */
+    public final void adormecer() {
+        adormecimientos++;
+    }
+
+    /**
+     * Si los adormecimientos son mayores a 0, le resta 1. No
+     * baja de 0 ya que puede haver despertado antes, si el heroe
+     * lo piso y el evento de despertar de la agenda llega igual.
+     */
+    public final void despertar() {
+        if (adormecimientos > 0) {
+            adormecimientos--;
+        }
+    }
+
+    /**
+     * Despierta del Todo a un monstruo.
+     */
+    private void despertarDelTodo() {
+        adormecimientos = 0;
+    }
+
+    /**
+     * @return true si esta adormecido el monstruo
+     */
+    public final boolean estaAdormecido() {
+        return adormecimientos > 0;
+    }
 
     // ================ GETTERS SIMPLES ================= //
 
@@ -138,8 +197,24 @@ public abstract class Monstruo extends Entidad {
         return danio;
     }
 
-        @Override
+    @Override
     public final char getSimbolo() {
         return 'M';
+    }
+
+    /**
+     * Cada tipo de monstruo dice cuál es. En el plano todos son una 'M', así que
+     * esto es lo que permite saber cuál tocó al sortearlos.
+     *
+     * @return el tipo de este monstruo
+     */
+    public abstract TipoDeMonstruo getTipoDeMonstruo();
+
+    /**
+     * @return el nombre del tipo de este monstruo, por ejemplo "CAZADOR"
+     */
+    @Override
+    public final String getTipo() {
+        return this.getTipoDeMonstruo().name();
     }
 }

@@ -34,6 +34,9 @@ public class VistaGrafica implements Vista, AutoCloseable {
     private static final int TAMANIO_CELDA = 48;
     private static final String NOMBRE_HEROE = "heroe";
 
+    /** Símbolo gráfico de una celda con escalera (se dibuja con escalera.png). */
+    private static final char SIMBOLO_ESCALERA = 'H';
+
     private final Path carpetaImagenes;
 
     private JuegoVisual juego;
@@ -105,14 +108,7 @@ public class VistaGrafica implements Vista, AutoCloseable {
 
         Tablero tablero = plano.getTablero();
 
-        Ubicacion ubicacionHeroe = partida.getHeroe().getUbicacion();
-        Set<Posicion> escaleras = new HashSet<>();
-        for (Conexion conexion : partida.getMazmorra()
-                .conexionesDelPlano(ubicacionHeroe.tablero(), ubicacionHeroe.piso())) {
-            escaleras.add(conexion.origen().posicion());
-        }
-
-        String[] grilla = construirGrilla(plano, escaleras);
+        String[] grilla = construirGrilla(partida, plano);
 
         this.juego = new JuegoVisual(
                 "La fuga de la mazmorra",
@@ -143,16 +139,39 @@ public class VistaGrafica implements Vista, AutoCloseable {
     }
 
     /**
-     * Construye la grilla gráfica a partir del tablero del modelo.
-     * Las celdas con escalera o pasillo se marcan con 'E' (se dibujan como puerta).
+     * Las celdas del plano donde hay una escalera. Una conexión entre pisos del
+     * mismo tablero es una escalera; entre tableros distintos sería un pasillo,
+     * que por ahora no se dibuja distinto.
+     *
+     * @param partida la partida, para consultar las conexiones de la mazmorra
+     * @return las posiciones de las escaleras del plano donde está el héroe
      */
-    private String[] construirGrilla(Plano plano, Set<Posicion> escaleras) {
+    private Set<Posicion> escalerasDelPlano(Partida partida) {
+
+        Ubicacion ubicacion = partida.getHeroe().getUbicacion();
+        Set<Posicion> escaleras = new HashSet<>();
+
+        for (Conexion conexion : partida.getMazmorra()
+                .conexionesDelPlano(ubicacion.tablero(), ubicacion.piso())) {
+
+            if (conexion.origen().tablero() == conexion.destino().tablero()) {
+                escaleras.add(conexion.origen().posicion());
+            }
+        }
+        return escaleras;
+    }
+
+    /**
+     * Construye la grilla gráfica a partir del tablero del modelo.
+     */
+    private String[] construirGrilla(Partida partida, Plano plano) {
 
         Tablero tablero = plano.getTablero();
 
         String[] grilla = new String[tablero.getFilas()];
 
         Posicion salida = plano.getSalida();
+        Set<Posicion> escaleras = escalerasDelPlano(partida);
 
         for (int fila = 1; fila <= tablero.getFilas(); fila++) {
 
@@ -169,7 +188,7 @@ public class VistaGrafica implements Vista, AutoCloseable {
                 if (salida != null && salida.equals(posicion)) {
                     simbolo = 'S';
                 } else if (escaleras.contains(posicion)) {
-                    simbolo = 'E';
+                    simbolo = SIMBOLO_ESCALERA;
                 } else {
                     simbolo = simboloDe(
                             tablero.getTerreno(posicion)
@@ -195,8 +214,7 @@ public class VistaGrafica implements Vista, AutoCloseable {
         this.juego.definirCelda('~', imagen("agua.png"));
         this.juego.definirCelda('^', imagen("lava.png"));
         this.juego.definirCelda('S', imagen("salida.png"));
-        // Provisorio: la escalera se dibuja como la puerta hasta tener su propia imagen.
-        this.juego.definirCelda('E', imagen("puerta.png"));
+        this.juego.definirCelda(SIMBOLO_ESCALERA, imagen("escalera.png"));
     }
 
     /**
@@ -272,18 +290,38 @@ public class VistaGrafica implements Vista, AutoCloseable {
     }
 
     /**
-     * Determina la imagen de una entidad a partir de su símbolo.
+     * Determina la imagen de una entidad a partir de su símbolo. En el plano
+     * todos los monstruos son una 'M', así que para ellos se busca la imagen
+     * según su tipo (cazador.png, fantasma.png...).
      */
     private Path imagenDe(Entidad entidad) {
 
         return switch (entidad.getSimbolo()) {
             case 'C' -> imagen("tesoro.png");
-            case 'M' -> imagen("monstruo.png");
+            case 'M' -> imagenDeMonstruo(entidad.getTipo());
             default -> throw new IllegalArgumentException(
                     "Símbolo de entidad desconocido: " +
                             entidad.getSimbolo()
             );
         };
+    }
+
+    /**
+     * La imagen de un monstruo según su tipo: el nombre del tipo en minúsculas
+     * más ".png". Si ese tipo todavía no tiene imagen propia, usa la genérica
+     * (monstruo.png).
+     *
+     * @param tipo el nombre del tipo, por ejemplo "CAZADOR"
+     * @return la ruta de la imagen
+     */
+    private Path imagenDeMonstruo(String tipo) {
+
+        Path propia = this.carpetaImagenes.resolve(tipo.toLowerCase() + ".png");
+
+        if (Files.isRegularFile(propia)) {
+            return propia;
+        }
+        return imagen("monstruo.png");
     }
 
     /**
