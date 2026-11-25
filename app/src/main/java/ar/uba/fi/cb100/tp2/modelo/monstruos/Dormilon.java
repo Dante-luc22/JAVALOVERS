@@ -21,11 +21,11 @@ public class Dormilon extends Cazador{
      *
      * @param posicionInicial del dormilon.
      * @param danio           que realiza el dormilon.
-     * @param radio           radio para alcanzar al heroe.
      * @param costos          energia que cuesta entrar en cada terreno.
+     * @param radio           radio para alcanzar al heroe.
      * @throws IllegalArgumentException si el radio dado es menor o igual a 0.
      */
-    public Dormilon(Posicion posicionInicial, int danio,Map<Terreno, Integer> costos ,int radio) {
+    public Dormilon(Posicion posicionInicial, int danio, Map<Terreno, Integer> costos , int radio) {
         if (radio <= 0) {
             throw new IllegalArgumentException(
                     "El radio debe ser mayor que 0.");

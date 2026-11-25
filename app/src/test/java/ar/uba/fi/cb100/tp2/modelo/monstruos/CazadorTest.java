@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Map;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -31,6 +32,8 @@ import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
 class CazadorTest {
 
     private static final int DANIO = 30;
+    private static final Map<Terreno, Integer> COSTOS =
+            Map.of(Terreno.PISO, 1, Terreno.AGUA, 3, Terreno.LAVA, 8);
     private static final Posicion HEROE = new Posicion(4, 4);
 
     // =================== AYUDAS =================== //
@@ -65,7 +68,7 @@ class CazadorTest {
 
     @Test
     void recienCreadoEstaEnSuPosicionInicialConSuDanio() {
-        Cazador cazador = new Cazador(new Posicion(2, 2), DANIO);
+        Cazador cazador = new Cazador(new Posicion(2, 2), DANIO, COSTOS);
         assertEquals(new Posicion(2, 2), cazador.getPosicion());
         assertEquals(new Posicion(2, 2), cazador.getPosicionInicial());
         assertEquals(DANIO, cazador.getDanio());
@@ -73,26 +76,48 @@ class CazadorTest {
 
     @Test
     void constructorRechazaPosicionNula() {
-        assertThrows(IllegalArgumentException.class, () -> new Cazador(null, DANIO));
+        assertThrows(IllegalArgumentException.class, () -> new Cazador(null, DANIO, COSTOS));
     }
 
     @Test
     void constructorRechazaDanioNoPositivo() {
-        assertThrows(IllegalArgumentException.class, () -> new Cazador(new Posicion(2, 2), 0));
+        assertThrows(IllegalArgumentException.class, () -> new Cazador(new Posicion(2, 2), 0, COSTOS));
+    }
+
+    @Test
+    void constructorRechazaCostosNulos() {
+        assertThrows(IllegalArgumentException.class, () -> new Cazador(new Posicion(2, 2), DANIO, null));
+    }
+
+    @Test
+    void guardaLosCostosQueRecibe() {
+        Cazador cazador = new Cazador(new Posicion(2, 2), DANIO, COSTOS);
+
+        assertEquals(COSTOS, cazador.getCostos());
+    }
+
+    @Test
+    void cambiarElMapaOriginalNoCambiaLosCostosDelCazador() {
+        Map<Terreno, Integer> costos = new HashMap<>(COSTOS);
+        Cazador cazador = new Cazador(new Posicion(2, 2), DANIO, costos);
+
+        costos.put(Terreno.AGUA, 100);
+
+        assertEquals(3, cazador.getCostos().get(Terreno.AGUA));
     }
 
     // =================== CALCULAR DISTANCIAS (BFS) =================== //
 
     @Test
     void elDestinoEstaADistanciaCero() {
-        Cazador cazador = new Cazador(new Posicion(2, 2), DANIO);
+        Cazador cazador = new Cazador(new Posicion(2, 2), DANIO, COSTOS);
         HashMap<Posicion, Integer> distancias = cazador.calcularDistancias(planoConPared(), HEROE);
         assertEquals(0, distancias.get(HEROE));
     }
 
     @Test
     void calculaLasDistanciasDelDibujo() {
-        Cazador cazador = new Cazador(new Posicion(2, 2), DANIO);
+        Cazador cazador = new Cazador(new Posicion(2, 2), DANIO, COSTOS);
         HashMap<Posicion, Integer> distancias = cazador.calcularDistancias(planoConPared(), HEROE);
 
         int[][] esperadas = {
@@ -117,7 +142,7 @@ class CazadorTest {
     void lasCeldasInalcanzablesNoTienenDistancia() {
         Posicion encerrada = new Posicion(2, 5);
         Plano plano = planoConPiso(new Posicion(2, 2), new Posicion(2, 3), encerrada);
-        Cazador cazador = new Cazador(new Posicion(2, 2), DANIO);
+        Cazador cazador = new Cazador(new Posicion(2, 2), DANIO, COSTOS);
 
         HashMap<Posicion, Integer> distancias = cazador.calcularDistancias(plano, new Posicion(2, 2));
 
@@ -131,7 +156,7 @@ class CazadorTest {
     void rodeaLaParedEnVezDeIrDerecho() {
         // Desde (2,4) el héroe está justo abajo, pero abajo hay pared:
         // tiene que ir a la derecha, por (2,5), que está a distancia 3.
-        Cazador cazador = new Cazador(new Posicion(2, 4), DANIO);
+        Cazador cazador = new Cazador(new Posicion(2, 4), DANIO, COSTOS);
 
         cazador.actuar(planoConPared(), heroeEn(HEROE));
 
@@ -141,7 +166,7 @@ class CazadorTest {
     @Test
     void cadaPasoLoAcercaUnaCeldaHastaAlcanzarlo() {
         Plano plano = planoConPared();
-        Cazador cazador = new Cazador(new Posicion(2, 2), DANIO);
+        Cazador cazador = new Cazador(new Posicion(2, 2), DANIO, COSTOS);
         Heroe heroe = heroeEn(HEROE);
 
         for (int esperada = 3; esperada >= 0; esperada--) {
@@ -154,7 +179,7 @@ class CazadorTest {
 
     @Test
     void conElHeroeAlLadoPisaSuCelda() {
-        Cazador cazador = new Cazador(new Posicion(4, 5), DANIO);
+        Cazador cazador = new Cazador(new Posicion(4, 5), DANIO, COSTOS);
 
         cazador.actuar(planoConPared(), heroeEn(HEROE));
 
@@ -163,7 +188,7 @@ class CazadorTest {
 
     @Test
     void siYaEstaEnLaCeldaDelHeroeSeQuedaAhi() {
-        Cazador cazador = new Cazador(HEROE, DANIO);
+        Cazador cazador = new Cazador(HEROE, DANIO, COSTOS);
 
         cazador.actuar(planoConPared(), heroeEn(HEROE));
 
@@ -175,7 +200,7 @@ class CazadorTest {
         Posicion inicio = new Posicion(2, 2);
         Posicion heroeEncerrado = new Posicion(2, 5);
         Plano plano = planoConPiso(inicio, new Posicion(2, 3), heroeEncerrado);
-        Cazador cazador = new Cazador(inicio, DANIO);
+        Cazador cazador = new Cazador(inicio, DANIO, COSTOS);
 
         cazador.actuar(plano, heroeEn(heroeEncerrado));
 
@@ -185,7 +210,7 @@ class CazadorTest {
     @Test
     void encerradoSinVecinasSeQuedaQuieto() {
         Posicion solo = new Posicion(3, 3);
-        Cazador cazador = new Cazador(solo, DANIO);
+        Cazador cazador = new Cazador(solo, DANIO, COSTOS);
 
         cazador.actuar(planoConPiso(solo, new Posicion(5, 5)), heroeEn(new Posicion(5, 5)));
 
@@ -195,7 +220,7 @@ class CazadorTest {
     @Test
     void nuncaPisaUnaPared() {
         Plano plano = planoConPared();
-        Cazador cazador = new Cazador(new Posicion(2, 3), DANIO);
+        Cazador cazador = new Cazador(new Posicion(2, 3), DANIO, COSTOS);
         Heroe heroe = heroeEn(HEROE);
 
         for (int paso = 0; paso < 10; paso++) {
@@ -210,7 +235,7 @@ class CazadorTest {
         // Si las distancias quedaran guardadas de un paso al otro, el cazador
         // seguiría yendo adonde estaba el héroe antes.
         Plano plano = planoConPared();
-        Cazador cazador = new Cazador(new Posicion(2, 4), DANIO);
+        Cazador cazador = new Cazador(new Posicion(2, 4), DANIO, COSTOS);
         Heroe heroe = heroeEn(new Posicion(2, 2));
 
         cazador.actuar(plano, heroe);
@@ -224,8 +249,8 @@ class CazadorTest {
     @Test
     void conEmpateSiempreEligeLoMismo() {
         // Desde (2,3) las dos vecinas, (2,2) y (2,4), están a distancia 4.
-        Cazador uno = new Cazador(new Posicion(2, 3), DANIO);
-        Cazador otro = new Cazador(new Posicion(2, 3), DANIO);
+        Cazador uno = new Cazador(new Posicion(2, 3), DANIO, COSTOS);
+        Cazador otro = new Cazador(new Posicion(2, 3), DANIO, COSTOS);
 
         uno.actuar(planoConPared(), heroeEn(HEROE));
         otro.actuar(planoConPared(), heroeEn(HEROE));
@@ -239,7 +264,7 @@ class CazadorTest {
 
     @Test
     void alAlcanzarAlHeroeLeRestaElDanioYVuelveAlInicio() {
-        Cazador cazador = new Cazador(new Posicion(4, 5), DANIO);
+        Cazador cazador = new Cazador(new Posicion(4, 5), DANIO, COSTOS);
         Heroe heroe = heroeEn(HEROE);
         cazador.actuar(planoConPared(), heroe);
 
@@ -252,7 +277,7 @@ class CazadorTest {
     @Test
     void sePuedeRegistrarEnElCatalogo() {
         CatalogoDeMonstruos catalogo = new CatalogoDeMonstruos();
-        catalogo.registrar("CAZADOR", posicion -> new Cazador(posicion, DANIO));
+        catalogo.registrar("CAZADOR", posicion -> new Cazador(posicion, DANIO, COSTOS));
 
         Monstruo creado = catalogo.crearAlAzar(new Posicion(2, 2), new Random(1));
 

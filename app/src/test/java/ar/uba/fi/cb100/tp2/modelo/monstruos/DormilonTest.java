@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Map;
 import java.util.Random;
 
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,8 @@ class DormilonTest {
 
     private static final int DANIO = 30;
     private static final int RADIO = 3;
+    private static final Map<Terreno, Integer> COSTOS =
+            Map.of(Terreno.PISO, 1, Terreno.AGUA, 3, Terreno.LAVA, 8);
     private static final Posicion HEROE = new Posicion(4, 4);
 
     // =================== AYUDAS =================== //
@@ -55,38 +58,51 @@ class DormilonTest {
 
     @Test
     void recienCreadoEstaEnSuPosicionInicialConSuDanio() {
-        Dormilon dormilon = new Dormilon(new Posicion(2, 2), DANIO, RADIO);
+        Dormilon dormilon = new Dormilon(new Posicion(2, 2), DANIO, COSTOS, RADIO);
         assertEquals(new Posicion(2, 2), dormilon.getPosicion());
         assertEquals(DANIO, dormilon.getDanio());
     }
 
     @Test
     void esUnCazador() {
-        assertTrue(new Dormilon(new Posicion(2, 2), DANIO, RADIO) instanceof Cazador);
+        assertTrue(new Dormilon(new Posicion(2, 2), DANIO, COSTOS, RADIO) instanceof Cazador);
     }
 
     @Test
     void constructorRechazaRadioCero() {
         assertThrows(IllegalArgumentException.class,
-                () -> new Dormilon(new Posicion(2, 2), DANIO, 0));
+                () -> new Dormilon(new Posicion(2, 2), DANIO, COSTOS, 0));
     }
 
     @Test
     void constructorRechazaRadioNegativo() {
         assertThrows(IllegalArgumentException.class,
-                () -> new Dormilon(new Posicion(2, 2), DANIO, -1));
+                () -> new Dormilon(new Posicion(2, 2), DANIO, COSTOS, -1));
     }
 
     @Test
     void constructorRechazaPosicionNula() {
         assertThrows(IllegalArgumentException.class,
-                () -> new Dormilon(null, DANIO, RADIO));
+                () -> new Dormilon(null, DANIO, COSTOS, RADIO));
     }
 
     @Test
     void constructorRechazaDanioNoPositivo() {
         assertThrows(IllegalArgumentException.class,
-                () -> new Dormilon(new Posicion(2, 2), 0, RADIO));
+                () -> new Dormilon(new Posicion(2, 2), 0, COSTOS, RADIO));
+    }
+
+    @Test
+    void constructorRechazaCostosNulos() {
+        assertThrows(IllegalArgumentException.class,
+                () -> new Dormilon(new Posicion(2, 2), DANIO, null, RADIO));
+    }
+
+    @Test
+    void lePasaLosCostosAlCazador() {
+        Dormilon dormilon = new Dormilon(new Posicion(2, 2), DANIO, COSTOS, RADIO);
+
+        assertEquals(COSTOS, dormilon.getCostos());
     }
 
     // =================== DUERME =================== //
@@ -94,7 +110,7 @@ class DormilonTest {
     @Test
     void conElHeroeMasLejosQueElRadioSigueDurmiendo() {
         // (2,2) está a 4 pasos del héroe; el radio es 3.
-        Dormilon dormilon = new Dormilon(new Posicion(2, 2), DANIO, RADIO);
+        Dormilon dormilon = new Dormilon(new Posicion(2, 2), DANIO, COSTOS, RADIO);
 
         dormilon.actuar(planoConPared(), heroeEn(HEROE));
 
@@ -105,7 +121,7 @@ class DormilonTest {
     void cuentaLaDistanciaCaminandoNoEnLineaRecta() {
         // (2,4) está a 2 celdas del héroe en línea recta, pero la pared
         // obliga a dar la vuelta: caminando son 4. Sigue durmiendo.
-        Dormilon dormilon = new Dormilon(new Posicion(2, 4), DANIO, RADIO);
+        Dormilon dormilon = new Dormilon(new Posicion(2, 4), DANIO, COSTOS, RADIO);
 
         dormilon.actuar(planoConPared(), heroeEn(HEROE));
 
@@ -119,7 +135,7 @@ class DormilonTest {
         tablero.setTerreno(new Posicion(2, 3), Terreno.PISO);
         tablero.setTerreno(new Posicion(4, 4), Terreno.PISO);
         Plano plano = new Plano(tablero, new Posicion(2, 2), null);
-        Dormilon dormilon = new Dormilon(new Posicion(2, 2), DANIO, RADIO);
+        Dormilon dormilon = new Dormilon(new Posicion(2, 2), DANIO, COSTOS, RADIO);
 
         dormilon.actuar(plano, heroeEn(new Posicion(4, 4)));
 
@@ -129,7 +145,7 @@ class DormilonTest {
     @Test
     void muchosPasosDormidoNoSeMueveNunca() {
         Plano plano = planoConPared();
-        Dormilon dormilon = new Dormilon(new Posicion(2, 3), DANIO, RADIO);
+        Dormilon dormilon = new Dormilon(new Posicion(2, 3), DANIO, COSTOS, RADIO);
         Heroe heroe = heroeEn(HEROE);
 
         for (int paso = 0; paso < 10; paso++) {
@@ -143,7 +159,7 @@ class DormilonTest {
     @Test
     void justoEnElRadioDespiertaYAvanza() {
         // (3,2) está a 3 pasos: no es más que el radio, así que caza.
-        Dormilon dormilon = new Dormilon(new Posicion(3, 2), DANIO, RADIO);
+        Dormilon dormilon = new Dormilon(new Posicion(3, 2), DANIO, COSTOS, RADIO);
 
         dormilon.actuar(planoConPared(), heroeEn(HEROE));
 
@@ -152,7 +168,7 @@ class DormilonTest {
 
     @Test
     void conUnRadioMasGrandeDespiertaDesdeMasLejos() {
-        Dormilon dormilon = new Dormilon(new Posicion(2, 2), DANIO, 5);
+        Dormilon dormilon = new Dormilon(new Posicion(2, 2), DANIO, COSTOS, 5);
 
         dormilon.actuar(planoConPared(), heroeEn(HEROE));
 
@@ -162,7 +178,7 @@ class DormilonTest {
     @Test
     void despiertaCuandoElHeroeSeAcerca() {
         Plano plano = planoConPared();
-        Dormilon dormilon = new Dormilon(new Posicion(2, 2), DANIO, RADIO);
+        Dormilon dormilon = new Dormilon(new Posicion(2, 2), DANIO, COSTOS, RADIO);
         Heroe heroe = heroeEn(HEROE);
 
         dormilon.actuar(plano, heroe);
@@ -176,7 +192,7 @@ class DormilonTest {
     @Test
     void despiertoLlegaHastaElHeroe() {
         Plano plano = planoConPared();
-        Dormilon dormilon = new Dormilon(new Posicion(3, 2), DANIO, RADIO);
+        Dormilon dormilon = new Dormilon(new Posicion(3, 2), DANIO, COSTOS, RADIO);
         Heroe heroe = heroeEn(HEROE);
 
         for (int paso = 0; paso < 3; paso++) {
@@ -189,7 +205,7 @@ class DormilonTest {
     @Test
     void siElHeroeSeAlejaVuelveADormirse() {
         Plano plano = planoConPared();
-        Dormilon dormilon = new Dormilon(new Posicion(3, 2), DANIO, RADIO);
+        Dormilon dormilon = new Dormilon(new Posicion(3, 2), DANIO, COSTOS, RADIO);
         Heroe heroe = heroeEn(HEROE);
 
         dormilon.actuar(plano, heroe);
@@ -204,7 +220,7 @@ class DormilonTest {
 
     @Test
     void alAlcanzarAlHeroeLeRestaElDanioYVuelveAlInicio() {
-        Dormilon dormilon = new Dormilon(new Posicion(4, 5), DANIO, RADIO);
+        Dormilon dormilon = new Dormilon(new Posicion(4, 5), DANIO, COSTOS, RADIO);
         Heroe heroe = heroeEn(HEROE);
         dormilon.actuar(planoConPared(), heroe);
         assertEquals(HEROE, dormilon.getPosicion());
@@ -218,7 +234,7 @@ class DormilonTest {
     @Test
     void sePuedeRegistrarEnElCatalogoConSuRadio() {
         CatalogoDeMonstruos catalogo = new CatalogoDeMonstruos();
-        catalogo.registrar("DORMILON", posicion -> new Dormilon(posicion, DANIO, RADIO));
+        catalogo.registrar("DORMILON", posicion -> new Dormilon(posicion, DANIO, COSTOS, RADIO));
 
         Monstruo creado = catalogo.crearAlAzar(new Posicion(2, 2), new Random(1));
 

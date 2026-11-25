@@ -14,6 +14,7 @@ import ar.uba.fi.cb100.tp2.modelo.mundo.Entidad;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Mazmorra;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Plano;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Tablero;
+import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
 import ar.uba.fi.cb100.tp2.modelo.partida.Configuracion;
 import ar.uba.fi.cb100.tp2.modelo.partida.EstadoPartida;
 import ar.uba.fi.cb100.tp2.modelo.partida.ParametrosDeDificultad;
@@ -161,7 +162,8 @@ public class CreadorPartidaTest {
 
         @Test
     void elCatalogoTieneLosCincoTiposDeMonstruo() {
-        CatalogoDeMonstruos catalogo = CreadorPartida.crearCatalogoDeMonstruos(new Random(1));
+        CatalogoDeMonstruos catalogo = CreadorPartida.crearCatalogoDeMonstruos(new Random(1),
+                Map.of(Terreno.PISO, 1, Terreno.AGUA, 3, Terreno.LAVA, 8));
 
         assertEquals(5, catalogo.cantidadDeTipos());
         for (String tipo : List.of("ERRANTE", "CAZADOR", "DORMILON", "FANTASMA", "LADRON")) {

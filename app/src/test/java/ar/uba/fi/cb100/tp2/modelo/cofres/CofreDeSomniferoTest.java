@@ -41,6 +41,8 @@ class CofreDeSomniferoTest {
     private static final Posicion HEROE = new Posicion(2, 4);
     private static final Posicion INICIO = new Posicion(2, 1);
     private static final int DURACION = 5;
+    private static final Map<Terreno, Integer> COSTOS =
+            Map.of(Terreno.PISO, 1, Terreno.AGUA, 3, Terreno.LAVA, 8);
 
     private Heroe heroe;
     private Plano plano;
@@ -59,7 +61,7 @@ class CofreDeSomniferoTest {
         this.partida = new Partida(new Mazmorra(List.of(this.plano), 1), this.heroe,
                 Map.of(Terreno.PISO, 1, Terreno.AGUA, 3, Terreno.LAVA, 8));
 
-        this.cazador = new Cazador(INICIO, 30);
+        this.cazador = new Cazador(INICIO, 30, COSTOS);
         this.cofre = new CofreDeSomnifero(HEROE);
         this.plano.agregarEntidad(this.cazador);
         this.plano.agregarEntidad(this.cofre);
@@ -159,7 +161,7 @@ class CofreDeSomniferoTest {
 
     @Test
     void adormecerMonstruosDuermeATodosLosMonstruosDelPlano() {
-        Cazador otro = new Cazador(new Posicion(2, 7), 30);
+        Cazador otro = new Cazador(new Posicion(2, 7), 30, COSTOS);
         this.plano.agregarEntidad(otro);
 
         new AdormecerMonstruos().ejecutar(this.partida);

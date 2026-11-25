@@ -36,6 +36,8 @@ class CofreDeRepelenteTest {
     private static final Posicion HEROE = new Posicion(2, 4);
     private static final Posicion INICIO_IZQUIERDA = new Posicion(2, 1);
     private static final Posicion INICIO_DERECHA = new Posicion(2, 7);
+    private static final Map<Terreno, Integer> COSTOS =
+            Map.of(Terreno.PISO, 1, Terreno.AGUA, 3, Terreno.LAVA, 8);
 
     private Heroe heroe;
     private Plano plano;
@@ -55,8 +57,8 @@ class CofreDeRepelenteTest {
         this.partida = new Partida(new Mazmorra(List.of(this.plano), 1), this.heroe,
                 Map.of(Terreno.PISO, 1, Terreno.AGUA, 3, Terreno.LAVA, 8));
 
-        this.izquierdo = new Cazador(INICIO_IZQUIERDA, 30);
-        this.derecho = new Cazador(INICIO_DERECHA, 30);
+        this.izquierdo = new Cazador(INICIO_IZQUIERDA, 30, COSTOS);
+        this.derecho = new Cazador(INICIO_DERECHA, 30, COSTOS);
         this.cofre = new CofreDeRepelente(HEROE);
         this.plano.agregarEntidad(this.izquierdo);
         this.plano.agregarEntidad(this.derecho);

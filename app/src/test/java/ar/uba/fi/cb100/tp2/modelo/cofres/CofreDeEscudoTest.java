@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Map;
 import java.util.Random;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -36,6 +37,8 @@ class CofreDeEscudoTest {
     private static final Posicion HEROE = new Posicion(2, 3);
     private static final Posicion INICIO = new Posicion(2, 1);
     private static final int DANIO = 30;
+    private static final Map<Terreno, Integer> COSTOS =
+            Map.of(Terreno.PISO, 1, Terreno.AGUA, 3, Terreno.LAVA, 8);
 
     private Heroe heroe;
     private Plano plano;
@@ -50,7 +53,7 @@ class CofreDeEscudoTest {
         }
         this.plano = new Plano(tablero, INICIO, new Posicion(2, 5));
         this.heroe = new Heroe(new Ubicacion(1, 1, HEROE), 100);
-        this.cazador = new Cazador(INICIO, DANIO);
+        this.cazador = new Cazador(INICIO, DANIO, COSTOS);
         this.cofre = new CofreDeEscudo(HEROE);
     }
 

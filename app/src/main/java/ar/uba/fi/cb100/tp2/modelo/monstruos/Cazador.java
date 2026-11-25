@@ -25,6 +25,7 @@ public class Cazador extends Monstruo{
      * @param posicionInicial del cazador.
      * @param danio           que realiza el cazador.
      * @param costos          energia que cuesta entrar en cada terreno.
+     * @throws IllegalArgumentException si los costos son nulos.
      */
     public Cazador(Posicion posicionInicial, int danio, Map<Terreno, Integer> costos) {
         if (costos == null) {

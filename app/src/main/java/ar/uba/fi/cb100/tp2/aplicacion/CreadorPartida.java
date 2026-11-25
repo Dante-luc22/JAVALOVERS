@@ -135,7 +135,7 @@ public class CreadorPartida {
         CatalogoDeMonstruos catalogo = new CatalogoDeMonstruos();
         catalogo.registrar("ERRANTE", p -> new Errante(p, DANIO_DE_LOS_BASICOS, azar));
         catalogo.registrar("CAZADOR", p -> new Cazador(p, DANIO_DE_LOS_BASICOS, costos));
-        catalogo.registrar("DORMILON", p -> new Dormilon(p, DANIO_DE_LOS_BASICOS, costos,RADIO_DEL_DORMILON));
+        catalogo.registrar("DORMILON", p -> new Dormilon(p, DANIO_DE_LOS_BASICOS, costos, RADIO_DEL_DORMILON));
         catalogo.registrar("FANTASMA", p -> new Fantasma(p, DANIO_DE_LOS_BASICOS));
         catalogo.registrar("LADRON", p -> new Ladron(p, DANIO_DE_LOS_BASICOS, azar));
         return catalogo;
