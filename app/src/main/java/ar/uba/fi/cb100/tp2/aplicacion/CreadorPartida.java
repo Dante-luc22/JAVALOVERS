@@ -142,8 +142,7 @@ public class CreadorPartida {
     }
 
     /**
-     * Los tipos de cofre terminados. Faltan Brújula, Pico, Repelente y
-     * Somnífero (Demián): se agrega una línea por cada uno.
+     * Los tipos de cofre terminados.
      */
     static CatalogoDeCofres crearCatalogoDeCofres() {
         CatalogoDeCofres catalogo = new CatalogoDeCofres();
