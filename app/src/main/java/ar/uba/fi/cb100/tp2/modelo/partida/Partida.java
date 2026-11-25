@@ -198,6 +198,7 @@ public class Partida {
             return new ResultadoTurno(false, this.estadoActual());
         }
         this.empezarPaso();
+        this.heroe.sumarEnergia(1);
         return this.cerrarTurno();
     }
 
