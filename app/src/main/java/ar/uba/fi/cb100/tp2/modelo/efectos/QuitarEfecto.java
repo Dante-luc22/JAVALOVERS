@@ -24,7 +24,7 @@ public class QuitarEfecto implements Evento {
     }
 
     /**
-     * @param partida la partida en curso, para llegar al héroe, al plano y a los monstruos
+     * @param partida la partida en curso, para llegar al héroe.
      */
     @Override
     public void ejecutar(Partida partida) {
