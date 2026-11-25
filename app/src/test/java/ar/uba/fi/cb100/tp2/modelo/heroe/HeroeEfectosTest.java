@@ -1,6 +1,7 @@
 package ar.uba.fi.cb100.tp2.modelo.heroe;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -10,14 +11,16 @@ import org.junit.jupiter.api.Test;
 import ar.uba.fi.cb100.tp2.modelo.efectos.AguaComoPiso;
 import ar.uba.fi.cb100.tp2.modelo.efectos.Efecto;
 import ar.uba.fi.cb100.tp2.modelo.efectos.Envenenado;
+import ar.uba.fi.cb100.tp2.modelo.efectos.LavaComoPiso;
 import ar.uba.fi.cb100.tp2.modelo.efectos.TipoDeEfecto;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
 
 /**
- * Tests de los efectos activos del héroe: se aplican en cadena, en el orden
- * en que se activaron, y se sacan por tipo con quitarEfecto (que es lo que
+ * Tests de los efectos activos del héroe: se aplican en cadena, primero los
+ * que cambian el terreno y después los que suman (así el orden en que se
+ * activaron no importa), y se sacan por tipo con quitarEfecto (que es lo que
  * hace el evento QuitarEfecto cuando la agenda lo ejecuta).
  * Costos de prueba: piso 1, agua 3, lava 8.
  */
@@ -73,12 +76,40 @@ class HeroeEfectosTest {
     }
 
     @Test
-    void elOrdenDeLosEfectosImporta() {
-        // Veneno primero (agua → 4) y después zapatos → 1.
+    void elOrdenDeLosEfectosNoImporta() {
+        // Veneno primero y después zapatos: igual cuesta 2, porque los que
+        // cambian el terreno se aplican antes que los que suman.
         this.heroe.agregarEfecto(new Envenenado());
         this.heroe.agregarEfecto(new AguaComoPiso());
 
-        assertEquals(PISO, this.heroe.ajustarCosto(Terreno.AGUA, AGUA, PISO));
+        assertEquals(2, this.heroe.ajustarCosto(Terreno.AGUA, AGUA, PISO));
+    }
+
+    @Test
+    void venenoYBotasEnCualquierOrdenCuestanLoMismo() {
+        Heroe otro = new Heroe(new Ubicacion(0, 0, new Posicion(2, 2)), 100);
+        this.heroe.agregarEfecto(new Envenenado());
+        this.heroe.agregarEfecto(new LavaComoPiso());
+        otro.agregarEfecto(new LavaComoPiso());
+        otro.agregarEfecto(new Envenenado());
+
+        assertEquals(PISO + 1, this.heroe.ajustarCosto(Terreno.LAVA, LAVA, PISO));
+        assertEquals(PISO + 1, otro.ajustarCosto(Terreno.LAVA, LAVA, PISO));
+    }
+
+    @Test
+    void conVenenoYZapatosElPisoSoloSumaElVeneno() {
+        this.heroe.agregarEfecto(new Envenenado());
+        this.heroe.agregarEfecto(new AguaComoPiso());
+
+        assertEquals(PISO + 1, this.heroe.ajustarCosto(Terreno.PISO, PISO, PISO));
+    }
+
+    @Test
+    void cambiaElTerrenoSoloEsVerdaderoEnZapatosYBotas() {
+        assertTrue(new AguaComoPiso().cambiaElTerreno());
+        assertTrue(new LavaComoPiso().cambiaElTerreno());
+        assertFalse(new Envenenado().cambiaElTerreno());
     }
 
     @Test

@@ -195,12 +195,12 @@ public class Heroe {
     }
 
     /**
-     * Aplica primero los efectos que cambian el terreno y después lo que
+     * Aplica primero los efectos que cambian el terreno y después los que
      * suman o restan, asi el resultado no depende del orden en que
      * se activaron.
      *
      * @param terreno      el terreno que pisa el heroe
-     * @param costoBase    del terrero.
+     * @param costoBase    el costo normal de ese terreno, sin efectos
      * @param costoDelPiso lo que cuesta pisar el piso, para los efectos
      *                     que hacen que otro terreno cueste igual.
      * @return el costo ajustado
