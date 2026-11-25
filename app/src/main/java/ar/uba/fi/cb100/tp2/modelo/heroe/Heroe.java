@@ -1,6 +1,7 @@
 package ar.uba.fi.cb100.tp2.modelo.heroe;
 
 import ar.uba.fi.cb100.tp2.modelo.efectos.Efecto;
+import ar.uba.fi.cb100.tp2.modelo.efectos.TipoDeEfecto;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
 import ar.uba.fi.cb100.tp2.modelo.objetos.Inventario;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
@@ -209,16 +210,24 @@ public class Heroe {
         return costo;
     }
 
+
     /**
-     * Elimina un efecto dentro de los efectos activos.
+     * Quita el primer efecto activo de ese tipo. Si no hay
+     * ninguno, no hace nada.
      *
-     * @param efecto a quitar
+     * @param tipo de efecto a sacar
+     * @throws IllegalArgumentException si el tipo es nulo.
      */
-    public void quitarEfecto(Efecto efecto) {
-        if (efecto == null) {
-            throw new IllegalArgumentException("El efecto no puede ser nulo.");
+    public void quitarEfecto(TipoDeEfecto tipo) {
+        if (tipo == null) {
+            throw new IllegalArgumentException("El tipo de efecto no puede ser nulo.");
         }
-        efectosActivos.remove(efecto);
+        for (Efecto efecto : this.efectosActivos) {
+            if (efecto.getTipo() == tipo) {
+                this.efectosActivos.remove(efecto);
+                return; // corta la ejecucion para sacar solo el que se indico
+            }
+        }
     }
 
     /**
