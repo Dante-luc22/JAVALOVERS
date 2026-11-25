@@ -1,6 +1,8 @@
 package ar.uba.fi.cb100.tp2.modelo.objetos;
 
 import ar.uba.fi.cb100.tp2.modelo.efectos.AguaComoPiso;
+import ar.uba.fi.cb100.tp2.modelo.efectos.Efecto;
+import ar.uba.fi.cb100.tp2.modelo.efectos.QuitarEfecto;
 import ar.uba.fi.cb100.tp2.modelo.eventos.Agenda;
 import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
 
@@ -26,6 +28,8 @@ public class ZapatosDeAgua extends Objeto{
      */
     @Override
     public void usar(Heroe heroe, Agenda agenda){
-        heroe.agregarEfecto(new AguaComoPiso(DURACION));
+        Efecto efecto = new AguaComoPiso();
+        heroe.agregarEfecto(efecto);
+        agenda.programar(DURACION, new QuitarEfecto(efecto.getTipo()));
     }
 }

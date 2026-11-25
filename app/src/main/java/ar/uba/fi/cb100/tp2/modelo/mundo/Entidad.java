@@ -62,6 +62,27 @@ public abstract class Entidad {
         return false;
     }
 
+    /**
+     * Duerme a la entidad. Por defecto no hace nada: un cofre no se duerme.
+     * Monstruo lo redefine. Asi los eventos recorren las entidades sin preguntar
+     * de que tipo es cada una.
+     */
+    public void adormecer() {}
+
+    /**
+     * Despierta a la entidad. Por defecto no hace nada: un cofre no se despierta.
+     * Monstruo lo redefine. Asi los eventos recorren las entidades sin preguntar
+     * de que tipo es cada una.
+     */
+    public void despertar() {}
+
+    /**
+     * Repele a la entidad. Por defecto no hace nada: un cofre no se repele.
+     * Monstruo lo redefine. Asi los eventos recorren las entidades sin preguntar
+     * de que tipo es cada una.
+     */
+    public void repeler() {}
+
         /**
      * El símbolo de la entidad según el anexo B.3: 'C' cofre, 'M' monstruo.
      * La vista elige el color a partir de esto, sin preguntar el tipo.
@@ -69,6 +90,18 @@ public abstract class Entidad {
      * @return el símbolo de la entidad
      */
     public abstract char getSimbolo();
+
+    /**
+     * El nombre del tipo concreto de la entidad, por ejemplo "CAZADOR". La vista
+     * lo usa para elegir la imagen sin preguntar de qué clase es (sin instanceof).
+     * Por defecto es el símbolo; los monstruos lo reemplazan con su tipo, porque
+     * en el plano todos tienen el mismo símbolo, 'M'.
+     *
+     * @return el nombre del tipo de la entidad
+     */
+    public String getTipo() {
+        return String.valueOf(this.getSimbolo());
+    }
 }
 
 

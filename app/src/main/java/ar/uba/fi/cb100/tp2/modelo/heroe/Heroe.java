@@ -1,6 +1,7 @@
 package ar.uba.fi.cb100.tp2.modelo.heroe;
 
 import ar.uba.fi.cb100.tp2.modelo.efectos.Efecto;
+import ar.uba.fi.cb100.tp2.modelo.efectos.TipoDeEfecto;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
 import ar.uba.fi.cb100.tp2.modelo.objetos.Inventario;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
@@ -16,6 +17,7 @@ public class Heroe {
     private final int energiaMaxima;
     private final Inventario inventario;
     private final ArrayList<Efecto> efectosActivos = new ArrayList<>();
+    private int escudos = 0;
 
     /**
      * Constructor de la clase heroe, recibe su ubicacionInicial y
@@ -211,15 +213,51 @@ public class Heroe {
         return costo;
     }
 
+
     /**
-     * Metodo para indicar que el heroe camino con el efecto
-     * activo.
+     * Quita el primer efecto activo de ese tipo. Si no hay
+     * ninguno, no hace nada.
+     *
+     * @param tipo de efecto a sacar
+     * @throws IllegalArgumentException si el tipo es nulo.
      */
-    public void pasarUnPaso() {
-        for (Efecto ef : this.efectosActivos) {
-            ef.pasarUnPaso();
+    public void quitarEfecto(TipoDeEfecto tipo) {
+        if (tipo == null) {
+            throw new IllegalArgumentException("El tipo de efecto no puede ser nulo.");
         }
-        this.efectosActivos.removeIf(Efecto::termino);
+        for (Efecto efecto : this.efectosActivos) {
+            if (efecto.getTipo() == tipo) {
+                this.efectosActivos.remove(efecto);
+                return; // corta la ejecucion para sacar solo el que se indico
+            }
+        }
+    }
+
+    /**
+     * Agrega 1 a la cantidad de escudos.
+     */
+    public void agregarEscudo() {
+        this.escudos++;
+    }
+
+    /**
+     * @return true si tiene escudos
+     */
+    public boolean tieneEscudo() {
+        return this.escudos > 0;
+    }
+
+    /**
+     * Le resta 1 a los escudos disponibles.
+     *
+     * @throws IllegalStateException si no hay escudos para usar.
+     */
+    public void usarEscudo() {
+        if (this.escudos <= 0) {
+            throw new IllegalStateException(
+                    "Deben haber escudos para usar.");
+        }
+        this.escudos--;
     }
 
 
@@ -267,5 +305,12 @@ public class Heroe {
      */
     public ArrayList<Efecto> getEfectosActivos() {
         return new ArrayList<>(this.efectosActivos);
+    }
+
+    /**
+     * Getter que devuelve la cantidad de escudos.
+     */
+    public int getEscudos() {
+        return escudos;
     }
 }

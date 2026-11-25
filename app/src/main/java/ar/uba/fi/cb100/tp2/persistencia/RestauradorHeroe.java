@@ -1,30 +1,27 @@
 
 package ar.uba.fi.cb100.tp2.persistencia;
 
-// Imports del modelo. Ajustar los paquetes según la ubicación
-// real de las clases en el proyecto.
 import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
+
 import ar.uba.fi.cb100.tp2.modelo.objetos.Inventario;
 import ar.uba.fi.cb100.tp2.modelo.objetos.Objeto;
-import ar.uba.fi.cb100.tp2.modelo.efectos.Efecto;
-import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
-import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
+import ar.uba.fi.cb100.tp2.modelo.objetos.BotasIgnifugas;
+import ar.uba.fi.cb100.tp2.modelo.objetos.ZapatosDeAgua;
 
 import ar.uba.fi.cb100.tp2.modelo.efectos.Efecto;
+import ar.uba.fi.cb100.tp2.modelo.efectos.TipoDeEfecto;
 import ar.uba.fi.cb100.tp2.modelo.efectos.AguaComoPiso;
 import ar.uba.fi.cb100.tp2.modelo.efectos.LavaComoPiso;
 import ar.uba.fi.cb100.tp2.modelo.efectos.Envenenado;
 
-import com.google.gson.JsonElement;
+import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
+import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
 
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.HeroeDTO;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.ObjetoInventarioDTO;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.EfectoDTO;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.PosicionDTO;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.UbicacionDTO;
-
-import ar.uba.fi.cb100.tp2.modelo.objetos.BotasIgnifugas;
-import ar.uba.fi.cb100.tp2.modelo.objetos.ZapatosDeAgua;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,9 +30,8 @@ import java.util.function.Function;
 
 /**
  * Reconstruye un héroe a partir de los datos de una partida guardada.
- *
  * La reconstrucción de objetos y efectos concretos se delega
- * en fábricas que se incorporarán progresivamente.
+ * en fábricas.
  */
 public class RestauradorHeroe {
 
@@ -45,9 +41,7 @@ public class RestauradorHeroe {
 
     /**
      * Constructor predeterminado.
-     *
-     * Permite reconstruir los objetos actualmente soportados.
-     * Los efectos activos se incorporarán mediante su propia fábrica.
+     * Permite reconstruir los objetos y efectos actualmente soportados.
      */
     public RestauradorHeroe() {
 
@@ -67,10 +61,17 @@ public class RestauradorHeroe {
             Function<String, Objeto> fabricaObjetos,
             Function<EfectoDTO, Efecto> fabricaEfectos) {
 
-        this.fabricaObjetos = Objects.requireNonNull(fabricaObjetos, "La fábrica de objetos no puede ser nula.");
+        this.fabricaObjetos = Objects.requireNonNull(
+                fabricaObjetos,
+                "La fábrica de objetos no puede ser nula."
+        );
 
-        this.fabricaEfectos = Objects.requireNonNull(fabricaEfectos, "La fábrica de efectos no puede ser nula.");
+        this.fabricaEfectos = Objects.requireNonNull(
+                fabricaEfectos,
+                "La fábrica de efectos no puede ser nula."
+        );
     }
+
     /**
      * Construye un objeto concreto a partir de su identificador.
      *
@@ -79,7 +80,10 @@ public class RestauradorHeroe {
      */
     private static Objeto crearObjeto(String id) {
 
-        if (id == null || id.isBlank()) {throw new IllegalArgumentException("El identificador del objeto no puede ser nulo ni vacío.");
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException(
+                    "El identificador del objeto no puede ser nulo ni vacío."
+            );
         }
 
         if (BotasIgnifugas.ID.equals(id)) {
@@ -91,14 +95,15 @@ public class RestauradorHeroe {
         }
 
         throw new IllegalArgumentException(
-                "No existe un objeto registrado con el identificador: " + id
+                "No existe un objeto registrado con el identificador: "
+                        + id
         );
     }
 
     /**
      * Construye un efecto concreto a partir de su representación DTO.
-     *
-     * Conserva exactamente los pasos restantes del efecto.
+     * Los efectos no guardan su duración internamente.
+     * Esa duración se recupera mediante los eventos pendientes de la agenda.
      *
      * @param datos representación DTO del efecto
      * @return efecto reconstruido
@@ -106,56 +111,53 @@ public class RestauradorHeroe {
     private static Efecto crearEfecto(EfectoDTO datos) {
 
         if (datos == null) {
-            throw new IllegalArgumentException("Los datos del efecto no pueden ser nulos.");
+            throw new IllegalArgumentException(
+                    "Los datos del efecto no pueden ser nulos."
+            );
         }
 
         if (datos.tipo == null || datos.tipo.isBlank()) {
-            throw new IllegalArgumentException("El tipo de efecto no puede ser nulo ni vacío.");
+            throw new IllegalArgumentException(
+                    "El tipo de efecto no puede ser nulo ni vacío."
+            );
         }
 
         if (datos.datos == null) {
-            throw new IllegalArgumentException("Los datos específicos del efecto no pueden ser nulos.");
+            throw new IllegalArgumentException(
+                    "Los datos específicos del efecto no pueden ser nulos."
+            );
         }
 
-        JsonElement duracionGuardada = datos.datos.get("pasosRestantes");
-
-        if (duracionGuardada == null
-                || !duracionGuardada.isJsonPrimitive()
-                || !duracionGuardada.getAsJsonPrimitive().isNumber()) {
-
-            throw new IllegalArgumentException("El efecto no contiene una duración restante válida.");
-        }
-
-        int pasosRestantes;
+        TipoDeEfecto tipo;
 
         try {
-            pasosRestantes = duracionGuardada.getAsInt();
+            tipo = TipoDeEfecto.valueOf(datos.tipo);
 
-        } catch (RuntimeException e) {
-
-            throw new IllegalArgumentException("No se pudo interpretar la duración restante del efecto.", e);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(
+                    "No existe un efecto registrado con el tipo: "
+                            + datos.tipo,
+                    e
+            );
         }
 
-        if (pasosRestantes <= 0) {
-            throw new IllegalArgumentException("La duración restante debe ser mayor que cero.");
-        }
+        switch (tipo) {
 
-        if ("AguaComoPiso".equals(datos.tipo)) {
-            return new AguaComoPiso(pasosRestantes);
-        }
+            case AGUA_COMO_PISO:
+                return new AguaComoPiso();
 
-        if ("LavaComoPiso".equals(datos.tipo)) {
-            return new LavaComoPiso(pasosRestantes);
-        }
+            case LAVA_COMO_PISO:
+                return new LavaComoPiso();
 
-        if ("Envenenado".equals(datos.tipo)) {
-            return new Envenenado(pasosRestantes);
-        }
+            case ENVENENADO:
+                return new Envenenado();
 
-        throw new IllegalArgumentException(
-                "No existe un efecto registrado con el tipo: "
-                        + datos.tipo
-        );
+            default:
+                throw new IllegalArgumentException(
+                        "No existe un efecto registrado con el tipo: "
+                                + datos.tipo
+                );
+        }
     }
 
     /**
@@ -167,7 +169,9 @@ public class RestauradorHeroe {
     public Heroe restaurar(HeroeDTO datos) {
 
         if (datos == null) {
-            throw new IllegalArgumentException("Los datos del héroe no pueden ser nulos.");
+            throw new IllegalArgumentException(
+                    "Los datos del héroe no pueden ser nulos."
+            );
         }
 
         // Recuperar la ubicación.
@@ -180,7 +184,14 @@ public class RestauradorHeroe {
         List<Efecto> efectos = restaurarEfectos(datos.efectosActivos);
 
         // Construir el héroe con todos sus valores originales.
-        return new Heroe(ubicacion, datos.energia, datos.energiaMaxima, datos.cofresAbiertos, inventario, efectos);
+        return new Heroe(
+                ubicacion,
+                datos.energia,
+                datos.energiaMaxima,
+                datos.cofresAbiertos,
+                inventario,
+                efectos
+        );
     }
 
     /**
@@ -190,37 +201,59 @@ public class RestauradorHeroe {
             List<ObjetoInventarioDTO> datos) {
 
         if (datos == null) {
-            throw new IllegalArgumentException("Los datos del inventario no pueden ser nulos.");
+            throw new IllegalArgumentException(
+                    "Los datos del inventario no pueden ser nulos."
+            );
         }
 
         Inventario inventario = new Inventario();
 
         for (ObjetoInventarioDTO entrada : datos) {
 
-            if (entrada == null) {throw new IllegalStateException("El inventario contiene una entrada nula.");
-            }
-            if (entrada.id == null || entrada.id.isBlank()) {
-                throw new IllegalStateException("El inventario contiene un identificador de objeto inválido.");
+            if (entrada == null) {
+                throw new IllegalStateException(
+                        "El inventario contiene una entrada nula."
+                );
             }
 
-            if (entrada.cantidad <= 0) {throw new IllegalStateException("La cantidad del objeto debe ser mayor que cero: "+ entrada.id);
+            if (entrada.id == null || entrada.id.isBlank()) {
+                throw new IllegalStateException(
+                        "El inventario contiene un identificador de objeto inválido."
+                );
+            }
+
+            if (entrada.cantidad <= 0) {
+                throw new IllegalStateException(
+                        "La cantidad del objeto debe ser mayor que cero: "
+                                + entrada.id
+                );
             }
 
             Objeto objeto;
 
-            try {objeto = fabricaObjetos.apply(entrada.id);
+            try {
+                objeto = fabricaObjetos.apply(entrada.id);
 
             } catch (RuntimeException e) {
-
-                throw new IllegalStateException("No se pudo reconstruir el objeto: " + entrada.id, e);
+                throw new IllegalStateException(
+                        "No se pudo reconstruir el objeto: "
+                                + entrada.id,
+                        e
+                );
             }
 
             if (objeto == null) {
-                throw new IllegalStateException("La fábrica devolvió un objeto nulo para: " + entrada.id);
+                throw new IllegalStateException(
+                        "La fábrica devolvió un objeto nulo para: "
+                                + entrada.id
+                );
             }
 
             if (!objeto.getId().equals(entrada.id)) {
-                throw new IllegalStateException("El ID reconstruido no coincide con el guardado: " + entrada.id);
+                throw new IllegalStateException(
+                        "El ID reconstruido no coincide con el guardado: "
+                                + entrada.id
+                );
             }
 
             inventario.restaurar(objeto, entrada.cantidad);
@@ -236,7 +269,9 @@ public class RestauradorHeroe {
             List<EfectoDTO> datos) {
 
         if (datos == null) {
-            throw new IllegalArgumentException("Los datos de los efectos no pueden ser nulos.");
+            throw new IllegalArgumentException(
+                    "Los datos de los efectos no pueden ser nulos."
+            );
         }
 
         List<Efecto> efectos = new ArrayList<>();
@@ -244,20 +279,29 @@ public class RestauradorHeroe {
         for (EfectoDTO efectoDTO : datos) {
 
             if (efectoDTO == null) {
-                throw new IllegalStateException("La lista contiene un efecto nulo.");
+                throw new IllegalStateException(
+                        "La lista contiene un efecto nulo."
+                );
             }
 
             Efecto efecto;
 
-            try {efecto = fabricaEfectos.apply(efectoDTO);
+            try {
+                efecto = fabricaEfectos.apply(efectoDTO);
 
             } catch (RuntimeException e) {
-
-                throw new IllegalStateException("No se pudo reconstruir el efecto: " + efectoDTO.tipo, e);
+                throw new IllegalStateException(
+                        "No se pudo reconstruir el efecto: "
+                                + efectoDTO.tipo,
+                        e
+                );
             }
 
             if (efecto == null) {
-                throw new IllegalStateException("La fábrica devolvió un efecto nulo: " + efectoDTO.tipo);
+                throw new IllegalStateException(
+                        "La fábrica devolvió un efecto nulo: "
+                                + efectoDTO.tipo
+                );
             }
 
             efectos.add(efecto);
@@ -272,10 +316,16 @@ public class RestauradorHeroe {
     private Ubicacion convertir(UbicacionDTO datos) {
 
         if (datos == null) {
-            throw new IllegalArgumentException("La ubicación no puede ser nula.");
+            throw new IllegalArgumentException(
+                    "La ubicación no puede ser nula."
+            );
         }
 
-        return new Ubicacion(datos.tablero, datos.piso, convertir(datos.posicion));
+        return new Ubicacion(
+                datos.tablero,
+                datos.piso,
+                convertir(datos.posicion)
+        );
     }
 
     /**
@@ -283,8 +333,15 @@ public class RestauradorHeroe {
      */
     private Posicion convertir(PosicionDTO datos) {
 
-        if (datos == null) {throw new IllegalArgumentException("La posición no puede ser nula.");
+        if (datos == null) {
+            throw new IllegalArgumentException(
+                    "La posición no puede ser nula."
+            );
         }
-        return new Posicion(datos.fila, datos.columna);
+
+        return new Posicion(
+                datos.fila,
+                datos.columna
+        );
     }
 }

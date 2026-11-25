@@ -1,8 +1,16 @@
 package ar.uba.fi.cb100.tp2.persistencia;
 
 import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
-import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
-import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.*;
+import ar.uba.fi.cb100.tp2.modelo.efectos.Efecto;
+import ar.uba.fi.cb100.tp2.modelo.efectos.TipoDeEfecto;
+
+import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.HeroeDTO;
+import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.ObjetoInventarioDTO;
+import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.EfectoDTO;
+import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.PosicionDTO;
+import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.UbicacionDTO;
+
+import com.google.gson.JsonObject;
 
 import org.junit.jupiter.api.Test;
 
@@ -10,15 +18,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import ar.uba.fi.cb100.tp2.modelo.efectos.Efecto;
-import ar.uba.fi.cb100.tp2.modelo.efectos.AguaComoPiso;
-import ar.uba.fi.cb100.tp2.modelo.efectos.LavaComoPiso;
-import ar.uba.fi.cb100.tp2.modelo.efectos.Envenenado;
-
-import com.google.gson.JsonObject;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RestauradorHeroeTest {
 
@@ -42,15 +44,8 @@ class RestauradorHeroeTest {
         Map<String, Integer> cantidades =
                 heroe.getInventario().getCantidades();
 
-        assertEquals(
-                2,
-                cantidades.get("BOTAS_IGNIFUGAS")
-        );
-
-        assertEquals(
-                3,
-                cantidades.get("ZAPATOS_DE_AGUA")
-        );
+        assertEquals(2, cantidades.get("BOTAS_IGNIFUGAS"));
+        assertEquals(3, cantidades.get("ZAPATOS_DE_AGUA"));
 
         assertEquals(
                 List.of("BOTAS_IGNIFUGAS", "ZAPATOS_DE_AGUA"),
@@ -120,18 +115,19 @@ class RestauradorHeroeTest {
                 () -> restaurador.restaurar(datos)
         );
     }
+
     /**
-     * Comprueba que se reconstruyan los tres tipos de efectos,
-     * conservando exactamente sus pasos restantes.
+     * Comprueba que se reconstruyan correctamente los tres tipos
+     * de efectos actualmente soportados.
      */
     @Test
-    void restaurarConservaTiposYDuracionDeLosEfectos() {
+    void restaurarConservaTiposDeEfectos() {
 
         HeroeDTO datos = crearHeroeDTO();
 
-        agregarEfecto(datos, "AguaComoPiso", 7);
-        agregarEfecto(datos, "LavaComoPiso", 12);
-        agregarEfecto(datos, "Envenenado", 5);
+        agregarEfecto(datos, "AGUA_COMO_PISO");
+        agregarEfecto(datos, "LAVA_COMO_PISO");
+        agregarEfecto(datos, "ENVENENADO");
 
         Heroe heroe = restaurador.restaurar(datos);
 
@@ -139,39 +135,19 @@ class RestauradorHeroeTest {
 
         assertEquals(3, efectos.size());
 
-        // Comprobar los tipos reconstruidos.
-        assertTrue(efectos.get(0) instanceof AguaComoPiso);
-        assertTrue(efectos.get(1) instanceof LavaComoPiso);
-        assertTrue(efectos.get(2) instanceof Envenenado);
+        assertEquals(
+                TipoDeEfecto.AGUA_COMO_PISO,
+                efectos.get(0).getTipo()
+        );
 
-        // Comprobar las duraciones originales restantes.
-        assertEquals(7, efectos.get(0).getPasosRestantes());
-        assertEquals(12, efectos.get(1).getPasosRestantes());
-        assertEquals(5, efectos.get(2).getPasosRestantes());
+        assertEquals(
+                TipoDeEfecto.LAVA_COMO_PISO,
+                efectos.get(1).getTipo()
+        );
 
-        // Comprobar que los efectos siguen funcionando.
-        efectos.get(0).pasarUnPaso();
-        efectos.get(1).pasarUnPaso();
-        efectos.get(2).pasarUnPaso();
-
-        assertEquals(6, efectos.get(0).getPasosRestantes());
-        assertEquals(11, efectos.get(1).getPasosRestantes());
-        assertEquals(4, efectos.get(2).getPasosRestantes());
-    }
-
-    /**
-     * Comprueba que no se reconstruyan efectos con duración cero.
-     */
-    @Test
-    void restaurarRechazaEfectosConDuracionCero() {
-
-        HeroeDTO datos = crearHeroeDTO();
-
-        agregarEfecto(datos, "Envenenado", 0);
-
-        assertThrows(
-                IllegalStateException.class,
-                () -> restaurador.restaurar(datos)
+        assertEquals(
+                TipoDeEfecto.ENVENENADO,
+                efectos.get(2).getTipo()
         );
     }
 
@@ -183,7 +159,7 @@ class RestauradorHeroeTest {
 
         HeroeDTO datos = crearHeroeDTO();
 
-        agregarEfecto(datos, "EfectoInexistente", 10);
+        agregarEfecto(datos, "EFECTO_INEXISTENTE");
 
         assertThrows(
                 IllegalStateException.class,
@@ -193,22 +169,22 @@ class RestauradorHeroeTest {
 
     /**
      * Agrega un efecto a la representación DTO del héroe.
+     *
+     * Los efectos ya no guardan su duración:
+     * esta se representa mediante eventos de la agenda.
+     *
+     * @param heroe héroe DTO
+     * @param tipo identificador del efecto
      */
     private void agregarEfecto(
             HeroeDTO heroe,
-            String tipo,
-            int pasosRestantes
+            String tipo
     ) {
 
         EfectoDTO efecto = new EfectoDTO();
 
         efecto.tipo = tipo;
         efecto.datos = new JsonObject();
-
-        efecto.datos.addProperty(
-                "pasosRestantes",
-                pasosRestantes
-        );
 
         heroe.efectosActivos.add(efecto);
     }

@@ -43,7 +43,7 @@ public class CreadorPartida {
     /** Energía que quitan los monstruos básicos al alcanzar al héroe (regla 6). */
     private static final int DANIO_DE_LOS_BASICOS = 30;
 
-        /** El dormilón empieza a cazar cuando el héroe está a esta distancia (idea del enunciado). */
+    /** El dormilón empieza a cazar cuando el héroe está a esta distancia (idea del enunciado). */
     private static final int RADIO_DEL_DORMILON = 3;
 
     /** Energía que devuelve la poción. A confirmar con Demián. */
@@ -64,7 +64,7 @@ public class CreadorPartida {
         this.generador = generador;
     }
 
-        /**
+    /**
      * Arma una partida nueva: genera un plano por cada tablero y piso, los valida
      * y carga, los junta en la mazmorra y pone al héroe en la entrada.
      * Solo el último plano tiene la salida.
@@ -90,19 +90,19 @@ public class CreadorPartida {
         }
 
         Mazmorra mazmorra = new Mazmorra(planos, parametros.pisos());
-        conectarEscaleras(mazmorra, planos, parametros);
+        conectarEscaleras(mazmorra, planos, parametros, semilla);
         Heroe heroe = new Heroe(mazmorra.getEntrada(), this.configuracion.energiaInicial());
         return new Partida(mazmorra, heroe, costosPorTerreno());
     }
 
-        /**
+    /**
      * Une los pisos de cada tablero con escaleras (1-2, 2-3...). Lo hace el
      * ConectorDeEscaleras de Facu; acá sólo se le pasa cada tablero por separado.
      * En Fácil hay un solo piso y no se conecta nada.
      */
     private void conectarEscaleras(Mazmorra mazmorra, List<Plano> planos,
-                                   ParametrosDeDificultad parametros) {
-        ConectorDeEscaleras conector = new ConectorDeEscaleras();
+                                   ParametrosDeDificultad parametros, long semilla) {
+        ConectorDeEscaleras conector = new ConectorDeEscaleras(new Random(semilla));
         int pisos = parametros.pisos();
         for (int tablero = 1; tablero <= parametros.tableros(); tablero++) {
             int desde = (tablero - 1) * pisos;
@@ -161,10 +161,10 @@ public class CreadorPartida {
         catalogo.registrar("TRAMPA_DE_PINCHOS", p -> new CofreDeTrampaDePinchos(p, DANIO_DE_LOS_PINCHOS));
         catalogo.registrar("VENENO", CofreDeVeneno::new);
         return catalogo;
-    } 
-    
+    }
 
-        /**
+
+    /**
      * Arma el JSON que recibe el generador para un plano (formato del Anexo B.2).
      * @param dificultad la elegida por el jugador
      * @param parametros el tamaño del plano, según la dificultad

@@ -47,6 +47,14 @@ public class Dormilon extends Cazador{
         this.radio = radio;
     }
     /**
+     * @return el tipo de este monstruo, para que la vista elija su imagen
+     */
+    @Override
+    public TipoDeMonstruo getTipoDeMonstruo() {
+        return TipoDeMonstruo.DORMILON;
+    }
+
+    /**
      * Metodo para decidir el movimiento del dormilon, si el heroe esta a una distancia
      * <= que el radio lo caza, sino sigue dormido.
      *

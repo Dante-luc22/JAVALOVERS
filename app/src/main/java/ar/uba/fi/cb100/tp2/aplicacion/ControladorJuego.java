@@ -82,7 +82,9 @@ public class ControladorJuego {
 
     /**
      * Aplica una acción del jugador a la partida.
-     * USAR y GUARDAR todavía no hacen nada en Fácil: no cuentan como paso.
+     * USAR usa el primer objeto del inventario (todavía no hay menú para elegir);
+     * con el inventario vacío no es una acción válida. GUARDAR todavía no hace
+     * nada: no cuenta como paso.
      *
      * @param accion lo que eligió el jugador
      * @return si la acción fue válida y cómo quedó la partida
@@ -94,7 +96,10 @@ public class ControladorJuego {
             case MOVER_IZQUIERDA -> this.partida.moverHeroe(Direccion.IZQUIERDA);
             case MOVER_DERECHA -> this.partida.moverHeroe(Direccion.DERECHA);
             case ESPERAR -> this.partida.esperar();
-            case USAR, GUARDAR, SALIR -> new ResultadoTurno(false, this.partida.estadoActual());
+            case USAR -> this.partida.getHeroe().getInventario().primerId()
+                    .map(this.partida::usarObjeto)
+                    .orElse(new ResultadoTurno(false, this.partida.estadoActual()));
+            case GUARDAR, SALIR -> new ResultadoTurno(false, this.partida.estadoActual());
         };
     }
     /**

@@ -8,13 +8,15 @@ import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
+import java.util.Random;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UbicadorDeEscalerasTest {
 
-    private final UbicadorDeEscaleras ubicador = new UbicadorDeEscaleras();
+    private final UbicadorDeEscaleras ubicador = new UbicadorDeEscaleras(new Random(42L));
 
     @Test
     void eligeUnaCeldaTransitableYLibreEnAmbosPisos() {
@@ -36,6 +38,38 @@ class UbicadorDeEscalerasTest {
         Plano superior = crearPlano(new Posicion(2, 3));
 
         assertTrue(ubicador.buscarPosicionComun(inferior, superior).isEmpty());
+    }
+
+    @Test
+    void prefiereUnaCeldaQueNoSeaVecinaDeLaReservada() {
+        Posicion reservada = new Posicion(2, 3);
+        Posicion vecina = new Posicion(2, 4);
+        Posicion separada = new Posicion(3, 4);
+        Plano inferior = crearPlano(new Posicion(2, 2), reservada, vecina, separada);
+        Plano superior = crearPlano(new Posicion(2, 2), reservada, vecina, separada);
+
+        assertEquals(Optional.of(separada),
+                ubicador.prepararPosicionComun(inferior, superior, Set.of(reservada)));
+    }
+
+    @Test
+    void usaElAzarRecibidoParaElegirEntreVariasCandidatas() {
+        Posicion entrada = new Posicion(2, 2);
+        Posicion primera = new Posicion(2, 3);
+        Posicion ultima = new Posicion(2, 4);
+        Plano inferior = crearPlano(entrada, primera, ultima);
+        Plano superior = crearPlano(entrada, primera, ultima);
+        Random azarQueEligeLaUltima = new Random(42L) {
+            @Override
+            public int nextInt(int limite) {
+                return limite - 1;
+            }
+        };
+
+        var ubicadorConAzarControlado = new UbicadorDeEscaleras(azarQueEligeLaUltima);
+
+        assertEquals(Optional.of(ultima),
+                ubicadorConAzarControlado.buscarPosicionComun(inferior, superior));
     }
 
     private Plano crearPlano(Posicion entrada, Posicion... pisos) {

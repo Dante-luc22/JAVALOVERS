@@ -4,18 +4,24 @@ import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
 import ar.uba.fi.cb100.tp2.modelo.objetos.Inventario;
 import ar.uba.fi.cb100.tp2.modelo.objetos.BotasIgnifugas;
 import ar.uba.fi.cb100.tp2.modelo.objetos.ZapatosDeAgua;
+
 import ar.uba.fi.cb100.tp2.modelo.efectos.Efecto;
 import ar.uba.fi.cb100.tp2.modelo.efectos.AguaComoPiso;
 import ar.uba.fi.cb100.tp2.modelo.efectos.LavaComoPiso;
 import ar.uba.fi.cb100.tp2.modelo.efectos.Envenenado;
+import ar.uba.fi.cb100.tp2.modelo.efectos.TipoDeEfecto;
+import ar.uba.fi.cb100.tp2.modelo.efectos.QuitarEfecto;
+
 import ar.uba.fi.cb100.tp2.modelo.eventos.Agenda;
+import ar.uba.fi.cb100.tp2.modelo.eventos.EventoProgramado;
+
 import ar.uba.fi.cb100.tp2.modelo.mundo.*;
+
 import ar.uba.fi.cb100.tp2.modelo.partida.AzarPersistible;
 import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
+
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
-import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.AgendaDTO;
-
 
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO;
 
@@ -39,7 +45,7 @@ class MapeadorRestauradorPartidaTest {
      *
      * Verifica que se conserven los atributos del héroe,
      * su inventario, sus efectos activos, la mazmorra,
-     * los costos y el estado del generador aleatorio.
+     * los costos, la agenda y el estado del generador aleatorio.
      */
     @Test
     void recorridoCompletoConservaEstadoDeLaPartida() {
@@ -53,28 +59,28 @@ class MapeadorRestauradorPartidaTest {
                 new MapeadorAgenda()::mapear
         );
 
-        // 3. Convertir la partida en DTO.
+        // 2. Convertir la partida en DTO.
         PartidaGuardadaDTO datos = mapeador.mapear(original);
 
-        // 4. Serializar el DTO a JSON.
+        // 3. Serializar el DTO a JSON.
         Gson gson = new Gson();
 
         String json = gson.toJson(datos);
 
-        // 5. Recuperar el DTO desde JSON.
+        // 4. Recuperar el DTO desde JSON.
         PartidaGuardadaDTO recuperado = gson.fromJson(
                 json,
                 PartidaGuardadaDTO.class
         );
 
-        // 6. Crear el restaurador.
+        // 5. Crear el restaurador.
         RestauradorPartida restaurador = new RestauradorPartida(
                 new RestauradorMazmorra(),
                 new RestauradorHeroe(),
                 new RestauradorAgenda()::restaurar
         );
 
-        // 7. Reconstruir la partida.
+        // 6. Reconstruir la partida.
         Partida restaurada = restaurador.restaurar(recuperado);
 
         // Comparar estado general de la partida.
@@ -131,7 +137,7 @@ class MapeadorRestauradorPartidaTest {
                 new ArrayList<>(inventarioRestaurado.keySet())
         );
 
-        // Comparar efectos activos.
+        // Comparar efectos activos mediante sus tipos.
         List<Efecto> efectosOriginales =
                 heroeOriginal.getEfectosActivos();
 
@@ -146,13 +152,8 @@ class MapeadorRestauradorPartidaTest {
         for (int i = 0; i < efectosOriginales.size(); i++) {
 
             assertEquals(
-                    efectosOriginales.get(i).getClass(),
-                    efectosRestaurados.get(i).getClass()
-            );
-
-            assertEquals(
-                    efectosOriginales.get(i).getPasosRestantes(),
-                    efectosRestaurados.get(i).getPasosRestantes()
+                    efectosOriginales.get(i).getTipo(),
+                    efectosRestaurados.get(i).getTipo()
             );
         }
 
@@ -170,17 +171,18 @@ class MapeadorRestauradorPartidaTest {
                 restaurada.getAgenda().getPasoActual()
         );
 
-        assertTrue(
-                restaurada.getAgenda().getPendientes().isEmpty()
+        comprobarEventosPendientes(
+                original.getAgenda().getPendientes(),
+                restaurada.getAgenda().getPendientes()
         );
     }
 
     /**
-     * Comprueba que los efectos continúen funcionando después
-     * de restaurar la partida completa.
+     * Comprueba que los efectos continúen activos después de restaurar
+     * la partida y que se eliminen cuando vencen sus eventos.
      */
     @Test
-    void efectosContinuanFuncionandoDespuesDeRestaurarPartida() {
+    void efectosSeEliminanEnLosPasosProgramadosDespuesDeRestaurar() {
 
         Partida original = crearPartida();
 
@@ -188,20 +190,97 @@ class MapeadorRestauradorPartidaTest {
 
         Heroe heroe = restaurada.getHeroe();
 
-        // Duraciones inmediatamente después de cargar.
+        // Los tres efectos deben estar activos después de cargar.
         assertEquals(
-                List.of(7, 12, 5),
-                duraciones(heroe)
+                List.of(
+                        TipoDeEfecto.AGUA_COMO_PISO,
+                        TipoDeEfecto.LAVA_COMO_PISO,
+                        TipoDeEfecto.ENVENENADO
+                ),
+                tiposDeEfectos(heroe)
         );
 
-        // Simular un paso de movimiento.
-        heroe.pasarUnPaso();
-
-        // Las duraciones deben disminuir exactamente una unidad.
-        assertEquals(
-                List.of(6, 11, 4),
-                duraciones(heroe)
+        // En el paso 12 vence el evento que elimina Envenenado.
+        restaurada.getAgenda().ejecutarLosQueVencen(
+                12,
+                restaurada
         );
+
+        assertEquals(
+                List.of(
+                        TipoDeEfecto.AGUA_COMO_PISO,
+                        TipoDeEfecto.LAVA_COMO_PISO
+                ),
+                tiposDeEfectos(heroe)
+        );
+
+        // En el paso 14 vence el evento que elimina AguaComoPiso.
+        restaurada.getAgenda().ejecutarLosQueVencen(
+                14,
+                restaurada
+        );
+
+        assertEquals(
+                List.of(TipoDeEfecto.LAVA_COMO_PISO),
+                tiposDeEfectos(heroe)
+        );
+
+        // En el paso 19 vence el evento que elimina LavaComoPiso.
+        restaurada.getAgenda().ejecutarLosQueVencen(
+                19,
+                restaurada
+        );
+
+        assertTrue(heroe.getEfectosActivos().isEmpty());
+    }
+
+    /**
+     * Comprueba que cada evento pendiente conserve su paso de vencimiento,
+     * su orden y el tipo de evento.
+     */
+    private void comprobarEventosPendientes(
+            List<EventoProgramado> originales,
+            List<EventoProgramado> restaurados
+    ) {
+
+        assertEquals(originales.size(), restaurados.size());
+
+        for (int i = 0; i < originales.size(); i++) {
+
+            EventoProgramado original = originales.get(i);
+            EventoProgramado restaurado = restaurados.get(i);
+
+            assertEquals(
+                    original.paso(),
+                    restaurado.paso()
+            );
+
+            assertEquals(
+                    original.orden(),
+                    restaurado.orden()
+            );
+
+            assertEquals(
+                    original.evento().getClass(),
+                    restaurado.evento().getClass()
+            );
+
+            assertEquals(
+                    ((QuitarEfecto) original.evento()).getTipo(),
+                    ((QuitarEfecto) restaurado.evento()).getTipo()
+            );
+        }
+    }
+
+    /**
+     * Obtiene los tipos de los efectos activos respetando su orden.
+     */
+    private List<TipoDeEfecto> tiposDeEfectos(Heroe heroe) {
+
+        return heroe.getEfectosActivos()
+                .stream()
+                .map(Efecto::getTipo)
+                .toList();
     }
 
     /**
@@ -233,18 +312,6 @@ class MapeadorRestauradorPartidaTest {
         );
 
         return restaurador.restaurar(recuperado);
-    }
-
-    /**
-     * Devuelve las duraciones de los efectos activos respetando
-     * su orden.
-     */
-    private List<Integer> duraciones(Heroe heroe) {
-
-        return heroe.getEfectosActivos()
-                .stream()
-                .map(Efecto::getPasosRestantes)
-                .toList();
     }
 
     /**
@@ -285,9 +352,9 @@ class MapeadorRestauradorPartidaTest {
 
         // Efectos activos.
         List<Efecto> efectos = List.of(
-                new AguaComoPiso(7),
-                new LavaComoPiso(12),
-                new Envenenado(5)
+                new AguaComoPiso(),
+                new LavaComoPiso(),
+                new Envenenado()
         );
 
         // Héroe.
@@ -311,8 +378,28 @@ class MapeadorRestauradorPartidaTest {
         // Generador aleatorio persistible.
         AzarPersistible azar = new AzarPersistible(12345L);
 
+        // Agenda con tres eventos de eliminación.
         Agenda agenda = new Agenda();
+
         agenda.restaurar(7, List.of());
+
+        // AguaComoPiso: vence en el paso 14.
+        agenda.programar(
+                7,
+                new QuitarEfecto(TipoDeEfecto.AGUA_COMO_PISO)
+        );
+
+        // LavaComoPiso: vence en el paso 19.
+        agenda.programar(
+                12,
+                new QuitarEfecto(TipoDeEfecto.LAVA_COMO_PISO)
+        );
+
+        // Envenenado: vence en el paso 12.
+        agenda.programar(
+                5,
+                new QuitarEfecto(TipoDeEfecto.ENVENENADO)
+        );
 
         return new Partida(
                 mazmorra,

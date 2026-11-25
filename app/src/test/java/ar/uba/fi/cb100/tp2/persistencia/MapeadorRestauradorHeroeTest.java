@@ -8,6 +8,8 @@ import ar.uba.fi.cb100.tp2.modelo.efectos.Efecto;
 import ar.uba.fi.cb100.tp2.modelo.efectos.AguaComoPiso;
 import ar.uba.fi.cb100.tp2.modelo.efectos.LavaComoPiso;
 import ar.uba.fi.cb100.tp2.modelo.efectos.Envenenado;
+import ar.uba.fi.cb100.tp2.modelo.efectos.TipoDeEfecto;
+import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 
@@ -36,7 +38,7 @@ class MapeadorRestauradorHeroeTest {
      * Modelo -> DTO -> JSON -> DTO -> Modelo.
      *
      * Conserva los atributos del héroe, los objetos del inventario
-     * y los efectos activos con sus duraciones restantes.
+     * y los tipos de los efectos activos.
      */
     @Test
     void recorridoCompletoConservaEstadoDelHeroe() {
@@ -116,23 +118,21 @@ class MapeadorRestauradorHeroeTest {
         for (int i = 0; i < efectosOriginales.size(); i++) {
 
             assertEquals(
-                    efectosOriginales.get(i).getClass(),
-                    efectosRestaurados.get(i).getClass()
-            );
-
-            assertEquals(
-                    efectosOriginales.get(i).getPasosRestantes(),
-                    efectosRestaurados.get(i).getPasosRestantes()
+                    efectosOriginales.get(i).getTipo(),
+                    efectosRestaurados.get(i).getTipo()
             );
         }
     }
 
     /**
-     * Comprueba que los efectos continúen funcionando después
-     * de completar el recorrido por JSON.
+     * Comprueba que los efectos continúen funcionando correctamente
+     * después de completar el recorrido por JSON.
+     *
+     * La duración ya no pertenece a los efectos:
+     * se administra mediante los eventos de la agenda.
      */
     @Test
-    void efectosContinuanDescontandoPasosDespuesDeRestaurar() {
+    void efectosConservanComportamientoDespuesDeRestaurar() {
 
         Heroe original = crearHeroe();
 
@@ -151,18 +151,40 @@ class MapeadorRestauradorHeroeTest {
 
         List<Efecto> efectos = restaurado.getEfectosActivos();
 
-        assertEquals(7, efectos.get(0).getPasosRestantes());
-        assertEquals(12, efectos.get(1).getPasosRestantes());
-        assertEquals(5, efectos.get(2).getPasosRestantes());
+        assertEquals(3, efectos.size());
 
-        // Simular un paso después de cargar.
-        for (Efecto efecto : efectos) {
-            efecto.pasarUnPaso();
-        }
+        // AguaComoPiso:
+        // el terreno agua cuesta lo mismo que el piso.
+        assertEquals(
+                1,
+                efectos.get(0).ajustarCosto(
+                        Terreno.AGUA,
+                        5,
+                        1
+                )
+        );
 
-        assertEquals(6, efectos.get(0).getPasosRestantes());
-        assertEquals(11, efectos.get(1).getPasosRestantes());
-        assertEquals(4, efectos.get(2).getPasosRestantes());
+        // LavaComoPiso:
+        // el terreno lava cuesta lo mismo que el piso.
+        assertEquals(
+                1,
+                efectos.get(1).ajustarCosto(
+                        Terreno.LAVA,
+                        6,
+                        1
+                )
+        );
+
+        // Envenenado:
+        // aumenta en uno el costo de cualquier terreno.
+        assertEquals(
+                6,
+                efectos.get(2).ajustarCosto(
+                        Terreno.PISO,
+                        5,
+                        1
+                )
+        );
     }
 
     /**
@@ -183,9 +205,9 @@ class MapeadorRestauradorHeroeTest {
         );
 
         List<Efecto> efectos = List.of(
-                new AguaComoPiso(7),
-                new LavaComoPiso(12),
-                new Envenenado(5)
+                new AguaComoPiso(),
+                new LavaComoPiso(),
+                new Envenenado()
         );
 
         return new Heroe(

@@ -36,6 +36,14 @@ public class Ladron extends Errante{
         super(posicionInicial, posicionActual, danio, azar);
     }
     /**
+     * @return el tipo de este monstruo, para que la vista elija su imagen
+     */
+    @Override
+    public TipoDeMonstruo getTipoDeMonstruo() {
+        return TipoDeMonstruo.LADRON;
+    }
+
+    /**
      * Metodo para indicar que reliza el ladron al alcanzar al heroe.
      *
      * @param heroe  heroe que alcanza

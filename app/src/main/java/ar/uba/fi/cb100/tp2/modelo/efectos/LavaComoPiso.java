@@ -5,15 +5,6 @@ import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
 public class LavaComoPiso extends Efecto {
 
     /**
-     * Constructor de la clase, usa super para enviar la duracion
-     * al padre.
-     * @param duracion del efecto
-     */
-    public LavaComoPiso(int duracion) {
-        super(duracion);
-    }
-
-    /**
      * Metodo para ajustar el costo del terreno
      *
      * @param terreno      donde camina el heroe
@@ -28,5 +19,13 @@ public class LavaComoPiso extends Efecto {
             return costoDelPiso;
         }
         return costoActual;
+    }
+
+    /**
+     * @return "LAVA_COMO_PISO"
+     */
+    @Override
+    public TipoDeEfecto getTipo() {
+        return TipoDeEfecto.LAVA_COMO_PISO;
     }
 }

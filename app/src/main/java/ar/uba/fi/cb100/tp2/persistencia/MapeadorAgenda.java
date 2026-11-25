@@ -1,24 +1,34 @@
 package ar.uba.fi.cb100.tp2.persistencia;
 
 import ar.uba.fi.cb100.tp2.modelo.eventos.Agenda;
+import ar.uba.fi.cb100.tp2.modelo.eventos.Evento;
 import ar.uba.fi.cb100.tp2.modelo.eventos.EventoProgramado;
+import ar.uba.fi.cb100.tp2.modelo.eventos.AdormecerMonstruos;
+import ar.uba.fi.cb100.tp2.modelo.eventos.DespertarMonstruos;
+import ar.uba.fi.cb100.tp2.modelo.eventos.RepelerMonstruos;
+import ar.uba.fi.cb100.tp2.modelo.eventos.RomperPared;
+import ar.uba.fi.cb100.tp2.modelo.efectos.QuitarEfecto;
+
+import ar.uba.fi.cb100.tp2.modelo.efectos.TipoDeEfecto;
+
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.AgendaDTO;
+import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.EventoDTO;
+
+import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Convierte una agenda del modelo en su representación DTO.
+ * Convierte una agenda en su representación DTO.
  *
- * Conserva el paso actual y los eventos pendientes.
+ * Conserva el paso actual y todos los eventos pendientes,
+ * incluyendo su momento de ejecución y orden original.
  */
 public class MapeadorAgenda {
 
     /**
      * Convierte una agenda en su representación DTO.
-     *
-     * Por el momento solamente admite agendas sin eventos pendientes,
-     * ya que todavía no existen mapeadores para eventos concretos.
      *
      * @param agenda agenda actual de la partida
      * @return representación DTO de la agenda
@@ -45,22 +55,98 @@ public class MapeadorAgenda {
             );
         }
 
-        // No descartar eventos que todavía no sabemos reconstruir.
-        if (!pendientes.isEmpty()) {
-
-            EventoProgramado primero = pendientes.get(0);
-
-            throw new UnsupportedOperationException(
-                    "Todavía no está implementado el guardado de eventos "
-                            + "pendientes. Primer evento: "
-                            + primero.evento().getClass().getSimpleName()
-            );
-        }
-
         AgendaDTO datos = new AgendaDTO();
 
         datos.paso = agenda.getPasoActual();
         datos.pendientes = new ArrayList<>();
+
+        for (EventoProgramado pendiente : pendientes) {
+
+            if (pendiente == null) {
+                throw new IllegalStateException(
+                        "La agenda contiene un evento programado nulo."
+                );
+            }
+
+            datos.pendientes.add(mapearEvento(pendiente));
+        }
+
+        return datos;
+    }
+
+    /**
+     * Convierte un evento programado en su representación DTO.
+     *
+     * @param programado evento programado
+     * @return representación DTO del evento
+     */
+    private EventoDTO mapearEvento(EventoProgramado programado) {
+
+        if (programado == null) {
+            throw new IllegalStateException(
+                    "El evento programado no puede ser nulo."
+            );
+        }
+
+        Evento evento = programado.evento();
+
+        if (evento == null) {
+            throw new IllegalStateException(
+                    "El evento no puede ser nulo."
+            );
+        }
+
+        EventoDTO datos = new EventoDTO();
+
+        // Conservar exactamente el vencimiento y el orden.
+        datos.paso = programado.paso();
+        datos.orden = programado.orden();
+
+        // Inicializar los datos específicos.
+        datos.datos = new JsonObject();
+
+        if (evento.getClass() == AdormecerMonstruos.class) {
+
+            datos.tipo = "ADORMECER_MONSTRUOS";
+
+        } else if (evento.getClass() == DespertarMonstruos.class) {
+
+            datos.tipo = "DESPERTAR_MONSTRUOS";
+
+        } else if (evento.getClass() == RepelerMonstruos.class) {
+
+            datos.tipo = "REPELER_MONSTRUOS";
+
+        } else if (evento.getClass() == RomperPared.class) {
+
+            datos.tipo = "ROMPER_PARED";
+
+        } else if (evento.getClass() == QuitarEfecto.class) {
+
+            QuitarEfecto quitarEfecto = (QuitarEfecto) evento;
+
+            TipoDeEfecto tipoEfecto = quitarEfecto.getTipo();
+
+            if (tipoEfecto == null) {
+                throw new IllegalStateException(
+                        "El evento QuitarEfecto no tiene un tipo válido."
+                );
+            }
+
+            datos.tipo = "QUITAR_EFECTO";
+
+            datos.datos.addProperty(
+                    "tipoEfecto",
+                    tipoEfecto.name()
+            );
+
+        } else {
+
+            throw new UnsupportedOperationException(
+                    "Todavía no está implementado el guardado del evento: "
+                            + evento.getClass().getSimpleName()
+            );
+        }
 
         return datos;
     }

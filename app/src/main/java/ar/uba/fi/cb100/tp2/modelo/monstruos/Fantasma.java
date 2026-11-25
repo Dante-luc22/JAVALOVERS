@@ -57,6 +57,14 @@ public class Fantasma extends Monstruo{
 
 
     /**
+     * @return el tipo de este monstruo, para que la vista elija su imagen
+     */
+    @Override
+    public TipoDeMonstruo getTipoDeMonstruo() {
+        return TipoDeMonstruo.FANTASMA;
+    }
+
+    /**
      * Metodo para decidir el movimiento del fantasma.
      *
      * @param plano lugar del plano donde se va a mover;

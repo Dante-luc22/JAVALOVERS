@@ -48,6 +48,14 @@ public class Errante extends Monstruo {
     }
 
     /**
+     * @return el tipo de este monstruo, para que la vista elija su imagen
+     */
+    @Override
+    public TipoDeMonstruo getTipoDeMonstruo() {
+        return TipoDeMonstruo.ERRANTE;
+    }
+
+    /**
      * Metodo para decidir el movimiento del errante.
      * Elige al azar una vecina transitable; si no hay ninguna, se queda donde está
      *

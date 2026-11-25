@@ -2,6 +2,7 @@ package ar.uba.fi.cb100.tp2.persistencia;
 
 import ar.uba.fi.cb100.tp2.modelo.efectos.*;
 import ar.uba.fi.cb100.tp2.modelo.eventos.Agenda;
+import ar.uba.fi.cb100.tp2.modelo.eventos.EventoProgramado;
 import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
 import ar.uba.fi.cb100.tp2.modelo.mundo.*;
 import ar.uba.fi.cb100.tp2.modelo.objetos.*;
@@ -32,6 +33,9 @@ class ServicioPersistenciaPartidaTest {
     /**
      * Comprueba el guardado físico y la posterior carga
      * de una partida completa.
+     *
+     * Conserva los atributos del héroe, inventario,
+     * efectos activos, agenda, mazmorra y generador aleatorio.
      */
     @Test
     void guardarYCargarConservaEstadoDeLaPartida() throws Exception {
@@ -91,13 +95,10 @@ class ServicioPersistenciaPartidaTest {
                 recuperadoHeroe.getInventario().getCantidades()
         );
 
-        // Efectos activos.
+        // Efectos activos: comparar sus tipos.
         assertEquals(
-                List.of(7, 12, 5),
-                recuperadoHeroe.getEfectosActivos()
-                        .stream()
-                        .map(Efecto::getPasosRestantes)
-                        .toList()
+                tiposDeEfectos(originalHeroe),
+                tiposDeEfectos(recuperadoHeroe)
         );
 
         // Agenda.
@@ -106,7 +107,10 @@ class ServicioPersistenciaPartidaTest {
                 recuperada.getAgenda().getPasoActual()
         );
 
-        assertTrue(recuperada.getAgenda().getPendientes().isEmpty());
+        comprobarEventosPendientes(
+                original.getAgenda().getPendientes(),
+                recuperada.getAgenda().getPendientes()
+        );
 
         // Mazmorra.
         assertNotNull(recuperada.getMazmorra());
@@ -118,7 +122,66 @@ class ServicioPersistenciaPartidaTest {
     }
 
     /**
-     * Comprueba que el servicio rechace una partida nula.
+     * Comprueba que los eventos pendientes sobrevivan al guardado
+     * y se ejecuten en los pasos originalmente programados.
+     */
+    @Test
+    void guardarYCargarConservaVencimientoDeLosEfectos() {
+
+        Partida original = crearPartida();
+
+        // Guardar y reconstruir la partida.
+        servicio.guardar(
+                original,
+                directorioTemporal.resolve("partida-efectos.json")
+        );
+
+        Partida recuperada = servicio.cargar(
+                directorioTemporal.resolve("partida-efectos.json")
+        );
+
+        Heroe heroe = recuperada.getHeroe();
+
+        // Al cargar, los tres efectos continúan activos.
+        assertEquals(
+                List.of(
+                        TipoDeEfecto.AGUA_COMO_PISO,
+                        TipoDeEfecto.LAVA_COMO_PISO,
+                        TipoDeEfecto.ENVENENADO
+                ),
+                tiposDeEfectos(heroe)
+        );
+
+        // Avanzar del paso 7 al paso 12.
+        avanzarTurnos(recuperada, 5);
+
+        // En el paso 12 se elimina Envenenado.
+        assertEquals(
+                List.of(
+                        TipoDeEfecto.AGUA_COMO_PISO,
+                        TipoDeEfecto.LAVA_COMO_PISO
+                ),
+                tiposDeEfectos(heroe)
+        );
+
+        // Avanzar del paso 12 al paso 14.
+        avanzarTurnos(recuperada, 2);
+
+        // En el paso 14 se elimina AguaComoPiso.
+        assertEquals(
+                List.of(TipoDeEfecto.LAVA_COMO_PISO),
+                tiposDeEfectos(heroe)
+        );
+
+        // Avanzar del paso 14 al paso 19.
+        avanzarTurnos(recuperada, 5);
+
+        // En el paso 19 se elimina LavaComoPiso.
+        assertTrue(heroe.getEfectosActivos().isEmpty());
+    }
+
+    /**
+     * Comprueba que se rechace una partida nula.
      */
     @Test
     void guardarRechazaPartidaNula() {
@@ -132,7 +195,7 @@ class ServicioPersistenciaPartidaTest {
     }
 
     /**
-     * Comprueba que el servicio rechace una ruta nula al guardar.
+     * Comprueba que se rechace una ruta nula al guardar.
      */
     @Test
     void guardarRechazaRutaNula() {
@@ -144,7 +207,7 @@ class ServicioPersistenciaPartidaTest {
     }
 
     /**
-     * Comprueba que el servicio rechace una ruta nula al cargar.
+     * Comprueba que se rechace una ruta nula al cargar.
      */
     @Test
     void cargarRechazaRutaNula() {
@@ -168,6 +231,59 @@ class ServicioPersistenciaPartidaTest {
                 IllegalStateException.class,
                 () -> servicio.cargar(inexistente)
         );
+    }
+
+    /**
+     * Avanza una cantidad determinada de turnos válidos
+     * utilizando la acción de esperar del héroe.
+     */
+    private void avanzarTurnos(Partida partida, int cantidad) {
+
+        for (int i = 0; i < cantidad; i++) {
+            partida.esperar();
+        }
+    }
+
+    /**
+     * Obtiene los tipos de los efectos activos respetando su orden.
+     */
+    private List<TipoDeEfecto> tiposDeEfectos(Heroe heroe) {
+
+        return heroe.getEfectosActivos()
+                .stream()
+                .map(Efecto::getTipo)
+                .toList();
+    }
+
+    /**
+     * Comprueba que se conserven el paso de vencimiento,
+     * el orden y el tipo de cada evento pendiente.
+     */
+    private void comprobarEventosPendientes(
+            List<EventoProgramado> originales,
+            List<EventoProgramado> recuperados
+    ) {
+
+        assertEquals(originales.size(), recuperados.size());
+
+        for (int i = 0; i < originales.size(); i++) {
+
+            EventoProgramado original = originales.get(i);
+            EventoProgramado recuperado = recuperados.get(i);
+
+            assertEquals(original.paso(), recuperado.paso());
+            assertEquals(original.orden(), recuperado.orden());
+
+            assertEquals(
+                    original.evento().getClass(),
+                    recuperado.evento().getClass()
+            );
+
+            assertEquals(
+                    ((QuitarEfecto) original.evento()).getTipo(),
+                    ((QuitarEfecto) recuperado.evento()).getTipo()
+            );
+        }
     }
 
     /**
@@ -208,9 +324,9 @@ class ServicioPersistenciaPartidaTest {
 
         // Efectos activos.
         List<Efecto> efectos = List.of(
-                new AguaComoPiso(7),
-                new LavaComoPiso(12),
-                new Envenenado(5)
+                new AguaComoPiso(),
+                new LavaComoPiso(),
+                new Envenenado()
         );
 
         // Héroe.
@@ -234,6 +350,24 @@ class ServicioPersistenciaPartidaTest {
         // Agenda.
         Agenda agenda = new Agenda();
         agenda.restaurar(7, List.of());
+
+        // AguaComoPiso: vence en el paso 14.
+        agenda.programar(
+                7,
+                new QuitarEfecto(TipoDeEfecto.AGUA_COMO_PISO)
+        );
+
+        // LavaComoPiso: vence en el paso 19.
+        agenda.programar(
+                12,
+                new QuitarEfecto(TipoDeEfecto.LAVA_COMO_PISO)
+        );
+
+        // Envenenado: vence en el paso 12.
+        agenda.programar(
+                5,
+                new QuitarEfecto(TipoDeEfecto.ENVENENADO)
+        );
 
         return new Partida(
                 mazmorra,
