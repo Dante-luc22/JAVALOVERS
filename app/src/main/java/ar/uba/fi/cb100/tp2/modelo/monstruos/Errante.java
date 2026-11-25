@@ -30,6 +30,22 @@ public class Errante extends Monstruo {
         this.azar = azar;
     }
 
+    public Errante(
+            Posicion posicionInicial,
+            Posicion posicionActual,
+            int danio,
+            Random azar) {
+
+        super(posicionInicial, posicionActual, danio);
+
+        if (azar == null) {
+            throw new IllegalArgumentException(
+                    "azar no puede ser nulo."
+            );
+        }
+
+        this.azar = azar;
+    }
 
     /**
      * Metodo para decidir el movimiento del errante.

@@ -39,4 +39,8 @@ public class CofreDePocion extends Cofre{
     protected void abrir(Heroe heroe, Agenda agenda) {
         heroe.sumarEnergia(cantidad);
     }
+    //-----GETTERS SIMPLES-----
+    public int getCantidad() {
+        return this.cantidad;
+    }
 }

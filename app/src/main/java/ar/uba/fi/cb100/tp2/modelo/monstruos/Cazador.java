@@ -23,6 +23,13 @@ public class Cazador extends Monstruo{
     public Cazador(Posicion posicionInicial, int danio) {
         super(posicionInicial, danio);
     }
+    public Cazador(
+            Posicion posicionInicial,
+            Posicion posicionActual,
+            int danio) {
+
+        super(posicionInicial, posicionActual, danio);
+    }
 
     /**
      * Método que Recorre el plano con BFS desde el destino y calcula

@@ -15,6 +15,7 @@ import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.TableroDTO;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.PosicionDTO;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.UbicacionDTO;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.ConexionDTO;
+import ar.uba.fi.cb100.tp2.modelo.partida.AzarPersistible;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,21 +23,38 @@ import java.util.List;
 /**
  * Reconstruye una mazmorra a partir de su representación DTO.
  *
- * Reconstruye tableros, planos y conexiones.
- * Las entidades se incorporarán mediante un restaurador específico.
+ * Reconstruye tableros, planos, entidades y conexiones.
  */
 public class RestauradorMazmorra {
 
+    private final RestauradorEntidad restauradorEntidad =
+            new RestauradorEntidad();
+
     /**
-     * Reconstruye una mazmorra completa en cuanto a su estructura:
-     * planos, tableros y conexiones.
+     * Reconstruye una mazmorra sin recibir un generador aleatorio.
      *
-     * Por ahora no reconstruye las entidades dinámicas.
+     * Se conserva para compatibilidad con pruebas y usos que no
+     * necesiten restaurar entidades que consumen valores aleatorios.
      *
      * @param datos representación de la mazmorra
      * @return mazmorra reconstruida
      */
     public Mazmorra restaurar(MazmorraDTO datos) {
+        return restaurar(datos, null);
+    }
+
+    /**
+     * Reconstruye una mazmorra completa, incluyendo sus entidades,
+     * utilizando el generador aleatorio recibido.
+     *
+     * @param datos representación de la mazmorra
+     * @param azar generador aleatorio compartido por la partida
+     * @return mazmorra reconstruida
+     */
+    public Mazmorra restaurar(
+            MazmorraDTO datos,
+            AzarPersistible azar
+    ) {
 
         if (datos == null) {
             throw new IllegalArgumentException(
@@ -61,22 +79,13 @@ public class RestauradorMazmorra {
                                 + " no contiene una lista válida de entidades."
                 );
             }
-
-            if (!plano.entidades.isEmpty()) {
-                throw new UnsupportedOperationException(
-                        "Todavía no está implementada la reconstrucción "
-                                + "de entidades del plano " + (i + 1)
-                                + ". No se puede cargar la mazmorra "
-                                + "sin perder su estado."
-                );
-            }
         }
 
         List<Plano> planos = new ArrayList<>();
 
-        // Primero reconstruimos todos los planos.
+        // Primero reconstruimos todos los planos y sus entidades.
         for (PlanoDTO planoDTO : datos.planos) {
-            planos.add(restaurarPlano(planoDTO));
+            planos.add(restaurarPlano(planoDTO, azar));
         }
 
         // Después construimos la mazmorra con los planos recuperados.
@@ -104,9 +113,12 @@ public class RestauradorMazmorra {
     }
 
     /**
-     * Reconstruye un plano y su tablero.
+     * Reconstruye un plano, su tablero y sus entidades.
      */
-    private Plano restaurarPlano(PlanoDTO datos) {
+    private Plano restaurarPlano(
+            PlanoDTO datos,
+            AzarPersistible azar
+    ) {
 
         TableroDTO tableroDTO = datos.tablero;
 
@@ -142,7 +154,24 @@ public class RestauradorMazmorra {
                 ? null
                 : convertir(datos.salida);
 
-        return new Plano(tablero, entrada, salida);
+        Plano plano = new Plano(tablero, entrada, salida);
+
+        // Restaurar las entidades respetando su orden original.
+        // Se comparte el mismo generador aleatorio de la partida.
+        for (var entidadDTO : datos.entidades) {
+
+            if (entidadDTO == null) {
+                throw new IllegalArgumentException(
+                        "El plano contiene una entidad nula."
+                );
+            }
+
+            plano.agregarEntidad(
+                    restauradorEntidad.restaurar(entidadDTO, azar)
+            );
+        }
+
+        return plano;
     }
 
     /**

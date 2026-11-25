@@ -31,6 +31,21 @@ public class Dormilon extends Cazador{
         this.radio = radio;
     }
 
+    public Dormilon(
+            Posicion posicionInicial,
+            Posicion posicionActual,
+            int danio,
+            int radio) {
+
+        if (radio <= 0) {
+            throw new IllegalArgumentException(
+                    "El radio debe ser mayor que 0."
+            );
+        }
+
+        super(posicionInicial, posicionActual, danio);
+        this.radio = radio;
+    }
     /**
      * Metodo para decidir el movimiento del dormilon, si el heroe esta a una distancia
      * <= que el radio lo caza, sino sigue dormido.
@@ -51,5 +66,9 @@ public class Dormilon extends Cazador{
             // caza como un cazador
             return super.decidirMovimiento(plano, heroe);
         }
+    }
+    //-----GETTERS SIMPLES-----
+    public int getRadio() {
+        return this.radio;
     }
 }

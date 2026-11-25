@@ -1,5 +1,4 @@
 
-
 package ar.uba.fi.cb100.tp2.persistencia.dto;
 
 import com.google.gson.JsonObject;
@@ -20,6 +19,12 @@ public class PartidaGuardadaDTO {
 
     public Integer pasos;
 
+    /**
+     * Estado interno del generador aleatorio compartido por la partida.
+     * Permite continuar la misma secuencia de números aleatorios al cargar.
+     */
+    public Long estadoAzar;
+
     public Map<String, Integer> costos = new LinkedHashMap<>();
 
     public HeroeDTO heroe;
@@ -28,8 +33,9 @@ public class PartidaGuardadaDTO {
 
     public AgendaDTO agenda;
 
-    // TODO: incorporar el estado restaurable del generador aleatorio.
-    // Guardar solamente la semilla original no alcanza.
+    // =========================================================
+    // HÉROE
+    // =========================================================
 
     public static class HeroeDTO {
 
@@ -59,6 +65,10 @@ public class PartidaGuardadaDTO {
 
         public JsonObject datos = new JsonObject();
     }
+
+    // =========================================================
+    // MAZMORRA
+    // =========================================================
 
     public static class MazmorraDTO {
 
@@ -96,6 +106,7 @@ public class PartidaGuardadaDTO {
         // Posición actual de la entidad.
         public PosicionDTO posicion;
 
+        // Atributos específicos según el tipo de entidad.
         public JsonObject datos = new JsonObject();
     }
 
@@ -105,6 +116,10 @@ public class PartidaGuardadaDTO {
 
         public UbicacionDTO destino;
     }
+
+    // =========================================================
+    // POSICIONES Y UBICACIONES
+    // =========================================================
 
     public static class PosicionDTO {
 
@@ -122,10 +137,10 @@ public class PartidaGuardadaDTO {
         public PosicionDTO posicion;
     }
 
-    /**
-     * Representación inicial de la agenda.
-     * Debe ajustarse a la implementación definitiva de Agenda.
-     */
+    // =========================================================
+    // AGENDA Y EVENTOS
+    // =========================================================
+
     public static class AgendaDTO {
 
         public Integer paso;
@@ -135,13 +150,13 @@ public class PartidaGuardadaDTO {
 
     /**
      * Datos simples de un evento pendiente.
-     * No contiene referencias a Heroe, Monstruo u otros objetos.
+     * No contiene referencias a objetos del modelo.
      */
     public static class EventoDTO {
 
         public Integer paso;
 
-        public Integer orden;
+        public Long orden;
 
         public String tipo;
 

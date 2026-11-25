@@ -32,6 +32,7 @@ import ar.uba.fi.cb100.tp2.modelo.monstruos.Dormilon;
 import ar.uba.fi.cb100.tp2.modelo.monstruos.Fantasma;
 import ar.uba.fi.cb100.tp2.modelo.monstruos.Ladron;
 import ar.uba.fi.cb100.tp2.construccion.ConectorDeEscaleras;
+import ar.uba.fi.cb100.tp2.modelo.partida.AzarPersistible;
 
 /**
  * Arma una partida lista para jugar: genera los planos, los valida y carga,
@@ -73,7 +74,7 @@ public class CreadorPartida {
     public Partida crear(Dificultad dificultad) {
         ParametrosDeDificultad parametros = this.configuracion.parametrosDe(dificultad);
         long semilla = resolverSemilla();
-        Random azar = new Random(semilla);
+        AzarPersistible azar = new AzarPersistible(semilla);
         CargadorDePlano cargador = new CargadorDePlano(
                 crearCatalogoDeCofres(), crearCatalogoDeMonstruos(azar), azar);
 

@@ -19,19 +19,51 @@ public abstract class Monstruo extends Entidad {
      * @throws IllegalArgumentException si la posicion inicial es nula y
      *         si el danio es menor o igual a 0.
      */
+
+    /**
+     * Constructor habitual: el monstruo comienza en su posición inicial.
+     */
     protected Monstruo(Posicion posicionInicial, int danio) {
-        if  (posicionInicial == null) {
+        this(posicionInicial, posicionInicial, danio);
+    }
+
+    /**
+     * Constructor de restauración: permite recuperar al monstruo
+     * en una posición distinta de aquella donde comenzó.
+     *
+     * @param posicionInicial posición original del monstruo
+     * @param posicionActual posición que tenía al guardar la partida
+     * @param danio daño que realiza
+     */
+    protected Monstruo(
+            Posicion posicionInicial,
+            Posicion posicionActual,
+            int danio) {
+
+        super(posicionActual);
+
+        if (posicionInicial == null) {
             throw new IllegalArgumentException(
-                    "La posicion inicial no puede ser nula");
+                    "La posición inicial no puede ser nula."
+            );
         }
+
+        if (posicionActual == null) {
+            throw new IllegalArgumentException(
+                    "La posición actual no puede ser nula."
+            );
+        }
+
         if (danio <= 0) {
             throw new IllegalArgumentException(
-                    "El danio debe ser mayor que cero, se recibio: " + danio);
+                    "El daño debe ser mayor que cero."
+            );
         }
-        super(posicionInicial);
+
         this.posicionInicial = posicionInicial;
         this.danio = danio;
     }
+
 
 
     /**

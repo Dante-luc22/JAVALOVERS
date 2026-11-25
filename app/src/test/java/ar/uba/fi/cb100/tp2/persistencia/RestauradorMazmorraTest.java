@@ -16,6 +16,7 @@ import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.ConexionDTO;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.EntidadDTO;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import org.junit.jupiter.api.Test;
 
@@ -44,47 +45,25 @@ class RestauradorMazmorraTest {
 
         Mazmorra restaurada = restaurarDesdeJson(datos);
 
-        Plano primerPlano = restaurada.getPlano(
-                new Ubicacion(1, 1, new Posicion(1, 1))
-        );
+        Plano primerPlano = restaurada.getPlano(new Ubicacion(1, 1, new Posicion(1, 1)));
 
-        Plano segundoPlano = restaurada.getPlano(
-                new Ubicacion(1, 2, new Posicion(1, 1))
-        );
+        Plano segundoPlano = restaurada.getPlano(new Ubicacion(1, 2, new Posicion(1, 1)));
 
         // Dimensiones del primer tablero.
         assertEquals(4, primerPlano.getTablero().getFilas());
         assertEquals(4, primerPlano.getTablero().getColumnas());
 
         // Terrenos del primer piso.
-        assertEquals(
-                Terreno.AGUA,
-                primerPlano.getTablero().getTerreno(
-                        new Posicion(2, 3)
-                )
-        );
+        assertEquals(Terreno.AGUA, primerPlano.getTablero().getTerreno(new Posicion(2, 3)));
 
-        assertEquals(
-                Terreno.LAVA,
-                primerPlano.getTablero().getTerreno(
-                        new Posicion(3, 2)
-                )
-        );
+        assertEquals(Terreno.LAVA, primerPlano.getTablero().getTerreno(new Posicion(3, 2)));
 
         // El segundo piso tiene una distribución diferente.
         assertEquals(
                 Terreno.LAVA,
-                segundoPlano.getTablero().getTerreno(
-                        new Posicion(2, 3)
-                )
-        );
+                segundoPlano.getTablero().getTerreno(new Posicion(2, 3)));
 
-        assertEquals(
-                Terreno.AGUA,
-                segundoPlano.getTablero().getTerreno(
-                        new Posicion(3, 2)
-                )
-        );
+        assertEquals(Terreno.AGUA, segundoPlano.getTablero().getTerreno(new Posicion(3, 2)));
 
         // Posiciones de entrada.
         assertEquals(
@@ -152,48 +131,43 @@ class RestauradorMazmorraTest {
 
         Mazmorra restaurada = restaurarDesdeJson(datos);
 
-        Plano pisoUno = restaurada.getPlano(
-                new Ubicacion(1, 1, new Posicion(1, 1))
-        );
+        Plano pisoUno = restaurada.getPlano(new Ubicacion(1, 1, new Posicion(1, 1)));
 
-        Plano pisoDos = restaurada.getPlano(
-                new Ubicacion(1, 2, new Posicion(1, 1))
-        );
+        Plano pisoDos = restaurada.getPlano(new Ubicacion(1, 2, new Posicion(1, 1)));
 
-        assertEquals(
-                Terreno.AGUA,
-                pisoUno.getTablero().getTerreno(
-                        new Posicion(2, 3)
-                )
-        );
+        assertEquals(Terreno.AGUA, pisoUno.getTablero().getTerreno(new Posicion(2, 3)));
 
-        assertEquals(
-                Terreno.LAVA,
-                pisoDos.getTablero().getTerreno(
-                        new Posicion(2, 3)
-                )
-        );
+        assertEquals(Terreno.LAVA, pisoDos.getTablero().getTerreno(new Posicion(2, 3)));
     }
 
     /**
-     * Comprueba que el restaurador no descarte silenciosamente
-     * entidades que todavía no sabe reconstruir.
+     * Comprueba que los monstruos que necesitan azar no puedan
+     * restaurarse cuando no se proporciona un generador aleatorio.
      */
     @Test
-    void restaurarRechazaEntidadesNoSoportadas() {
+    void restaurarRechazaMonstruosSinAzar() {
 
-        MazmorraDTO datos = crearMazmorraDTO();
+        for (String tipo : List.of("Errante", "Ladron")) {
 
-        EntidadDTO entidad = new EntidadDTO();
-        entidad.tipo = "ERRANTE";
-        entidad.posicion = posicion(2, 2);
+            MazmorraDTO datos = crearMazmorraDTO();
 
-        datos.planos.get(0).entidades.add(entidad);
+            EntidadDTO entidad = new EntidadDTO();
+            entidad.tipo = tipo;
+            entidad.posicion = posicion(2, 2);
 
-        assertThrows(
-                UnsupportedOperationException.class,
-                () -> restaurador.restaurar(datos)
-        );
+            entidad.datos = new JsonObject();
+            entidad.datos.addProperty("filaInicial", 2);
+            entidad.datos.addProperty("columnaInicial", 2);
+            entidad.datos.addProperty("danio", 1);
+
+            datos.planos.get(0).entidades.add(entidad);
+
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () -> restaurador.restaurar(datos),
+                    "Se esperaba un error al restaurar " + tipo + " sin azar."
+            );
+        }
     }
 
     /**
@@ -259,45 +233,27 @@ class RestauradorMazmorraTest {
         tablero.celdas = new ArrayList<>();
 
         tablero.celdas.add(
-                new ArrayList<>(List.of(
-                        "PARED", "PARED", "PARED", "PARED"
-                ))
-        );
+                new ArrayList<>(List.of("PARED", "PARED", "PARED", "PARED")));
 
         if (segundoPiso) {
 
             tablero.celdas.add(
-                    new ArrayList<>(List.of(
-                            "PARED", "PISO", "LAVA", "PARED"
-                    ))
-            );
+                    new ArrayList<>(List.of("PARED", "PISO", "LAVA", "PARED")));
 
             tablero.celdas.add(
-                    new ArrayList<>(List.of(
-                            "PARED", "AGUA", "PISO", "PARED"
-                    ))
-            );
+                    new ArrayList<>(List.of("PARED", "AGUA", "PISO", "PARED")));
 
         } else {
 
             tablero.celdas.add(
-                    new ArrayList<>(List.of(
-                            "PARED", "PISO", "AGUA", "PARED"
-                    ))
-            );
+                    new ArrayList<>(List.of("PARED", "PISO", "AGUA", "PARED")));
 
             tablero.celdas.add(
-                    new ArrayList<>(List.of(
-                            "PARED", "LAVA", "PISO", "PARED"
-                    ))
-            );
+                    new ArrayList<>(List.of("PARED", "LAVA", "PISO", "PARED")));
         }
 
         tablero.celdas.add(
-                new ArrayList<>(List.of(
-                        "PARED", "PARED", "PARED", "PARED"
-                ))
-        );
+                new ArrayList<>(List.of("PARED", "PARED", "PARED", "PARED")));
 
         plano.tablero = tablero;
 
@@ -343,10 +299,6 @@ class RestauradorMazmorraTest {
             int fila,
             int columna) {
 
-        return new Ubicacion(
-                tablero,
-                piso,
-                new Posicion(fila, columna)
-        );
+        return new Ubicacion(tablero, piso, new Posicion(fila, columna));
     }
 }

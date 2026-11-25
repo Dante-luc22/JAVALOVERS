@@ -28,33 +28,55 @@ public class Partida {
     private final Heroe heroe;
     private final Map<Terreno, Integer> costos;
     private final Agenda agenda;
+    private final AzarPersistible azar;
+
     private int pasos;
 
     /**
-     * @param mazmorra todos los planos del juego
-     * @param heroe    el héroe, ya puesto en la entrada
-     * @param costos   cuánta energía cuesta entrar a cada terreno (sale de la configuración)
+     * Constructor habitual de una partida.
      */
-    public Partida(Mazmorra mazmorra, Heroe heroe, Map<Terreno, Integer> costos) {
-        this.mazmorra = mazmorra;
-        this.heroe = heroe;
-        this.costos = new EnumMap<>(Terreno.class);
-        this.costos.putAll(costos);
-        this.agenda = new Agenda();
-        this.pasos = 0;
+    public Partida(
+            Mazmorra mazmorra,
+            Heroe heroe,
+            Map<Terreno, Integer> costos) {
+
+        this(
+                mazmorra,
+                heroe,
+                costos,
+                0,
+                new Agenda(),
+                new AzarPersistible(0L)
+        );
     }
 
     /**
-     * Constructor para reconstruir una partida guardada.
+     * Constructor para crear una partida con su generador aleatorio compartido.
      *
-     * Conserva los pasos y la agenda recuperados, sin inicializar
-     * una partida nueva.
-     *
-     * @param mazmorra mazmorra reconstruida
-     * @param heroe héroe reconstruido
-     * @param costos costos efectivos de la partida
-     * @param pasos cantidad de pasos realizados
-     * @param agenda agenda restaurada con sus eventos pendientes
+     * @param mazmorra mazmorra de la partida
+     * @param heroe héroe de la partida
+     * @param costos costos de movimiento
+     * @param azar generador aleatorio compartido
+     */
+    public Partida(
+            Mazmorra mazmorra,
+            Heroe heroe,
+            Map<Terreno, Integer> costos,
+            AzarPersistible azar) {
+
+        this(
+                mazmorra,
+                heroe,
+                costos,
+                0,
+                new Agenda(),
+                azar
+        );
+    }
+
+    /**
+     * Constructor de compatibilidad para restaurar partidas
+     * que todavía no reciben explícitamente el generador.
      */
     public Partida(
             Mazmorra mazmorra,
@@ -63,25 +85,45 @@ public class Partida {
             int pasos,
             Agenda agenda) {
 
-        if (mazmorra == null) {
+        this(
+                mazmorra,
+                heroe,
+                costos,
+                pasos,
+                agenda,
+                new AzarPersistible(0L)
+        );
+    }
+
+    /**
+     * Constructor principal para crear o reconstruir una partida completa.
+     *
+     * @param mazmorra mazmorra de la partida
+     * @param heroe héroe de la partida
+     * @param costos costos de movimiento
+     * @param pasos cantidad de pasos realizados
+     * @param agenda agenda de eventos
+     * @param azar generador aleatorio compartido
+     */
+    public Partida(
+            Mazmorra mazmorra,
+            Heroe heroe,
+            Map<Terreno, Integer> costos,
+            int pasos,
+            Agenda agenda,
+            AzarPersistible azar) {
+
+        if (mazmorra == null || heroe == null || costos == null
+                || agenda == null || azar == null) {
             throw new IllegalArgumentException(
-                    "La mazmorra no puede ser nula.");
+                    "Los componentes de la partida no pueden ser nulos."
+            );
         }
-        if (heroe == null) {
-            throw new IllegalArgumentException(
-                    "El héroe no puede ser nulo.");
-        }
-        if (costos == null) {
-            throw new IllegalArgumentException(
-                    "Los costos no pueden ser nulos.");
-        }
+
         if (pasos < 0) {
             throw new IllegalArgumentException(
-                    "Los pasos no pueden ser negativos.");
-        }
-        if (agenda == null) {
-            throw new IllegalArgumentException(
-                    "La agenda no puede ser nula.");
+                    "La cantidad de pasos no puede ser negativa."
+            );
         }
 
         this.mazmorra = mazmorra;
@@ -90,17 +132,17 @@ public class Partida {
         this.costos = new EnumMap<>(Terreno.class);
         this.costos.putAll(costos);
 
-        this.agenda = agenda;
         this.pasos = pasos;
+        this.agenda = agenda;
+        this.azar = azar;
     }
-
 
     /** @return cuántos pasos se dieron; las acciones inválidas no cuentan */
     public int getPasos() {
         return this.pasos;
     }
 
-    /** @return cuántos cofres abrió el héroe (los cuenta el propio héroe al abrirlos) */
+    /** @return cuántos cofres abrió el héroe */
     public int getCofresAbiertos() {
         return this.heroe.getCofresAbiertos();
     }
@@ -124,43 +166,54 @@ public class Partida {
     /**
      * Devuelve la agenda de eventos de la partida.
      *
-     * Se utiliza para consultar y restaurar los eventos pendientes
-     * durante el proceso de persistencia.
-     *
      * @return agenda de la partida
      */
     public Agenda getAgenda() {
         return this.agenda;
     }
 
+    /**
+     * Devuelve el generador aleatorio compartido por la partida.
+     *
+     * Se devuelve siempre la misma instancia para conservar
+     * una única secuencia de números aleatorios.
+     *
+     * @return generador aleatorio de la partida
+     */
+    public AzarPersistible getAzar() {
+        return this.azar;
+    }
 
     /**
      * @param terreno el terreno al que entra el héroe
      * @return cuánta energía cuesta entrar ahí
-     * @throws IllegalArgumentException si ese terreno no tiene costo (la pared no se pisa)
+     * @throws IllegalArgumentException si ese terreno no tiene costo
      */
     public int costoDe(Terreno terreno) {
         Integer costo = this.costos.get(terreno);
+
         if (costo == null) {
-            throw new IllegalArgumentException("El terreno " + terreno + " no tiene costo");
+            throw new IllegalArgumentException(
+                    "El terreno " + terreno + " no tiene costo"
+            );
         }
+
         return costo;
     }
 
     /**
-     * Mueve al héroe una celda. Si hay una pared (o el borde) no hace nada y la
-     * acción no cuenta como paso. Si no, cobra el costo del terreno al que entra,
-     * suma un paso, avisa a las entidades de esa celda que el héroe llegó y,
-     * si la partida sigue, mueve a los monstruos.
-     * Una partida ya terminada no acepta más movimientos.
+     * Mueve al héroe una celda. Si hay una pared o el borde, no hace nada
+     * y la acción no cuenta como paso.
      *
-     * @param direccion hacia dónde se mueve
-     * @return si la acción fue válida y cómo quedó la partida
+     * @param direccion dirección del movimiento
+     * @return resultado del turno
      */
     public ResultadoTurno moverHeroe(Direccion direccion) {
+
         if (this.estadoActual() != EstadoPartida.EN_CURSO) {
             return new ResultadoTurno(false, this.estadoActual());
         }
+
         Ubicacion actual = this.heroe.getUbicacion();
         Plano plano = this.getPlanoActual();
         Posicion destino = actual.posicion().mover(direccion);
@@ -169,30 +222,41 @@ public class Partida {
             return new ResultadoTurno(false, this.estadoActual());
         }
 
-        this.heroe.restarEnergia(this.costoDe(plano.getTablero().getTerreno(destino)));
-        this.heroe.mover(new Ubicacion(actual.tablero(), actual.piso(), destino));
+        this.heroe.restarEnergia(
+                this.costoDe(plano.getTablero().getTerreno(destino))
+        );
+
+        this.heroe.mover(
+                new Ubicacion(actual.tablero(), actual.piso(), destino)
+        );
+
         this.pasos++;
 
         for (Entidad entidad : plano.obtenerEntidades(destino)) {
             entidad.alEncontrarseConHeroe(this.heroe, this.agenda);
+
             if (entidad.debeSalirDelPlano()) {
                 plano.quitarEntidad(entidad);
             }
         }
+
         return this.cerrarTurno();
     }
 
     /**
-     * El héroe se queda donde está: cuenta como un paso, no cuesta energía y
-     * los monstruos igual se mueven. Una partida ya terminada no lo acepta.
+     * El héroe se queda donde está: cuenta como un paso,
+     * no cuesta energía y los monstruos igual se mueven.
      *
-     * @return si la acción fue válida y cómo quedó la partida
+     * @return resultado del turno
      */
     public ResultadoTurno esperar() {
+
         if (this.estadoActual() != EstadoPartida.EN_CURSO) {
             return new ResultadoTurno(false, this.estadoActual());
         }
+
         this.pasos++;
+
         return this.cerrarTurno();
     }
 
@@ -201,83 +265,102 @@ public class Partida {
         return this.estadoActual() == EstadoPartida.GANADA;
     }
 
-    /** @return si al héroe se le acabó la energía sin llegar a la salida */
+    /** @return si al héroe se le acabó la energía */
     public boolean estaPerdida() {
         return this.estadoActual() == EstadoPartida.PERDIDA;
     }
 
     /** @return el puntaje de la partida hasta ahora */
     public int puntaje() {
-        return calcularPuntaje(this.heroe.getCofresAbiertos(), this.heroe.getEnergia(), this.pasos);
+        return calcularPuntaje(
+                this.heroe.getCofresAbiertos(),
+                this.heroe.getEnergia(),
+                this.pasos
+        );
     }
 
     /**
-     * Cierra el paso del héroe: si la partida sigue, mueven los monstruos.
-     * Si el héroe ganó o perdió en este paso, los monstruos no juegan.
+     * Cierra el paso del héroe: si la partida sigue,
+     * mueven los monstruos.
      */
     private ResultadoTurno cerrarTurno() {
+
         if (this.estadoActual() == EstadoPartida.EN_CURSO) {
             this.moverMonstruos(this.getPlanoActual());
         }
+
         return new ResultadoTurno(true, this.estadoActual());
     }
 
     /**
-     * Le da su turno a cada entidad del plano. Una entidad que se movió y
-     * quedó en la celda del héroe lo alcanzó. Las que no se movieron (los
-     * cofres) no se vuelven a encontrar con el héroe: eso ya pasó cuando
-     * él las pisó. Solo juega el plano donde está el héroe, porque los
-     * monstruos nunca cambian de plano.
+     * Le da su turno a cada entidad del plano.
+     *
+     * @param plano plano donde se encuentra el héroe
      */
     private void moverMonstruos(Plano plano) {
-        Posicion posicionHeroe = this.heroe.getUbicacion().posicion();
+
+        Posicion posicionHeroe =
+                this.heroe.getUbicacion().posicion();
+
         for (Entidad entidad : plano.getEntidades()) {
+
             Posicion antes = entidad.getPosicion();
+
             entidad.actuar(plano, this.heroe);
-            if (!entidad.getPosicion().equals(antes) && entidad.getPosicion().equals(posicionHeroe)) {
-                entidad.alEncontrarseConHeroe(this.heroe, this.agenda);
+
+            if (!entidad.getPosicion().equals(antes)
+                    && entidad.getPosicion().equals(posicionHeroe)) {
+
+                entidad.alEncontrarseConHeroe(
+                        this.heroe,
+                        this.agenda
+                );
             }
         }
     }
 
     /**
-     * Pisar la salida gana aunque ese último paso haya dejado la energía en 0:
-     * por eso se mira primero la salida.
+     * Determina el estado actual de la partida.
+     *
+     * @return estado actual
      */
     public EstadoPartida estadoActual() {
+
         if (this.heroe.getUbicacion().equals(this.mazmorra.getSalida())) {
             return EstadoPartida.GANADA;
         }
+
         if (this.heroe.getEnergia() <= 0) {
             return EstadoPartida.PERDIDA;
         }
+
         return EstadoPartida.EN_CURSO;
     }
 
     /**
-     * Puntaje según la regla 9: cofres abiertos × 100 + energía restante × 2 - pasos.
-     * Es estática porque no usa el estado de ninguna partida: solo hace la cuenta
-     * con los números que recibe, y así se puede probar sola.
+     * Calcula el puntaje según la regla 9.
      *
-     * @param cofresAbiertos  cuántos cofres se abrieron
-     * @param energiaRestante la energía que le queda al héroe
-     * @param pasos           cuántos pasos se dieron
-     * @return el puntaje, que puede ser negativo si se dieron muchos pasos
+     * @param cofresAbiertos cantidad de cofres abiertos
+     * @param energiaRestante energía restante
+     * @param pasos cantidad de pasos realizados
+     * @return puntaje obtenido
      */
-    public static int calcularPuntaje(int cofresAbiertos, int energiaRestante, int pasos) {
-        return cofresAbiertos * PUNTOS_POR_COFRE + energiaRestante * PUNTOS_POR_ENERGIA - pasos;
+    public static int calcularPuntaje(
+            int cofresAbiertos,
+            int energiaRestante,
+            int pasos) {
+
+        return cofresAbiertos * PUNTOS_POR_COFRE
+                + energiaRestante * PUNTOS_POR_ENERGIA
+                - pasos;
     }
 
-        /**
-     * @return el héroe de esta partida, para que la vista lo pueda dibujar
-     */
+    /** @return el héroe de esta partida */
     public Heroe getHeroe() {
         return this.heroe;
     }
 
-        /**
-     * @return la mazmorra de esta partida: planos y conexiones
-     */
+    /** @return la mazmorra de esta partida */
     public Mazmorra getMazmorra() {
         return this.mazmorra;
     }

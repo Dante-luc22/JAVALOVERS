@@ -9,6 +9,15 @@ import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.ObjetoInventarioD
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.PosicionDTO;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.UbicacionDTO;
 
+import java.util.List;
+import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.EfectoDTO;
+import ar.uba.fi.cb100.tp2.modelo.efectos.Efecto;
+import ar.uba.fi.cb100.tp2.modelo.efectos.AguaComoPiso;
+import ar.uba.fi.cb100.tp2.modelo.efectos.LavaComoPiso;
+import ar.uba.fi.cb100.tp2.modelo.efectos.Envenenado;
+
+import com.google.gson.JsonObject;
+
 import java.util.Map;
 
 /**
@@ -77,20 +86,55 @@ public class MapeadorHeroe {
             datos.inventario.add(objeto);
         }
 
-        // No descartar silenciosamente los efectos activos.
-        // Su representación se incorporará al estudiar Efecto.
-        if (heroe.getEfectosActivos() == null) {
+        // Conservar los efectos activos y sus duraciones restantes.
+        List<Efecto> efectosActivos = heroe.getEfectosActivos();
+
+        if (efectosActivos == null) {
             throw new IllegalStateException(
                     "La lista de efectos activos no puede ser nula."
             );
         }
 
-        if (!heroe.getEfectosActivos().isEmpty()) {
-            throw new UnsupportedOperationException(
-                    "Todavía no está implementado el guardado "
-                            + "de los efectos activos del héroe."
-            );
+        for (Efecto efecto : efectosActivos) {
+            datos.efectosActivos.add(mapearEfecto(efecto));
         }
+
+        return datos;
+    }
+    /**
+     * Convierte un efecto activo en su representación DTO.
+     *
+     * Conserva el tipo concreto y los pasos restantes.
+     *
+     * @param efecto efecto activo del héroe
+     * @return representación DTO del efecto
+     */
+    private EfectoDTO mapearEfecto(Efecto efecto) {
+
+        if (efecto == null) {
+            throw new IllegalStateException("No se puede guardar un efecto nulo.");
+        }
+
+        int pasosRestantes = efecto.getPasosRestantes();
+
+        if (pasosRestantes <= 0) {throw new IllegalStateException("No se puede guardar un efecto que ya terminó.");
+        }
+
+        EfectoDTO datos = new EfectoDTO();
+
+        if (efecto.getClass() == AguaComoPiso.class) {datos.tipo = "AguaComoPiso";
+
+        } else if (efecto.getClass() == LavaComoPiso.class) {datos.tipo = "LavaComoPiso";
+
+        } else if (efecto.getClass() == Envenenado.class) {datos.tipo = "Envenenado";
+
+        } else {
+
+            throw new UnsupportedOperationException("Todavía no está implementado el guardado del efecto: " + efecto.getClass().getSimpleName());
+        }
+
+        datos.datos = new JsonObject();
+        datos.datos.addProperty("pasosRestantes", pasosRestantes);
 
         return datos;
     }

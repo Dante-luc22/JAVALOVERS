@@ -27,6 +27,14 @@ public class Ladron extends Errante{
         super(posicionInicial, danio, azar);
     }
 
+    public Ladron(
+            Posicion posicionInicial,
+            Posicion posicionActual,
+            int danio,
+            Random azar) {
+
+        super(posicionInicial, posicionActual, danio, azar);
+    }
     /**
      * Metodo para indicar que reliza el ladron al alcanzar al heroe.
      *

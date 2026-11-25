@@ -25,7 +25,7 @@ import java.util.List;
  * La reconstrucción de las entidades se incorpora posteriormente.
  */
 public class MapeadorMazmorra {
-
+    private final MapeadorEntidad mapeadorEntidad = new MapeadorEntidad();
     /**
      * Convierte una mazmorra en un DTO.
      *
@@ -61,22 +61,10 @@ public class MapeadorMazmorra {
                 );
             }
 
-            // No guardar una mazmorra parcialmente:
-            // todavía falta reconstruir los estados particulares
-            // de monstruos y cofres.
             if (plano.getEntidades() == null) {
                 throw new IllegalStateException(
                         "El plano " + (i + 1)
                                 + " tiene una lista de entidades nula."
-                );
-            }
-
-            if (!plano.getEntidades().isEmpty()) {
-                throw new UnsupportedOperationException(
-                        "Todavía no está implementado el guardado "
-                                + "de entidades del plano " + (i + 1)
-                                + ". No se puede guardar la mazmorra "
-                                + "sin perder su estado."
                 );
             }
 
@@ -114,6 +102,9 @@ public class MapeadorMazmorra {
 
         datos.entidades = new ArrayList<>();
 
+        for (var entidad : plano.getEntidades()) {
+            datos.entidades.add(mapeadorEntidad.mapear(entidad));
+        }
         return datos;
     }
 

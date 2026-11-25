@@ -30,6 +30,17 @@ public class Fantasma extends Monstruo{
         super(posicionInicial, danio);
     }
 
+    public Fantasma(
+            Posicion posicionInicial,
+            Posicion posicionActual,
+            int danio,
+            boolean descansaEsteTurno) {
+
+        super(posicionInicial, posicionActual, danio);
+
+        this.descansaEsteTurno = descansaEsteTurno;
+    }
+
 
     /**
      * Método para calcular la distancia en línea recta, |Δfila| + |Δcolumna|
@@ -94,5 +105,9 @@ public class Fantasma extends Monstruo{
     @Override
     protected void alAlcanzarAlHeroe(Heroe heroe, Agenda agenda){
         atacarYVolver(heroe);
+    }
+    //-----GETTERS SIMPLES-----
+    public boolean isDescansaEsteTurno() {
+        return this.descansaEsteTurno;
     }
 }

@@ -78,6 +78,9 @@ public class MapeadorPartida {
         // Contador de pasos.
         datos.pasos = partida.getPasos();
 
+        // Estado actual del generador aleatorio compartido.
+        datos.estadoAzar = partida.getAzar().getEstadoInterno();
+
         // Costos efectivos utilizados durante esta partida.
         datos.costos = mapearCostos(partida.getCostos());
 
