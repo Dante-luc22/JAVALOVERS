@@ -7,10 +7,22 @@ import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 
 public class CofreDeBotasIgnifugas extends Cofre{
 
+    /**
+     * Constructor del cofre de botas ignifugas, recibe la posicion
+     * donde va a estar
+     *
+     * @param posicion del cofre
+     */
     public CofreDeBotasIgnifugas(Posicion posicion){
         super(posicion);
     }
 
+    /**
+     * Metodo que indica que sucede al abrir el cofre
+     *
+     * @param heroe  el que abre el cofre;
+     * @param agenda la agenda, para efectos que vencen más adelante
+     */
     @Override
     protected void abrir(Heroe heroe, Agenda agenda){
         heroe.getInventario().agregar(new BotasIgnifugas());

@@ -1,11 +1,13 @@
 package ar.uba.fi.cb100.tp2.modelo.heroe;
 
 import ar.uba.fi.cb100.tp2.modelo.efectos.Efecto;
+import ar.uba.fi.cb100.tp2.modelo.efectos.TipoDeEfecto;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
 import ar.uba.fi.cb100.tp2.modelo.objetos.Inventario;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Heroe {
 
@@ -15,6 +17,7 @@ public class Heroe {
     private final int energiaMaxima;
     private final Inventario inventario;
     private final ArrayList<Efecto> efectosActivos = new ArrayList<>();
+    private int escudos = 0;
 
     /**
      * Constructor de la clase heroe, recibe su ubicacionInicial y
@@ -41,6 +44,74 @@ public class Heroe {
         this.cofresAbiertos = 0;
         this.inventario = new Inventario();
     }
+
+
+    /**
+     * Constructor para reconstruir un héroe desde una partida guardada.
+     *
+     * A diferencia del constructor inicial, conserva todos los valores
+     * que tenía el héroe al momento de guardar la partida.
+     *
+     * @param ubicacion ubicación actual del héroe
+     * @param energia energía disponible
+     * @param energiaMaxima energía máxima
+     * @param cofresAbiertos cantidad de cofres abiertos
+     * @param inventario inventario previamente reconstruido
+     * @param efectosActivos efectos que todavía están vigentes
+     */
+    public Heroe(
+            Ubicacion ubicacion,
+            int energia,
+            int energiaMaxima,
+            int cofresAbiertos,
+            Inventario inventario,
+            List<Efecto> efectosActivos) {
+
+        if (ubicacion == null) {
+            throw new IllegalArgumentException(
+                    "La ubicación del héroe no puede ser nula.");
+        }
+
+        if (energiaMaxima <= 0) {
+            throw new IllegalArgumentException(
+                    "La energía máxima debe ser mayor que cero.");
+        }
+
+        if (energia < 0 || energia > energiaMaxima) {
+            throw new IllegalArgumentException(
+                    "La energía actual debe estar entre cero y la energía máxima.");
+        }
+
+        if (cofresAbiertos < 0) {
+            throw new IllegalArgumentException(
+                    "La cantidad de cofres abiertos no puede ser negativa.");
+        }
+
+        if (inventario == null) {
+            throw new IllegalArgumentException(
+                    "El inventario no puede ser nulo.");
+        }
+
+        if (efectosActivos == null) {
+            throw new IllegalArgumentException(
+                    "La lista de efectos activos no puede ser nula.");
+        }
+
+        if (efectosActivos.contains(null)) {
+            throw new IllegalArgumentException(
+                    "La lista de efectos no puede contener valores nulos.");
+        }
+
+        this.ubicacion = ubicacion;
+        this.energia = energia;
+        this.energiaMaxima = energiaMaxima;
+        this.cofresAbiertos = cofresAbiertos;
+        this.inventario = inventario;
+
+        // Se conserva la lista interna, sin compartir la colección recibida.
+        this.efectosActivos.addAll(efectosActivos);
+    }
+
 
 
     /**
@@ -139,15 +210,51 @@ public class Heroe {
         return costo;
     }
 
+
     /**
-     * Metodo para indicar que el heroe camino con el efecto
-     * activo.
+     * Quita el primer efecto activo de ese tipo. Si no hay
+     * ninguno, no hace nada.
+     *
+     * @param tipo de efecto a sacar
+     * @throws IllegalArgumentException si el tipo es nulo.
      */
-    public void pasarUnPaso() {
-        for (Efecto ef : this.efectosActivos) {
-            ef.pasarUnPaso();
+    public void quitarEfecto(TipoDeEfecto tipo) {
+        if (tipo == null) {
+            throw new IllegalArgumentException("El tipo de efecto no puede ser nulo.");
         }
-        this.efectosActivos.removeIf(Efecto::termino);
+        for (Efecto efecto : this.efectosActivos) {
+            if (efecto.getTipo() == tipo) {
+                this.efectosActivos.remove(efecto);
+                return; // corta la ejecucion para sacar solo el que se indico
+            }
+        }
+    }
+
+    /**
+     * Agrega 1 a la cantidad de escudos.
+     */
+    public void agregarEscudo() {
+        this.escudos++;
+    }
+
+    /**
+     * @return true si tiene escudos
+     */
+    public boolean tieneEscudo() {
+        return this.escudos > 0;
+    }
+
+    /**
+     * Le resta 1 a los escudos disponibles.
+     *
+     * @throws IllegalStateException si no hay escudos para usar.
+     */
+    public void usarEscudo() {
+        if (this.escudos <= 0) {
+            throw new IllegalStateException(
+                    "Deben haber escudos para usar.");
+        }
+        this.escudos--;
     }
 
 
@@ -195,5 +302,12 @@ public class Heroe {
      */
     public ArrayList<Efecto> getEfectosActivos() {
         return new ArrayList<>(this.efectosActivos);
+    }
+
+    /**
+     * Getter que devuelve la cantidad de escudos.
+     */
+    public int getEscudos() {
+        return escudos;
     }
 }
