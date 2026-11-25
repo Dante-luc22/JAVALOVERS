@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 
+import ar.uba.fi.cb100.material.i11_grafos.Grafo;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 
 /**
@@ -14,7 +15,8 @@ import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
  * El tablero es un grafo con pesos: cada celda transitable es un vértice y
  * moverse a una celda vecina (arriba, abajo, izquierda o derecha) es una arista
  * cuyo costo es el del terreno al que se entra, igual que cuando el héroe paga
- * la energía en la partida. La pared no es un vértice.
+ * la energía en la partida. La pared no es un vértice. El grafo es el de la
+ * cátedra ({@link Grafo}); acá se lo arma a partir del tablero.
  *
  * A diferencia del BFS, que cuenta pasos, Dijkstra cuenta costo: un camino con
  * menos pasos puede costar más si cruza agua o lava, y entonces conviene el
@@ -51,6 +53,9 @@ public final class Dijkstra {
             Tablero tablero, Map<Terreno, Integer> costos, Posicion destino) {
         validar(tablero, costos, destino);
 
+        Grafo grafo = armarGrafoInverso(tablero, costos);
+        int columnas = tablero.getColumnas();
+
         Map<Posicion, Integer> mejores = new HashMap<>();
         PriorityQueue<Pendiente> cola = new PriorityQueue<>(
                 (a, b) -> Integer.compare(a.costo(), b.costo()));
@@ -63,11 +68,9 @@ public final class Dijkstra {
                 // ya se había llegado a esta celda por un camino más barato
                 continue;
             }
-            // para una vecina, ir hasta el destino pasando por la actual cuesta
-            // entrar a la actual más lo que cuesta seguir desde la actual
-            int costoDeEntrarAqui = costos.get(tablero.getTerreno(actual.posicion()));
-            for (Posicion vecina : tablero.vecinasTransitables(actual.posicion())) {
-                int costoPorAqui = actual.costo() + costoDeEntrarAqui;
+            for (Grafo.Arista arista : grafo.vecinos(vertice(actual.posicion(), columnas))) {
+                Posicion vecina = posicion(arista.destino(), columnas);
+                int costoPorAqui = actual.costo() + arista.peso();
                 Integer conocido = mejores.get(vecina);
                 if (conocido == null || costoPorAqui < conocido) {
                     mejores.put(vecina, costoPorAqui);
@@ -76,6 +79,40 @@ public final class Dijkstra {
             }
         }
         return mejores;
+    }
+
+    /**
+     * Arma el grafo del tablero con las aristas al revés: la que va de la celda
+     * actual a una vecina pesa lo que cuesta entrar a la actual. Así, partiendo
+     * del destino, se obtiene lo que cuesta ir desde cada celda hasta él.
+     * Cada celda es el vértice {@code (fila - 1) * columnas + (columna - 1)}.
+     */
+    private static Grafo armarGrafoInverso(Tablero tablero, Map<Terreno, Integer> costos) {
+        int columnas = tablero.getColumnas();
+        Grafo grafo = new Grafo(tablero.getFilas() * columnas, true);
+        for (int fila = 1; fila <= tablero.getFilas(); fila++) {
+            for (int columna = 1; columna <= columnas; columna++) {
+                Posicion celda = new Posicion(fila, columna);
+                if (!tablero.esTransitable(celda)) {
+                    continue;
+                }
+                int costoDeEntrarAqui = costos.get(tablero.getTerreno(celda));
+                for (Posicion vecina : tablero.vecinasTransitables(celda)) {
+                    grafo.agregarArista(vertice(celda, columnas), vertice(vecina, columnas), costoDeEntrarAqui);
+                }
+            }
+        }
+        return grafo;
+    }
+
+    /** El número de vértice de una celda. */
+    private static int vertice(Posicion posicion, int columnas) {
+        return (posicion.fila() - 1) * columnas + (posicion.columna() - 1);
+    }
+
+    /** La celda que corresponde a un número de vértice. */
+    private static Posicion posicion(int vertice, int columnas) {
+        return new Posicion(vertice / columnas + 1, vertice % columnas + 1);
     }
 
     /**
