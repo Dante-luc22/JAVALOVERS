@@ -106,7 +106,7 @@ public class CreadorPartidaTest {
                 assertEquals(1, punta.piso());
                 Tablero tablero = mazmorra.getPlano(punta).getTablero();
                 Posicion p = punta.posicion();
-                assertTrue(p.columna() == 1 || p.columna() == tablero.getColumnas(), "no está en el borde: " + punta);
+                assertTrue(p.fila() == 1 || p.fila() == tablero.getFilas(), "no está en el borde: " + punta);
                 assertTrue(tablero.esTransitable(p));
             }
         }

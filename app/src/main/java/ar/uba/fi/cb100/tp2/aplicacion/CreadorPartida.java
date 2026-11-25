@@ -114,11 +114,13 @@ public class CreadorPartida {
         }
     }
 
-        /**
-     * Une los tableros con pasillos en el piso 1: sale por el borde DERECHO de
-     * un tablero y entra por el IZQUIERDO del siguiente. Con 3 o más tableros,
+    /**
+     * Une los tableros con pasillos en el piso 1: sale por el borde de ABAJO de
+     * un tablero y entra por el de ARRIBA del siguiente. Con 3 o más tableros,
      * el último se une con el primero y forman un ciclo (Difícil). Con un solo
      * tablero (Fácil y Medio) no hace nada.
+     * Se usan esos bordes porque, con el generador actual, en planos de 15×20 la
+     * columna junto al borde derecho queda siempre pared y no entra un pasillo.
      *
      * @throws IllegalStateException si no hay lugar para un pasillo en algún borde
      */
@@ -133,8 +135,8 @@ public class CreadorPartida {
         for (int tablero = 1; tablero <= ultimo; tablero++) {
             int siguiente = (tablero % tableros) + 1;
             boolean unido = conector.conectar(mazmorra,
-                    pisoUno(planos, parametros, tablero), Direccion.DERECHA,
-                    pisoUno(planos, parametros, siguiente), Direccion.IZQUIERDA);
+                    pisoUno(planos, parametros, tablero), Direccion.ABAJO,
+                    pisoUno(planos, parametros, siguiente), Direccion.ARRIBA);
             if (!unido) {
                 throw new IllegalStateException(
                         "No hay lugar para el pasillo del tablero " + tablero + " al " + siguiente);
