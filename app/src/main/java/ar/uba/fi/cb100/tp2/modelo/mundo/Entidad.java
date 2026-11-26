@@ -63,6 +63,18 @@ public abstract class Entidad {
     }
 
     /**
+     * Si la entidad se activa solo cuando el jugador interactúa con su celda
+     * (tecla E), en vez de activarse apenas el héroe la pisa. Por defecto no:
+     * un monstruo alcanza al héroe sin que el jugador haga nada. Un cofre, en
+     * cambio, se abre solo si el jugador lo decide.
+     *
+     * @return true si hay que interactuar para activarla
+     */
+    public boolean seActivaAlInteractuar() {
+        return false;
+    }
+
+    /**
      * Duerme a la entidad. Por defecto no hace nada: un cofre no se duerme.
      * Monstruo lo redefine. Asi los eventos recorren las entidades sin preguntar
      * de que tipo es cada una.

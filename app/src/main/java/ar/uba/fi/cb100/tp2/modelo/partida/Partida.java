@@ -5,7 +5,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Collections;
 
+import ar.uba.fi.cb100.tp2.modelo.efectos.QuitarEfecto;
+import ar.uba.fi.cb100.tp2.modelo.efectos.TipoDeEfecto;
 import ar.uba.fi.cb100.tp2.modelo.eventos.Agenda;
+import ar.uba.fi.cb100.tp2.modelo.eventos.EventoProgramado;
 import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Entidad;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Mazmorra;
@@ -186,6 +189,25 @@ public class Partida {
     }
 
     /**
+     * Cuántos pasos faltan para que se le pase el veneno al héroe: recién
+     * envenenado por un cofre son 10, y baja de a uno por paso. Se lee de la
+     * agenda, donde está anotado cuándo se le quita el efecto. Si se envenenó
+     * más de una vez, cuenta hasta el último que se le pasa.
+     *
+     * @return los pasos que faltan, o 0 si el héroe no está envenenado
+     */
+    public int pasosParaQueSePaseElVeneno() {
+        int pasos = 0;
+        for (EventoProgramado programado : this.agenda.getPendientes()) {
+            if (programado.evento() instanceof QuitarEfecto quitar
+                    && quitar.getTipo() == TipoDeEfecto.ENVENENADO) {
+                pasos = Math.max(pasos, programado.paso() - this.agenda.getPasoActual());
+            }
+        }
+        return pasos;
+    }
+
+    /**
      * @param terreno el terreno al que entra el héroe
      * @return cuánta energía cuesta entrar ahí
      * @throws IllegalArgumentException si ese terreno no tiene costo
@@ -205,10 +227,10 @@ public class Partida {
     /**
      * Mueve al héroe una celda. Si hay una pared (o el borde) no hace nada y la
      * acción no cuenta como paso. Si no, empieza el paso (suma un paso y corre
-     * la agenda), cobra el costo del terreno al que entra, avisa a las entidades
-     * de esa celda que el héroe llegó y, si la celda es una escalera o un
-     * pasillo, lo traslada al otro extremo (una sola vez). Si la partida sigue,
-     * mueve a los monstruos del plano donde quedó el héroe.
+     * la agenda), cobra el costo del terreno al que entra y avisa a los
+     * monstruos de esa celda que el héroe llegó. Los cofres y las escaleras no
+     * se activan solos: para eso está {@link #interactuar()}. Si la partida
+     * sigue, mueve a los monstruos del plano donde quedó el héroe.
      * Una partida ya terminada no acepta más movimientos.
      *
      * @param direccion dirección del movimiento
@@ -234,26 +256,89 @@ public class Partida {
         this.empezarPaso();
 
         Terreno terreno = plano.getTablero().getTerreno(destino);
-        this.heroe.restarEnergia(
-                this.heroe.ajustarCosto(
-                        terreno,
-                        this.costoDe(terreno),
-                        this.costoDe(Terreno.PISO)
-                )
-        );
-
-        Ubicacion ubicacionNueva =
-                new Ubicacion(actual.tablero(), actual.piso(), destino);
+        int costo = this.heroe.ajustarCosto(terreno, this.costoDe(terreno), this.costoDe(Terreno.PISO));
+        if (costo > this.costoDe(Terreno.PISO)) {
+            // agua, lava o un efecto que encarece el paso: es un daño y se muestra
+            this.heroe.restarEnergia(costo);
+        } else {
+            // caminar por un piso común no se muestra
+            this.heroe.restarEnergiaEnSilencio(costo);
+        }
+        Ubicacion ubicacionNueva = new Ubicacion(actual.tablero(), actual.piso(), destino);
         this.heroe.mover(ubicacionNueva);
         this.encontrarEntidades(plano, destino);
-
-        this.trasladarSiHayConexion(ubicacionNueva);
         return this.cerrarTurno();
     }
 
     /**
-     * El héroe se queda donde está: cuenta como un paso,
-     * no cuesta energía y los monstruos igual se mueven.
+     * El jugador interactúa con la celda donde está parado (tecla E). Si hay
+     * un cofre cerrado, lo abre. Si no hay cofre pero la celda es una escalera
+     * o un pasillo, lleva al héroe al otro extremo, donde se encuentra con los
+     * monstruos que haya.
+     *
+     * Cuenta como un paso y no cuesta energía, como usar un objeto. Si en la
+     * celda no hay nada con qué interactuar, la acción no es válida y no
+     * cuenta como paso. Una partida ya terminada no la acepta.
+     *
+     * @return si la acción fue válida y cómo quedó la partida
+     */
+    public ResultadoTurno interactuar() {
+        if (this.estadoActual() != EstadoPartida.EN_CURSO) {
+            return new ResultadoTurno(false, this.estadoActual());
+        }
+        Ubicacion actual = this.heroe.getUbicacion();
+        Plano plano = this.getPlanoActual();
+        boolean hayCofre = this.hayAlgoParaInteractuar(plano, actual.posicion());
+        Optional<Ubicacion> destino = this.mazmorra.destinoDesde(actual);
+        if (!hayCofre && destino.isEmpty()) {
+            return new ResultadoTurno(false, this.estadoActual());
+        }
+
+        this.empezarPaso();
+        if (hayCofre) {
+            this.activarAlInteractuar(plano, actual.posicion());
+        } else {
+            this.heroe.mover(destino.get());
+            this.encontrarEntidades(this.getPlanoActual(), destino.get().posicion());
+        }
+        return this.cerrarTurno();
+    }
+
+    /**
+     * @return si el héroe tiene algo con qué interactuar donde está: un cofre
+     *         cerrado o una escalera o pasillo
+     */
+    public boolean puedeInteractuar() {
+        return this.interaccionDisponible() != Interaccion.NINGUNA;
+    }
+
+    /**
+     * Qué pasaría si el jugador interactúa ahora, para que la vista se lo
+     * avise. Si hay un cofre, se abre el cofre; si no, se usa la escalera o
+     * el pasillo. Una partida terminada no admite ninguna.
+     *
+     * @return la interacción disponible donde está parado el héroe
+     */
+    public Interaccion interaccionDisponible() {
+        if (this.estadoActual() != EstadoPartida.EN_CURSO) {
+            return Interaccion.NINGUNA;
+        }
+        Ubicacion actual = this.heroe.getUbicacion();
+        if (this.hayAlgoParaInteractuar(this.getPlanoActual(), actual.posicion())) {
+            return Interaccion.ABRIR_COFRE;
+        }
+        Optional<Ubicacion> destino = this.mazmorra.destinoDesde(actual);
+        if (destino.isEmpty()) {
+            return Interaccion.NINGUNA;
+        }
+        return destino.get().tablero() == actual.tablero()
+                ? Interaccion.USAR_ESCALERA
+                : Interaccion.USAR_PASILLO;
+    }
+
+    /**
+     * El héroe se queda donde está: cuenta como un paso, no cuesta energía y
+     * los monstruos igual se mueven. Una partida ya terminada no lo acepta.
      *
      * @return resultado del turno
      */
@@ -263,6 +348,7 @@ public class Partida {
             return new ResultadoTurno(false, this.estadoActual());
         }
         this.empezarPaso();
+        this.heroe.sumarEnergia(1);
         return this.cerrarTurno();
     }
 
@@ -316,33 +402,50 @@ public class Partida {
     }
 
     /**
-     * Avisa a las entidades de una celda que el héroe llegó, y saca del plano
-     * a las que ya cumplieron su papel (un cofre abierto).
+     * Avisa a las entidades de una celda que el héroe llegó. Solo a las que se
+     * activan al pisarlas (los monstruos): los cofres esperan a que el jugador
+     * interactúe.
      */
     private void encontrarEntidades(Plano plano, Posicion posicion) {
         for (Entidad entidad : plano.obtenerEntidades(posicion)) {
-            entidad.alEncontrarseConHeroe(this.heroe, this.agenda);
-            if (entidad.debeSalirDelPlano()) {
-                plano.quitarEntidad(entidad);
+            if (!entidad.seActivaAlInteractuar()) {
+                this.activar(plano, entidad);
             }
         }
     }
 
     /**
-     * Si el héroe está parado en una escalera o un pasillo y la partida sigue,
-     * lo pone en el otro extremo y le avisa a las entidades de esa celda.
-     * Mira una sola vez, justo después del movimiento: como el destino también
-     * es una conexión, el héroe no rebota; para volver tiene que salir de la
-     * celda y pisarla de nuevo.
+     * Activa las entidades de la celda que esperaban una interacción (los
+     * cofres).
      */
-    private void trasladarSiHayConexion(Ubicacion pisada) {
-        if (this.estadoActual() != EstadoPartida.EN_CURSO) {
-            return;
+    private void activarAlInteractuar(Plano plano, Posicion posicion) {
+        for (Entidad entidad : plano.obtenerEntidades(posicion)) {
+            if (entidad.seActivaAlInteractuar()) {
+                this.activar(plano, entidad);
+            }
         }
-        Optional<Ubicacion> destino = this.mazmorra.destinoDesde(pisada);
-        if (destino.isPresent()) {
-            this.heroe.mover(destino.get());
-            this.encontrarEntidades(this.getPlanoActual(), destino.get().posicion());
+    }
+
+    /**
+     * @return si en la celda hay alguna entidad que espera una interacción
+     */
+    private boolean hayAlgoParaInteractuar(Plano plano, Posicion posicion) {
+        for (Entidad entidad : plano.obtenerEntidades(posicion)) {
+            if (entidad.seActivaAlInteractuar()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Le avisa a una entidad que se encontró con el héroe y la saca del plano
+     * si ya cumplió su papel (un cofre abierto).
+     */
+    private void activar(Plano plano, Entidad entidad) {
+        entidad.alEncontrarseConHeroe(this.heroe, this.agenda);
+        if (entidad.debeSalirDelPlano()) {
+            plano.quitarEntidad(entidad);
         }
     }
 
@@ -360,9 +463,11 @@ public class Partida {
     }
 
     /**
-     * Le da su turno a cada entidad del plano.
-     *
-     * @param plano plano donde se encuentra el héroe
+     * Le da su turno a cada entidad del plano. Una entidad que se movió y
+     * quedó en la celda del héroe lo alcanzó. Las que no se movieron (los
+     * cofres) no se encuentran con el héroe: un cofre se abre solo cuando el
+     * jugador interactúa. Solo juega el plano donde está el héroe, porque los
+     * monstruos nunca cambian de plano.
      */
     private void moverMonstruos(Plano plano) {
 

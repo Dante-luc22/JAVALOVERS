@@ -24,11 +24,6 @@ import ar.uba.fi.cb100.tp2.persistencia.ServicioPersistenciaPartida;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-
-import org.junit.jupiter.api.io.TempDir;
-
 /**
  * Tests del ciclo del juego, con una vista falsa que devuelve acciones
  * preparadas y cuenta cuántas veces se mostró la partida.
@@ -135,7 +130,6 @@ public class ControladorJuegoTest {
         assertEquals(2, vista.vecesMostrada);
         assertEquals(1, this.partida.getPasos());
     }
-
     /**
      * Comprueba que guardar cree el archivo JSON sin consumir un turno
      * y que el jugador pueda continuar con la partida.
@@ -224,5 +218,15 @@ public class ControladorJuegoTest {
 
         // El evento pendiente sigue existiendo.
         assertEquals(1, this.partida.getAgenda().getPendientes().size());
+    }
+    @Test
+    void interactuarDondeNoHayNadaAvisaYNoCuentaComoPaso() {
+        VistaFalsa vista = new VistaFalsa(Accion.INTERACTUAR, Accion.SALIR);
+
+        new ControladorJuego(this.partida, vista).jugar();
+
+        assertEquals(1, vista.vecesMostrada);
+        assertEquals(0, this.partida.getPasos());
+        assertEquals(1, vista.avisos);
     }
 }

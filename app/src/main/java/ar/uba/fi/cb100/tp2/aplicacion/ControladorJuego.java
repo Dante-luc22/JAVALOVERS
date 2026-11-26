@@ -96,6 +96,7 @@ public class ControladorJuego {
             case MOVER_IZQUIERDA -> this.partida.moverHeroe(Direccion.IZQUIERDA);
             case MOVER_DERECHA -> this.partida.moverHeroe(Direccion.DERECHA);
             case ESPERAR -> this.partida.esperar();
+            case INTERACTUAR -> this.partida.interactuar();
             case USAR -> this.partida.getHeroe().getInventario().primerId()
                     .map(this.partida::usarObjeto)
                     .orElse(new ResultadoTurno(false, this.partida.estadoActual()));
