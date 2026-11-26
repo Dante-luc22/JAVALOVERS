@@ -172,13 +172,6 @@ public class Mazmorra {
         return new ArrayList<>(this.planos);
     }
 
-    /**
-     * Devuelve la cantidad de pisos que tiene cada tablero.
-     *
-     * @return pisos por tablero
-     */
-    public int getPisosPorTablero() {
-        return this.pisosPorTablero;
-    }
+
 
 }
