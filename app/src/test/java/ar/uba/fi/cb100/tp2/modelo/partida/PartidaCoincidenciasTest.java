@@ -103,7 +103,7 @@ class PartidaCoincidenciasTest {
         Partida partida = partida(ENTRADA, 100);
         AguaComoPiso zapatos = new AguaComoPiso();
         this.heroe.agregarEfecto(zapatos);
-        partida.getAgenda().programar(1, new QuitarEfecto(zapatos));
+        partida.getAgenda().programar(1, new QuitarEfecto(zapatos.getTipo()));
 
         partida.moverHeroe(Direccion.ABAJO);
 
@@ -115,7 +115,7 @@ class PartidaCoincidenciasTest {
         Partida partida = partida(ENTRADA, 100);
         AguaComoPiso zapatos = new AguaComoPiso();
         this.heroe.agregarEfecto(zapatos);
-        partida.getAgenda().programar(2, new QuitarEfecto(zapatos));
+        partida.getAgenda().programar(2, new QuitarEfecto(zapatos.getTipo()));
 
         partida.moverHeroe(Direccion.ABAJO);
         assertEquals(99, this.heroe.getEnergia());
@@ -130,7 +130,7 @@ class PartidaCoincidenciasTest {
         Partida partida = partida(ENTRADA, 100);
         Envenenado veneno = new Envenenado();
         this.heroe.agregarEfecto(veneno);
-        partida.getAgenda().programar(2, new QuitarEfecto(veneno));
+        partida.getAgenda().programar(2, new QuitarEfecto(veneno.getTipo()));
 
         partida.moverHeroe(Direccion.DERECHA);
         assertEquals(98, this.heroe.getEnergia());
@@ -283,7 +283,7 @@ class PartidaCoincidenciasTest {
         Partida partida = partida(ENTRADA, 100, monstruo);
         AguaComoPiso zapatos = new AguaComoPiso();
         this.heroe.agregarEfecto(zapatos);
-        partida.getAgenda().programar(1, new QuitarEfecto(zapatos));
+        partida.getAgenda().programar(1, new QuitarEfecto(zapatos.getTipo()));
         partida.getAgenda().programar(1, new DespertarMonstruos());
 
         partida.moverHeroe(Direccion.ABAJO);
