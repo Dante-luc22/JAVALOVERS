@@ -87,6 +87,20 @@ public class Mazmorra {
         throw new IllegalStateException("La mazmorra no tiene salida");
     }
 
+    /**
+     * @return cuántos planos tiene la mazmorra en total (1, 3 o 9)
+     */
+    public int getCantidadDePlanos() {
+        return this.planos.size();
+    }
+
+    /**
+     * @return cuántos pisos tiene cada tablero
+     */
+    public int getPisosPorTablero() {
+        return this.pisosPorTablero;
+    }
+
         /**
      * Une dos celdas de planos distintos con una escalera o un pasillo, en los
      * dos sentidos: pisar cualquiera de las dos lleva a la otra.

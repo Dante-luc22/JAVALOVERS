@@ -65,10 +65,10 @@ class ArchivoDeRankingTest {
     @Test
     void guardarYVolverACargarDaLasMismasPartidas() {
         Ranking original = new Ranking();
-        original.registrar(new EntradaDeRanking("Juan", 250, Dificultad.FACIL, HOY));
-        original.registrar(new EntradaDeRanking("Facu", 250, Dificultad.FACIL, HOY.minusDays(1)));
-        original.registrar(new EntradaDeRanking("Lucía", 0, Dificultad.MEDIO, HOY.plusNanos(123_456_000)));
-        original.registrar(new EntradaDeRanking("O'Brien", 900, Dificultad.DIFICIL, HOY));
+        original.registrar(new EntradaDeRanking("JUA", 250, Dificultad.FACIL, HOY));
+        original.registrar(new EntradaDeRanking("FAC", 250, Dificultad.FACIL, HOY.minusDays(1)));
+        original.registrar(new EntradaDeRanking("LUC", 0, Dificultad.MEDIO, HOY.plusNanos(123_456_000)));
+        original.registrar(new EntradaDeRanking("O'B", 900, Dificultad.DIFICIL, HOY));
 
         ArchivoDeRanking.guardar(original, rutaDelRanking());
         Ranking cargado = ArchivoDeRanking.cargar(rutaDelRanking());
@@ -82,12 +82,12 @@ class ArchivoDeRankingTest {
     @Test
     void guardaLosCuatroCamposComoTextoLegible() throws IOException {
         Ranking ranking = new Ranking();
-        ranking.registrar(new EntradaDeRanking("Lucía", 250, Dificultad.MEDIO, HOY));
+        ranking.registrar(new EntradaDeRanking("LUC", 250, Dificultad.MEDIO, HOY));
 
         ArchivoDeRanking.guardar(ranking, rutaDelRanking());
         String contenido = Files.readString(rutaDelRanking(), StandardCharsets.UTF_8);
 
-        assertTrue(contenido.contains("\"nombre\": \"Lucía\""));
+        assertTrue(contenido.contains("\"nombre\": \"LUC\""));
         assertTrue(contenido.contains("\"puntaje\": 250"));
         assertTrue(contenido.contains("\"dificultad\": \"MEDIO\""));
         assertTrue(contenido.contains("\"fecha\": \"2026-11-22T15:30:12\""));
@@ -96,9 +96,9 @@ class ArchivoDeRankingTest {
     @Test
     void guardarReemplazaLoQueHabiaEnElArchivo() {
         Ranking viejo = new Ranking();
-        viejo.registrar(new EntradaDeRanking("Juan", 100, Dificultad.FACIL, HOY));
+        viejo.registrar(new EntradaDeRanking("JUA", 100, Dificultad.FACIL, HOY));
         Ranking nuevo = new Ranking();
-        nuevo.registrar(new EntradaDeRanking("Facu", 300, Dificultad.MEDIO, HOY));
+        nuevo.registrar(new EntradaDeRanking("FAC", 300, Dificultad.MEDIO, HOY));
 
         ArchivoDeRanking.guardar(viejo, rutaDelRanking());
         ArchivoDeRanking.guardar(nuevo, rutaDelRanking());
@@ -110,29 +110,29 @@ class ArchivoDeRankingTest {
     void cargarRespetaElOrdenDelRankingAunqueElArchivoEsteDesordenado() throws IOException {
         Path archivo = archivoCon("""
                 [
-                  { "nombre": "Juan", "puntaje": 100, "dificultad": "FACIL", "fecha": "2026-11-22T10:00" },
-                  { "nombre": "Facu", "puntaje": 300, "dificultad": "FACIL", "fecha": "2026-11-22T11:00" },
-                  { "nombre": "Mati", "puntaje": 200, "dificultad": "FACIL", "fecha": "2026-11-22T12:00" }
+                  { "nombre": "JUA", "puntaje": 100, "dificultad": "FACIL", "fecha": "2026-11-22T10:00" },
+                  { "nombre": "FAC", "puntaje": 300, "dificultad": "FACIL", "fecha": "2026-11-22T11:00" },
+                  { "nombre": "MAT", "puntaje": 200, "dificultad": "FACIL", "fecha": "2026-11-22T12:00" }
                 ]
                 """);
 
         List<EntradaDeRanking> top = ArchivoDeRanking.cargar(archivo).obtenerTop10(Dificultad.FACIL);
 
-        assertEquals("Facu", top.get(0).nombre());
-        assertEquals("Mati", top.get(1).nombre());
-        assertEquals("Juan", top.get(2).nombre());
+        assertEquals("FAC", top.get(0).nombre());
+        assertEquals("MAT", top.get(1).nombre());
+        assertEquals("JUA", top.get(2).nombre());
     }
 
     @Test
     void rechazaUnJsonMalEscrito() throws IOException {
-        Path archivo = archivoCon("[ { \"nombre\": \"Juan\", ");
+        Path archivo = archivoCon("[ { \"nombre\": \"JUA\", ");
 
         assertThrows(IllegalStateException.class, () -> ArchivoDeRanking.cargar(archivo));
     }
 
     @Test
     void rechazaUnaEntradaSinPuntaje() throws IOException {
-        Path archivo = archivoConUnaEntrada("\"Juan\"", "null", "\"FACIL\"", "\"2026-11-22T10:00\"");
+        Path archivo = archivoConUnaEntrada("\"JUA\"", "null", "\"FACIL\"", "\"2026-11-22T10:00\"");
 
         IllegalStateException error = assertThrows(IllegalStateException.class,
                 () -> ArchivoDeRanking.cargar(archivo));
@@ -142,7 +142,7 @@ class ArchivoDeRankingTest {
 
     @Test
     void rechazaUnPuntajeNegativo() throws IOException {
-        Path archivo = archivoConUnaEntrada("\"Juan\"", "-56", "\"FACIL\"", "\"2026-11-22T10:00\"");
+        Path archivo = archivoConUnaEntrada("\"JUA\"", "-56", "\"FACIL\"", "\"2026-11-22T10:00\"");
 
         IllegalStateException error = assertThrows(IllegalStateException.class,
                 () -> ArchivoDeRanking.cargar(archivo));
@@ -162,7 +162,7 @@ class ArchivoDeRankingTest {
 
     @Test
     void rechazaUnaDificultadQueNoExiste() throws IOException {
-        Path archivo = archivoConUnaEntrada("\"Juan\"", "100", "\"IMPOSIBLE\"", "\"2026-11-22T10:00\"");
+        Path archivo = archivoConUnaEntrada("\"JUA\"", "100", "\"IMPOSIBLE\"", "\"2026-11-22T10:00\"");
 
         IllegalStateException error = assertThrows(IllegalStateException.class,
                 () -> ArchivoDeRanking.cargar(archivo));
@@ -172,7 +172,7 @@ class ArchivoDeRankingTest {
 
     @Test
     void rechazaUnaFechaInvalida() throws IOException {
-        Path archivo = archivoConUnaEntrada("\"Juan\"", "100", "\"FACIL\"", "\"22/11/2026\"");
+        Path archivo = archivoConUnaEntrada("\"JUA\"", "100", "\"FACIL\"", "\"22/11/2026\"");
 
         IllegalStateException error = assertThrows(IllegalStateException.class,
                 () -> ArchivoDeRanking.cargar(archivo));
