@@ -191,6 +191,7 @@ class PartidaCambiosDeEnergiaTest {
         Partida partida = partida(100, new CofreDeVeneno(new Posicion(2, 3)));
 
         partida.moverHeroe(Direccion.DERECHA);
+        partida.interactuar();
 
         assertEquals(10, partida.pasosParaQueSePaseElVeneno());
     }
@@ -199,6 +200,7 @@ class PartidaCambiosDeEnergiaTest {
     void cadaPasoBajaElVenenoEnUno() {
         Partida partida = partida(100, new CofreDeVeneno(new Posicion(2, 3)));
         partida.moverHeroe(Direccion.DERECHA);
+        partida.interactuar();
 
         partida.esperar();
         partida.esperar();
@@ -210,6 +212,7 @@ class PartidaCambiosDeEnergiaTest {
     void alPasarseElVenenoNoFaltaNada() {
         Partida partida = partida(100, new CofreDeVeneno(new Posicion(2, 3)));
         partida.moverHeroe(Direccion.DERECHA);
+        partida.interactuar();
 
         for (int i = 0; i < 10; i++) {
             partida.esperar();

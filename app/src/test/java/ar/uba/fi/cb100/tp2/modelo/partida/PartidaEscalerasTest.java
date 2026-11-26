@@ -96,13 +96,36 @@ class PartidaEscalerasTest {
     // =================== ESCALERAS =================== //
 
     @Test
-    void pisarUnaEscaleraLlevaAlHeroeAlPisoDeDestinoEnLaMismaCelda() {
+    void pisarUnaEscaleraNoTrasladaAlHeroe() {
         Partida partida = dosPisosConEscalera();
 
         partida.moverHeroe(Direccion.DERECHA);
 
+        assertEquals(new Ubicacion(1, 1, ESCALERA), this.heroe.getUbicacion());
+        assertTrue(partida.puedeInteractuar());
+    }
+
+    @Test
+    void interactuarEnUnaEscaleraLlevaAlHeroeAlPisoDeDestinoEnLaMismaCelda() {
+        Partida partida = dosPisosConEscalera();
+        partida.moverHeroe(Direccion.DERECHA);
+
+        ResultadoTurno resultado = partida.interactuar();
+
+        assertTrue(resultado.accionValida());
         assertEquals(new Ubicacion(1, 2, ESCALERA), this.heroe.getUbicacion());
         assertEquals(this.mazmorra.getPlano(new Ubicacion(1, 2, ESCALERA)), partida.getPlanoActual());
+    }
+
+    @Test
+    void usarLaEscaleraCuentaUnPasoYNoCuestaEnergia() {
+        Partida partida = dosPisosConEscalera();
+        partida.moverHeroe(Direccion.DERECHA);
+
+        partida.interactuar();
+
+        assertEquals(2, partida.getPasos());
+        assertEquals(99, this.heroe.getEnergia());
     }
 
     @Test
@@ -116,10 +139,11 @@ class PartidaEscalerasTest {
     }
 
     @Test
-    void elTrasladoOcurreUnaSolaVezAunqueElDestinoTambienSeaEscalera() {
+    void despuesDeSubirQuedarseEnLaEscaleraNoLoVuelveABajar() {
         Partida partida = dosPisosConEscalera();
 
         partida.moverHeroe(Direccion.DERECHA);
+        partida.interactuar();
         partida.esperar();
 
         // no rebota al piso 1: sigue en el piso 2, parado en la escalera
@@ -127,15 +151,29 @@ class PartidaEscalerasTest {
     }
 
     @Test
-    void salirDeLaEscaleraYVolverAPisarlaTrasladaDeNuevo() {
+    void interactuarDeNuevoEnLaEscaleraLoVuelveABajar() {
         Partida partida = dosPisosConEscalera();
 
         partida.moverHeroe(Direccion.DERECHA);
+        partida.interactuar();
+        partida.interactuar();
+
+        assertEquals(new Ubicacion(1, 1, ESCALERA), this.heroe.getUbicacion());
+    }
+
+    @Test
+    void salirDeLaEscaleraYVolverAPisarlaNoTrasladaHastaInteractuar() {
+        Partida partida = dosPisosConEscalera();
+
+        partida.moverHeroe(Direccion.DERECHA);
+        partida.interactuar();
         partida.moverHeroe(Direccion.DERECHA);
         assertEquals(new Ubicacion(1, 2, new Posicion(2, 4)), this.heroe.getUbicacion());
 
         partida.moverHeroe(Direccion.IZQUIERDA);
+        assertEquals(new Ubicacion(1, 2, ESCALERA), this.heroe.getUbicacion());
 
+        partida.interactuar();
         assertEquals(new Ubicacion(1, 1, ESCALERA), this.heroe.getUbicacion());
     }
 
@@ -148,11 +186,14 @@ class PartidaEscalerasTest {
         piso1.agregarEntidad(deAbajo);
         Partida partida = dosPisosConEscalera(piso1, piso2);
         this.mazmorra.getPlano(new Ubicacion(1, 2, ENTRADA)).agregarEntidad(deArriba);
-
         partida.moverHeroe(Direccion.DERECHA);
+        assertEquals(1, deAbajo.getTurnosJugados());
 
+        partida.interactuar();
+
+        // al subir juega el piso de destino; el de origen no vuelve a jugar
         assertEquals(1, deArriba.getTurnosJugados());
-        assertEquals(0, deAbajo.getTurnosJugados());
+        assertEquals(1, deAbajo.getTurnosJugados());
     }
 
     @Test
@@ -171,9 +212,20 @@ class PartidaEscalerasTest {
         Partida partida = dosPisosConEscalera();
 
         partida.moverHeroe(Direccion.DERECHA);
+        partida.interactuar();
         partida.moverHeroe(Direccion.DERECHA);
         partida.moverHeroe(Direccion.DERECHA);
 
         assertTrue(partida.estaGanada());
+    }
+
+    @Test
+    void sobreUnaEscaleraLaInteraccionDisponibleEsUsarla() {
+        Partida partida = dosPisosConEscalera();
+        assertEquals(Interaccion.NINGUNA, partida.interaccionDisponible());
+
+        partida.moverHeroe(Direccion.DERECHA);
+
+        assertEquals(Interaccion.USAR_ESCALERA, partida.interaccionDisponible());
     }
 }

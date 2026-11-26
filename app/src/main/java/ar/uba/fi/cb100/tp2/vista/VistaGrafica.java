@@ -21,6 +21,7 @@ import ar.uba.fi.cb100.tp2.modelo.mundo.Tablero;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
 import ar.uba.fi.cb100.tp2.modelo.partida.Accion;
 import ar.uba.fi.cb100.tp2.modelo.partida.EstadoPartida;
+import ar.uba.fi.cb100.tp2.modelo.partida.Interaccion;
 import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
@@ -386,6 +387,19 @@ public class VistaGrafica implements Vista, AutoCloseable {
     }
 
     /**
+     * El aviso de la tecla E para la barra de estado, o vacío si en la celda
+     * no hay nada con qué interactuar.
+     */
+    static String avisoDeInteraccion(Interaccion interaccion) {
+        return switch (interaccion) {
+            case ABRIR_COFRE -> " | E: abrir cofre";
+            case USAR_ESCALERA -> " | E: usar escalera";
+            case USAR_PASILLO -> " | E: usar pasillo";
+            case NINGUNA -> "";
+        };
+    }
+
+    /**
      * Muestra información general de la partida.
      */
     private void mostrarEstado(Partida partida) {
@@ -394,7 +408,8 @@ public class VistaGrafica implements Vista, AutoCloseable {
                 "Energia: " + partida.getHeroe().getEnergia()
                         + " | Cofres: " + partida.getCofresAbiertos()
                         + " | Pasos: " + partida.getPasos()
-                        + " | Puntaje: " + partida.puntaje();
+                        + " | Puntaje: " + partida.puntaje()
+                        + avisoDeInteraccion(partida.interaccionDisponible());
 
         if (partida.estadoActual() == EstadoPartida.GANADA) {
             mensaje = "¡GANASTE! " + mensaje;
@@ -441,6 +456,9 @@ public class VistaGrafica implements Vista, AutoCloseable {
 
                 case ENTER:
                     return Accion.USAR;
+
+                case INTERACTUAR:
+                    return Accion.INTERACTUAR;
 
                 case RETROCESO:
                     return Accion.GUARDAR;
