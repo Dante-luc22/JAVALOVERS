@@ -42,6 +42,10 @@ public class VistaGrafica implements Vista, AutoCloseable {
     /** El número de la energía que recupera el héroe. */
     private static final Color COLOR_RECUPERACION = new Color(72, 214, 96);
 
+    /** Lo que se ve arriba del héroe mientras está envenenado: "VENENO" y los pasos que le quedan. */
+    private static final Color COLOR_VENENO = new Color(110, 225, 70);
+    private static final String TEXTO_VENENO = "VENENO";
+
     /** Si en un mismo turno pasan varias cosas, cada número sale un poco después del anterior. */
     private static final int RETRASO_ENTRE_NUMEROS_MS = 350;
 
@@ -133,6 +137,22 @@ public class VistaGrafica implements Vista, AutoCloseable {
                     posicion.columna(),
                     i * RETRASO_ENTRE_NUMEROS_MS
             );
+        }
+    }
+
+    /**
+     * Mientras el héroe está envenenado lleva arriba, en verde, "VENENO" y
+     * cuántos pasos faltan para que se le pase. Cuando se le pasa, desaparece.
+     */
+    private void mostrarVeneno(Partida partida) {
+
+        int restante = partida.pasosParaQueSePaseElVeneno();
+
+        if (restante > 0) {
+            this.juego.definirEtiqueta(
+                    NOMBRE_HEROE, TEXTO_VENENO + " " + restante, COLOR_VENENO);
+        } else {
+            this.juego.quitarEtiqueta(NOMBRE_HEROE);
         }
     }
 
@@ -383,6 +403,7 @@ public class VistaGrafica implements Vista, AutoCloseable {
         }
 
         this.juego.mostrarMensaje(mensaje);
+        mostrarVeneno(partida);
     }
 
     /**

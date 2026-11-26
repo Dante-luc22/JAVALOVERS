@@ -85,6 +85,7 @@ final class PanelDelTablero extends JPanel {
                 // Dibujar utilizando las dimensiones originales.
                 dibujarCeldas(g);
                 dibujarPersonajes(g);
+                dibujarEtiquetas(g);
                 dibujarTextosFlotantes(g);
             }
 
@@ -149,28 +150,55 @@ final class PanelDelTablero extends JPanel {
             if (avance < 0 || avance >= 1) {
                 continue;                                   // todavía no empezó, o ya terminó
             }
-            // sube rápido al principio y se frena; se desvanece en la segunda mitad
-            double subida = tamanio * 0.9 * (1 - Math.pow(1 - avance, 2));
+            // sube rápido al principio y se frena; se desvanece en la segunda mitad.
+            // Sube solo dentro de la celda, para no tapar lo que va arriba del personaje.
+            double subida = tamanio * 0.45 * (1 - Math.pow(1 - avance, 2));
             float opacidad = (float) (avance < 0.5 ? 1.0 : 1.0 - (avance - 0.5) / 0.5);
 
-            Shape letras = fuente.createGlyphVector(g.getFontRenderContext(), texto.texto).getOutline();
-            var caja = letras.getBounds2D();
-            double x = (texto.columna - 1) * tamanio + (tamanio - caja.getWidth()) / 2 - caja.getX();
-            double y = (texto.fila - 1) * tamanio + tamanio * 0.4 - subida;
-            Shape ubicado = AffineTransform.getTranslateInstance(x, y).createTransformedShape(letras);
+            double centroX = (texto.columna - 1) * tamanio + tamanio / 2.0;
+            double base = (texto.fila - 1) * tamanio + tamanio * 0.9 - subida;
+            dibujarTextoConBorde(g, fuente, texto.texto, texto.color, centroX, base, opacidad);
+        }
+    }
 
-            Graphics2D pincel = (Graphics2D) g.create();
-            try {
-                pincel.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacidad));
-                pincel.setStroke(new BasicStroke(Math.max(3f, tamanio / 12f),
-                        BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-                pincel.setColor(new Color(10, 10, 14));
-                pincel.draw(ubicado);
-                pincel.setColor(texto.color);
-                pincel.fill(ubicado);
-            } finally {
-                pincel.dispose();
+    /**
+     * El texto fijo que algunos personajes llevan arriba (por ejemplo el
+     * veneno que le queda al héroe), pegado al borde de arriba de su celda.
+     */
+    private void dibujarEtiquetas(Graphics2D g) {
+        Font fuente = new Font(Font.SANS_SERIF, Font.BOLD, Math.max(11, tamanio / 3));
+        for (EstadoDelTablero.Personaje personaje : estado.personajes()) {
+            if (personaje.etiqueta == null) {
+                continue;
             }
+            double centroX = (personaje.columna - 1) * tamanio + tamanio / 2.0;
+            double base = (personaje.fila - 1) * tamanio - 2;
+            dibujarTextoConBorde(g, fuente, personaje.etiqueta, personaje.colorDeLaEtiqueta, centroX, base, 1f);
+        }
+    }
+
+    /**
+     * Un texto centrado en {@code centroX} y apoyado en la línea {@code base},
+     * con un borde oscuro para que se lea sobre cualquier fondo.
+     */
+    private void dibujarTextoConBorde(Graphics2D g, Font fuente, String texto, Color color,
+                                      double centroX, double base, float opacidad) {
+        Shape letras = fuente.createGlyphVector(g.getFontRenderContext(), texto).getOutline();
+        var caja = letras.getBounds2D();
+        double x = centroX - caja.getWidth() / 2 - caja.getX();
+        Shape ubicado = AffineTransform.getTranslateInstance(x, base).createTransformedShape(letras);
+
+        Graphics2D pincel = (Graphics2D) g.create();
+        try {
+            pincel.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacidad));
+            pincel.setStroke(new BasicStroke(Math.max(3f, tamanio / 12f),
+                    BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            pincel.setColor(new Color(10, 10, 14));
+            pincel.draw(ubicado);
+            pincel.setColor(color);
+            pincel.fill(ubicado);
+        } finally {
+            pincel.dispose();
         }
     }
 

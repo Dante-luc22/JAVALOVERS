@@ -40,6 +40,9 @@ final class EstadoDelTablero {
         final Apariencia apariencia;
         int fila;
         int columna;
+        /** Un texto fijo que se dibuja arriba del personaje, o null si no tiene. */
+        String etiqueta;
+        Color colorDeLaEtiqueta;
 
         Personaje(String nombre, Apariencia apariencia, int fila, int columna) {
             this.nombre = nombre;
@@ -173,6 +176,13 @@ final class EstadoDelTablero {
         Personaje personaje = personaje(nombre);
         personaje.fila = fila;
         personaje.columna = columna;
+    }
+
+    /** Le pone al personaje un texto fijo arriba; con texto null se lo saca. */
+    void setEtiqueta(String nombre, String texto, Color color) {
+        Personaje personaje = personaje(nombre);
+        personaje.etiqueta = texto;
+        personaje.colorDeLaEtiqueta = texto == null ? null : Objects.requireNonNull(color);
     }
 
     void quitarPersonaje(String nombre) {
