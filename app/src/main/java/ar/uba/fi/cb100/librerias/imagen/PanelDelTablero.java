@@ -7,6 +7,10 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.AlphaComposite;
+import java.awt.BasicStroke;
+import java.awt.Shape;
+import java.awt.geom.AffineTransform;
 
 import javax.swing.JPanel;
 
@@ -81,6 +85,7 @@ final class PanelDelTablero extends JPanel {
                 // Dibujar utilizando las dimensiones originales.
                 dibujarCeldas(g);
                 dibujarPersonajes(g);
+                dibujarTextosFlotantes(g);
             }
 
         } finally {
@@ -128,6 +133,43 @@ final class PanelDelTablero extends JPanel {
                 g.drawOval(x, y, lado, lado);
                 dibujarLetra(g, personaje.nombre.substring(0, 1).toUpperCase(),
                         x - margen, y - margen, Color.WHITE);
+            }
+        }
+    }
+
+    /**
+     * Los textos que suben desde una celda y se van desvaneciendo. Cada uno
+     * tiene un borde oscuro para que se lea sobre cualquier fondo.
+     */
+    private void dibujarTextosFlotantes(Graphics2D g) {
+        long ahora = System.currentTimeMillis();
+        Font fuente = new Font(Font.SANS_SERIF, Font.BOLD, Math.max(12, tamanio * 2 / 5));
+        for (EstadoDelTablero.TextoFlotante texto : estado.textosFlotantes()) {
+            double avance = (double) (ahora - texto.inicio) / EstadoDelTablero.DURACION_DEL_TEXTO_MS;
+            if (avance < 0 || avance >= 1) {
+                continue;                                   // todavía no empezó, o ya terminó
+            }
+            // sube rápido al principio y se frena; se desvanece en la segunda mitad
+            double subida = tamanio * 0.9 * (1 - Math.pow(1 - avance, 2));
+            float opacidad = (float) (avance < 0.5 ? 1.0 : 1.0 - (avance - 0.5) / 0.5);
+
+            Shape letras = fuente.createGlyphVector(g.getFontRenderContext(), texto.texto).getOutline();
+            var caja = letras.getBounds2D();
+            double x = (texto.columna - 1) * tamanio + (tamanio - caja.getWidth()) / 2 - caja.getX();
+            double y = (texto.fila - 1) * tamanio + tamanio * 0.4 - subida;
+            Shape ubicado = AffineTransform.getTranslateInstance(x, y).createTransformedShape(letras);
+
+            Graphics2D pincel = (Graphics2D) g.create();
+            try {
+                pincel.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacidad));
+                pincel.setStroke(new BasicStroke(Math.max(3f, tamanio / 12f),
+                        BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                pincel.setColor(new Color(10, 10, 14));
+                pincel.draw(ubicado);
+                pincel.setColor(texto.color);
+                pincel.fill(ubicado);
+            } finally {
+                pincel.dispose();
             }
         }
     }

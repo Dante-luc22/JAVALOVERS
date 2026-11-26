@@ -13,6 +13,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -20,6 +21,7 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.LayoutManager;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.SecondaryLoop;
 import java.awt.Shape;
@@ -39,6 +41,7 @@ import java.util.function.Supplier;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -47,16 +50,26 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
+import javax.swing.plaf.basic.BasicArrowButton;
 import javax.swing.plaf.basic.BasicButtonUI;
+import javax.swing.plaf.basic.BasicComboBoxUI;
+import javax.swing.plaf.basic.BasicComboPopup;
+import javax.swing.plaf.basic.BasicScrollBarUI;
+import javax.swing.plaf.basic.BasicTextFieldUI;
+import javax.swing.plaf.basic.ComboPopup;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 
 /** Presenta el menú principal, las opciones de inicio y el resultado de la partida. */
 public final class MenuGrafico {
@@ -66,6 +79,8 @@ public final class MenuGrafico {
     private static final Color BORDE = new Color(119, 110, 100);
     private static final Color TEXTO = new Color(249, 239, 217);
     private static final Color DORADO = new Color(229, 177, 99);
+    private static final Color PANEL_CLARO = new Color(33, 40, 51);
+    private static final Color SELECCION = new Color(121, 76, 39);
     private static final int ANCHO_BASE = 920;
     private static final int ALTO_BASE = 530;
     private static final int ALTO_ENCICLOPEDIA = 346;
@@ -236,10 +251,10 @@ public final class MenuGrafico {
 
         private JPanel jugar(Long semillaConfigurada) {
             JComboBox<String> dificultad = selectorDeDificultad();
-            JComboBox<String> mapa = new JComboBox<>(
+            JComboBox<String> mapa = new SelectorMazmorra(
                     new String[]{"De configuración", "Aleatorio", "Semilla personalizada"}
             );
-            JTextField semilla = new JTextField(
+            JTextField semilla = new CampoMazmorra(
                     semillaConfigurada == null ? "" : semillaConfigurada.toString()
             );
             semilla.setEnabled(false);
@@ -289,7 +304,7 @@ public final class MenuGrafico {
         }
 
         private JPanel opciones() {
-            JComboBox<String> vista = new JComboBox<>(new String[]{"Gráfica", "BMP (consola)"});
+            JComboBox<String> vista = new SelectorMazmorra(new String[]{"Gráfica", "BMP (consola)"});
             vista.setSelectedIndex(modoVista == ModoVista.GRAFICA ? 0 : 1);
             vista.addActionListener(e ->
                     modoVista = vista.getSelectedIndex() == 0 ? ModoVista.GRAFICA : ModoVista.BMP);
@@ -388,6 +403,7 @@ public final class MenuGrafico {
             tabla.setDefaultEditor(Object.class, null);
             tabla.setRowHeight(24);
             tabla.getTableHeader().setReorderingAllowed(false);
+            estilizarTabla(tabla);
             JLabel estado = texto("", 13);
 
             Runnable actualizar = () -> {
@@ -400,13 +416,24 @@ public final class MenuGrafico {
                 }
                 tabla.setModel(new DefaultTableModel(filas,
                         new String[]{"Puesto", "Jugador", "Puntaje", "Fecha"}));
+                int[] anchos = {60, 90, 90, 190};
+                for (int i = 0; i < anchos.length; i++) {
+                    tabla.getColumnModel().getColumn(i).setPreferredWidth(anchos[i]);
+                }
                 estado.setText(mejores.isEmpty() ? "Todavía no hay partidas registradas." : " ");
             };
             dificultad.addActionListener(e -> actualizar.run());
             actualizar.run();
 
             contenido.add(filtro, BorderLayout.NORTH);
-            contenido.add(new JScrollPane(tabla), BorderLayout.CENTER);
+            JScrollPane desplazable = new JScrollPane(tabla);
+            desplazable.setBorder(BorderFactory.createLineBorder(BORDE));
+            desplazable.getViewport().setBackground(FONDO);
+            estilizarBarra(desplazable.getVerticalScrollBar());
+            JPanel esquina = new JPanel();
+            esquina.setBackground(PANEL_CLARO);
+            desplazable.setCorner(JScrollPane.UPPER_RIGHT_CORNER, esquina);
+            contenido.add(desplazable, BorderLayout.CENTER);
             contenido.add(estado, BorderLayout.SOUTH);
             return contenido;
         }
@@ -449,7 +476,7 @@ public final class MenuGrafico {
     }
 
     private static JComboBox<String> selectorDeDificultad() {
-        return new JComboBox<>(new String[]{"Fácil", "Medio", "Difícil"});
+        return new SelectorMazmorra(new String[]{"Fácil", "Medio", "Difícil"});
     }
 
     private static JLabel texto(String contenido, float tamano) {
@@ -673,8 +700,6 @@ public final class MenuGrafico {
                 pincel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
                 int ancho = pincel.getFontMetrics().stringWidth(GRUPO);
                 int centro = (int) Math.round(anchoDisponible / 2);
-                pincel.setColor(new Color(12, 14, 21));
-                pincel.fillRect(centro - ancho / 2 - 14, 105, ancho + 28, 24);
                 pincel.setColor(DORADO);
                 pincel.drawLine(centro - ancho / 2 - 45, 117, centro - ancho / 2 - 14, 117);
                 pincel.drawLine(centro + ancho / 2 + 14, 117, centro + ancho / 2 + 45, 117);
@@ -735,6 +760,180 @@ public final class MenuGrafico {
                 pincel.dispose();
             }
             super.paintComponent(g);
+        }
+    }
+
+    /** Le da a la tabla el estilo de la mazmorra: celdas oscuras, texto claro y encabezado dorado. */
+    private static void estilizarTabla(JTable tabla) {
+        tabla.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
+        tabla.setBackground(FONDO);
+        tabla.setForeground(TEXTO);
+        tabla.setSelectionBackground(SELECCION);
+        tabla.setSelectionForeground(TEXTO);
+        tabla.setGridColor(PANEL_CLARO);
+        tabla.setShowVerticalLines(false);
+        tabla.setShowHorizontalLines(true);
+        tabla.setIntercellSpacing(new Dimension(0, 1));
+        tabla.setFillsViewportHeight(true);
+
+        tabla.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable origen, Object valor,
+                    boolean seleccionada, boolean conFoco, int fila, int columna) {
+                super.getTableCellRendererComponent(origen, valor, seleccionada, false, fila, columna);
+                setBackground(seleccionada ? SELECCION : FONDO);
+                setForeground(TEXTO);
+                setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
+                return this;
+            }
+        });
+
+        JTableHeader encabezado = tabla.getTableHeader();
+        encabezado.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
+        encabezado.setDefaultRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable origen, Object valor,
+                    boolean seleccionada, boolean conFoco, int fila, int columna) {
+                super.getTableCellRendererComponent(origen, valor, false, false, fila, columna);
+                setFont(origen.getTableHeader().getFont());
+                setBackground(PANEL_CLARO);
+                setForeground(DORADO);
+                setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createMatteBorder(0, 0, 1, 0, BORDE),
+                        BorderFactory.createEmptyBorder(6, 10, 6, 10)));
+                return this;
+            }
+        });
+    }
+
+    /** Barra de desplazamiento fina y oscura, sin flechas, a juego con la tabla. */
+    private static void estilizarBarra(JScrollBar barra) {
+        barra.setUI(new BasicScrollBarUI() {
+            @Override
+            protected void configureScrollBarColors() {
+                thumbColor = BORDE;
+                trackColor = FONDO;
+            }
+
+            @Override
+            protected JButton createDecreaseButton(int orientacion) {
+                return botonInvisible();
+            }
+
+            @Override
+            protected JButton createIncreaseButton(int orientacion) {
+                return botonInvisible();
+            }
+
+            private JButton botonInvisible() {
+                JButton boton = new JButton();
+                boton.setPreferredSize(new Dimension(0, 0));
+                return boton;
+            }
+        });
+        barra.setBackground(FONDO);
+        barra.setPreferredSize(new Dimension(12, 0));
+    }
+
+    /** El borde de los campos: línea de la mazmorra y un margen para el texto. */
+    private static Border bordeDeCampo(int arriba, int izquierda, int abajo, int derecha) {
+        return BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDE),
+                BorderFactory.createEmptyBorder(arriba, izquierda, abajo, derecha));
+    }
+
+    /** Desplegable con el mismo estilo que los botones: fondo oscuro, borde recto y flecha dorada. */
+    private static final class SelectorMazmorra extends JComboBox<String> {
+
+        private SelectorMazmorra(String[] opciones) {
+            super(opciones);
+            setUI(new InterfazDelSelector());
+            setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
+            setBackground(FONDO);
+            setForeground(TEXTO);
+            setBorder(bordeDeCampo(0, 10, 0, 0));
+            setRenderer(new DefaultListCellRenderer() {
+                @Override
+                public Component getListCellRendererComponent(JList<?> lista, Object valor,
+                        int indice, boolean seleccionado, boolean conFoco) {
+                    super.getListCellRendererComponent(lista, valor, indice, seleccionado, false);
+                    setBackground(seleccionado ? SELECCION : PANEL);
+                    setForeground(TEXTO);
+                    setBorder(BorderFactory.createEmptyBorder(6, 10, 6, 10));
+                    return this;
+                }
+            });
+        }
+    }
+
+    private static final class InterfazDelSelector extends BasicComboBoxUI {
+
+        @Override
+        protected JButton createArrowButton() {
+            BasicArrowButton flecha = new BasicArrowButton(
+                    SwingConstants.SOUTH, PANEL_CLARO, PANEL_CLARO, DORADO, PANEL_CLARO);
+            flecha.setBorder(BorderFactory.createEmptyBorder());
+            return flecha;
+        }
+
+        @Override
+        protected ComboPopup createPopup() {
+            return new BasicComboPopup(comboBox) {
+                @Override
+                protected void configurePopup() {
+                    super.configurePopup();
+                    setBorder(BorderFactory.createLineBorder(DORADO));
+                }
+            };
+        }
+
+        @Override
+        public void paintCurrentValueBackground(Graphics g, Rectangle limites, boolean conFoco) {
+            g.setColor(comboBox.isEnabled() ? FONDO : PANEL);
+            g.fillRect(limites.x, limites.y, limites.width, limites.height);
+        }
+
+        @Override
+        public void paintCurrentValue(Graphics g, Rectangle limites, boolean conFoco) {
+            Object valor = comboBox.getSelectedItem();
+            if (valor == null) {
+                return;
+            }
+            Graphics2D pincel = (Graphics2D) g.create();
+            try {
+                pincel.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+                        RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                pincel.setFont(comboBox.getFont());
+                pincel.setColor(TEXTO);
+                FontMetrics medidas = pincel.getFontMetrics();
+                int base = limites.y + (limites.height + medidas.getAscent() - medidas.getDescent()) / 2;
+                pincel.drawString(valor.toString(), limites.x, base);
+            } finally {
+                pincel.dispose();
+            }
+        }
+    }
+
+    /** Campo de texto con el mismo estilo que los botones y los desplegables. */
+    private static final class CampoMazmorra extends JTextField {
+
+        private CampoMazmorra(String contenido) {
+            super(contenido);
+            setUI(new BasicTextFieldUI());
+            setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
+            setBackground(FONDO);
+            setForeground(TEXTO);
+            setCaretColor(DORADO);
+            setDisabledTextColor(BORDE);
+            setSelectionColor(SELECCION);
+            setSelectedTextColor(TEXTO);
+            setBorder(bordeDeCampo(6, 10, 6, 10));
+        }
+
+        @Override
+        public void setEnabled(boolean activo) {
+            super.setEnabled(activo);
+            setBackground(activo ? FONDO : PANEL);
         }
     }
 

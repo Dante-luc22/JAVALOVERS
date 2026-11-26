@@ -178,7 +178,14 @@ public class Partida {
         this.empezarPaso();
 
         Terreno terreno = plano.getTablero().getTerreno(destino);
-        this.heroe.restarEnergia(this.heroe.ajustarCosto(terreno, this.costoDe(terreno), this.costoDe(Terreno.PISO)));
+        int costo = this.heroe.ajustarCosto(terreno, this.costoDe(terreno), this.costoDe(Terreno.PISO));
+        if (costo > this.costoDe(Terreno.PISO)) {
+            // agua, lava o un efecto que encarece el paso: es un daño y se muestra
+            this.heroe.restarEnergia(costo);
+        } else {
+            // caminar por un piso común no se muestra
+            this.heroe.restarEnergiaEnSilencio(costo);
+        }
         Ubicacion ubicacionNueva = new Ubicacion(actual.tablero(), actual.piso(), destino);
         this.heroe.mover(ubicacionNueva);
         this.encontrarEntidades(plano, destino);

@@ -2,8 +2,10 @@ package ar.uba.fi.cb100.librerias.imagen;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -47,11 +49,33 @@ final class EstadoDelTablero {
         }
     }
 
+    /** Cuánto dura en pantalla un texto flotante, en milisegundos. */
+    static final long DURACION_DEL_TEXTO_MS = 1100;
+
+    /** Un texto que sube y se desvanece sobre una celda, por ejemplo "-3" o "+1". */
+    static final class TextoFlotante {
+        final String texto;
+        final Color color;
+        final int fila;
+        final int columna;
+        /** El momento (en milisegundos) en que empieza a verse; puede ser a futuro. */
+        final long inicio;
+
+        TextoFlotante(String texto, Color color, int fila, int columna, long inicio) {
+            this.texto = texto;
+            this.color = color;
+            this.fila = fila;
+            this.columna = columna;
+            this.inicio = inicio;
+        }
+    }
+
     private final int filas;
     private final int columnas;
     private final char[][] celdas;
     private final Map<Character, Apariencia> apariencias = new HashMap<>();
     private final Map<String, Personaje> personajes = new LinkedHashMap<>();   // conserva el orden de dibujo
+    private final List<TextoFlotante> textosFlotantes = new ArrayList<>();
     private String mensaje = "";
 
     EstadoDelTablero(int filas, int columnas) {
@@ -180,6 +204,28 @@ final class EstadoDelTablero {
                     + "\". Los que hay: " + personajes.keySet());
         }
         return personaje;
+    }
+
+    // ------------------------------------------------------------ textos flotantes
+
+    void agregarTextoFlotante(String texto, Color color, int fila, int columna, long inicio) {
+        Objects.requireNonNull(texto, "el texto no puede ser null");
+        Objects.requireNonNull(color, "el color no puede ser null");
+        validarPosicion(fila, columna);
+        textosFlotantes.add(new TextoFlotante(texto, color, fila, columna, inicio));
+    }
+
+    Iterable<TextoFlotante> textosFlotantes() {
+        return textosFlotantes;
+    }
+
+    boolean hayTextosFlotantes() {
+        return !textosFlotantes.isEmpty();
+    }
+
+    /** Saca los textos que ya terminaron de verse. */
+    void quitarTextosVencidos(long ahora) {
+        textosFlotantes.removeIf(t -> ahora - t.inicio >= DURACION_DEL_TEXTO_MS);
     }
 
     // ------------------------------------------------------------ mensaje

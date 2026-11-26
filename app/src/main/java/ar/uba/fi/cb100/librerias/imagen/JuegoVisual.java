@@ -20,6 +20,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 
 /**
  * Una ventana con un tablero de celdas, personajes que se mueven por él y el
@@ -85,6 +86,7 @@ public final class JuegoVisual implements AutoCloseable {
     private PanelDelTablero panel;
     private JLabel barraDeMensaje;
     private volatile boolean abierta = false;
+    private Timer animacion;
 
     // ==================================================================
     //  Construcción
@@ -337,6 +339,51 @@ public final class JuegoVisual implements AutoCloseable {
     public int getColumnaDe(String nombre) {
         synchronized (estado) {
             return estado.columnaDe(nombre);
+        }
+    }
+
+    // ==================================================================
+    //  Textos flotantes
+    // ==================================================================
+
+    /**
+     * Hace salir un texto de una celda: sube y se desvanece solo, por ejemplo
+     * "-3" en rojo cuando el héroe pierde energía. Sirve para varios a la vez.
+     *
+     * @param texto     lo que se escribe
+     * @param color     el color de las letras
+     * @param fila      la fila de la celda de donde sale, de 1 a n
+     * @param columna   la columna de la celda de donde sale, de 1 a n
+     * @param retrasoMs cuántos milisegundos espera antes de aparecer; con 0, sale ya
+     */
+    public void mostrarTextoFlotante(String texto, Color color, int fila, int columna, int retrasoMs) {
+        long inicio = System.currentTimeMillis() + Math.max(0, retrasoMs);
+        synchronized (estado) {
+            estado.agregarTextoFlotante(texto, color, fila, columna, inicio);
+        }
+        SwingUtilities.invokeLater(this::arrancarAnimacion);
+    }
+
+    /** En el hilo de Swing: repinta cada tanto mientras haya textos, y se detiene cuando no quedan. */
+    private void arrancarAnimacion() {
+        if (panel == null) {
+            return;
+        }
+        if (animacion == null) {
+            animacion = new Timer(30, evento -> {
+                boolean quedan;
+                synchronized (estado) {
+                    estado.quitarTextosVencidos(System.currentTimeMillis());
+                    quedan = estado.hayTextosFlotantes();
+                }
+                panel.repaint();
+                if (!quedan) {
+                    animacion.stop();
+                }
+            });
+        }
+        if (!animacion.isRunning()) {
+            animacion.start();
         }
     }
 
