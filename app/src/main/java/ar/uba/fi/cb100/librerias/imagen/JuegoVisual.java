@@ -342,6 +342,25 @@ public final class JuegoVisual implements AutoCloseable {
         }
     }
 
+    /**
+     * Pone un texto fijo arriba de un personaje, que lo sigue cuando se mueve
+     * (por ejemplo "VENENO 7" en verde). Reemplaza al anterior, si había.
+     */
+    public void definirEtiqueta(String nombre, String texto, Color color) {
+        synchronized (estado) {
+            estado.setEtiqueta(nombre, texto, color);
+        }
+        redibujar();
+    }
+
+    /** Le saca al personaje el texto fijo que tenía arriba. */
+    public void quitarEtiqueta(String nombre) {
+        synchronized (estado) {
+            estado.setEtiqueta(nombre, null, null);
+        }
+        redibujar();
+    }
+
     // ==================================================================
     //  Textos flotantes
     // ==================================================================

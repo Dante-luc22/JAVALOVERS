@@ -5,7 +5,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Collections;
 
+import ar.uba.fi.cb100.tp2.modelo.efectos.QuitarEfecto;
+import ar.uba.fi.cb100.tp2.modelo.efectos.TipoDeEfecto;
 import ar.uba.fi.cb100.tp2.modelo.eventos.Agenda;
+import ar.uba.fi.cb100.tp2.modelo.eventos.EventoProgramado;
 import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Entidad;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Mazmorra;
@@ -134,6 +137,25 @@ public class Partida {
         return this.agenda;
     }
 
+
+    /**
+     * Cuántos pasos faltan para que se le pase el veneno al héroe: recién
+     * envenenado por un cofre son 10, y baja de a uno por paso. Se lee de la
+     * agenda, donde está anotado cuándo se le quita el efecto. Si se envenenó
+     * más de una vez, cuenta hasta el último que se le pasa.
+     *
+     * @return los pasos que faltan, o 0 si el héroe no está envenenado
+     */
+    public int pasosParaQueSePaseElVeneno() {
+        int pasos = 0;
+        for (EventoProgramado programado : this.agenda.getPendientes()) {
+            if (programado.evento() instanceof QuitarEfecto quitar
+                    && quitar.getTipo() == TipoDeEfecto.ENVENENADO) {
+                pasos = Math.max(pasos, programado.paso() - this.agenda.getPasoActual());
+            }
+        }
+        return pasos;
+    }
 
     /**
      * @param terreno el terreno al que entra el héroe
