@@ -12,7 +12,7 @@ import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
  * el Errante.
  */
 public class Fantasma extends Monstruo{
-
+    
     /**
      * Si en este paso descansa. Se invierte en cada paso;
      * arranca en true, así que el primer paso descansa.

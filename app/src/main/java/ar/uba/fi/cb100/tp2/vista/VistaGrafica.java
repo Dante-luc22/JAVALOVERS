@@ -1,12 +1,14 @@
 
 package ar.uba.fi.cb100.tp2.vista;
 
+import java.awt.Color;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -33,6 +35,19 @@ public class VistaGrafica implements Vista, AutoCloseable {
 
     private static final int TAMANIO_CELDA = 48;
     private static final String NOMBRE_HEROE = "heroe";
+
+    /** El número de la energía que pierde el héroe. */
+    private static final Color COLOR_DANIO = new Color(235, 64, 52);
+
+    /** El número de la energía que recupera el héroe. */
+    private static final Color COLOR_RECUPERACION = new Color(72, 214, 96);
+
+    /** Lo que se ve arriba del héroe mientras está envenenado: "VENENO" y los pasos que le quedan. */
+    private static final Color COLOR_VENENO = new Color(110, 225, 70);
+    private static final String TEXTO_VENENO = "VENENO";
+
+    /** Si en un mismo turno pasan varias cosas, cada número sale un poco después del anterior. */
+    private static final int RETRASO_ENTRE_NUMEROS_MS = 350;
 
     /** Símbolo gráfico de una celda con escalera (se dibuja con escalera.png). */
     private static final char SIMBOLO_ESCALERA = 'H';
@@ -73,9 +88,13 @@ public class VistaGrafica implements Vista, AutoCloseable {
     public void mostrar(Partida partida) {
         Plano plano = partida.getPlanoActual();
 
+        // Lo que le pasó a la energía del héroe en este turno, para mostrarlo sobre él.
+        List<Integer> cambiosDeEnergia = partida.getHeroe().retirarCambiosDeEnergia();
+
         // Primera llamada o cambio de plano.
         if (this.juego == null || plano != this.planoMostrado) {
             inicializar(partida, plano);
+            mostrarCambiosDeEnergia(partida, cambiosDeEnergia);
             return;
         }
 
@@ -93,6 +112,48 @@ public class VistaGrafica implements Vista, AutoCloseable {
         );
 
         mostrarEstado(partida);
+        mostrarCambiosDeEnergia(partida, cambiosDeEnergia);
+    }
+
+    /**
+     * Hace salir del héroe un número por cada cambio de energía: en rojo con
+     * un menos si perdió (por el terreno o por un ataque) y en verde con un más
+     * si recuperó. Solo números, sin texto.
+     */
+    private void mostrarCambiosDeEnergia(Partida partida, List<Integer> cambios) {
+
+        Posicion posicion = partida.getHeroe().getUbicacion().posicion();
+
+        for (int i = 0; i < cambios.size(); i++) {
+
+            int cambio = cambios.get(i);
+            String texto = cambio > 0 ? "+" + cambio : String.valueOf(cambio);
+            Color color = cambio > 0 ? COLOR_RECUPERACION : COLOR_DANIO;
+
+            this.juego.mostrarTextoFlotante(
+                    texto,
+                    color,
+                    posicion.fila(),
+                    posicion.columna(),
+                    i * RETRASO_ENTRE_NUMEROS_MS
+            );
+        }
+    }
+
+    /**
+     * Mientras el héroe está envenenado lleva arriba, en verde, "VENENO" y
+     * cuántos pasos faltan para que se le pase. Cuando se le pasa, desaparece.
+     */
+    private void mostrarVeneno(Partida partida) {
+
+        int restante = partida.pasosParaQueSePaseElVeneno();
+
+        if (restante > 0) {
+            this.juego.definirEtiqueta(
+                    NOMBRE_HEROE, TEXTO_VENENO + " " + restante, COLOR_VENENO);
+        } else {
+            this.juego.quitarEtiqueta(NOMBRE_HEROE);
+        }
     }
 
     /**
@@ -342,6 +403,7 @@ public class VistaGrafica implements Vista, AutoCloseable {
         }
 
         this.juego.mostrarMensaje(mensaje);
+        mostrarVeneno(partida);
     }
 
     /**
@@ -426,7 +488,7 @@ public class VistaGrafica implements Vista, AutoCloseable {
     /**
      * Busca las imágenes tanto desde la raíz del proyecto como desde app/.
      */
-    private static Path buscarCarpetaImagenes() {
+    static Path buscarCarpetaImagenes() {
 
         Path[] candidatas = {
                 Path.of(

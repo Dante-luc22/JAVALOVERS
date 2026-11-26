@@ -22,4 +22,12 @@ public class AguaComoPiso extends Efecto{
             return costoActual;
         }
     }
+
+    /**
+     * @return "AGUA_COMO_PISO"
+     */
+    @Override
+    public TipoDeEfecto getTipo() {
+        return TipoDeEfecto.AGUA_COMO_PISO;
+    }
 }

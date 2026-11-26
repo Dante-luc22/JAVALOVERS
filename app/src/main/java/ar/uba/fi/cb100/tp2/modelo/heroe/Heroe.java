@@ -1,6 +1,7 @@
 package ar.uba.fi.cb100.tp2.modelo.heroe;
 
 import ar.uba.fi.cb100.tp2.modelo.efectos.Efecto;
+import ar.uba.fi.cb100.tp2.modelo.efectos.TipoDeEfecto;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
 import ar.uba.fi.cb100.tp2.modelo.objetos.Inventario;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
@@ -17,6 +18,13 @@ public class Heroe {
     private final Inventario inventario;
     private final ArrayList<Efecto> efectosActivos = new ArrayList<>();
     private int escudos = 0;
+
+    /**
+     * Los cambios de energía que la vista todavía no mostró, en el orden en que
+     * pasaron: negativos son daño y positivos son energía recuperada. No es
+     * parte del estado de la partida (no se guarda): solo sirve para mostrar.
+     */
+    private final List<Integer> cambiosDeEnergia = new ArrayList<>();
 
     /**
      * Constructor de la clase heroe, recibe su ubicacionInicial y
@@ -136,6 +144,21 @@ public class Heroe {
      * @throws IllegalArgumentException si la cantidad dada es negativa
      */
     public void restarEnergia(int cantidad) {
+        restarEnergiaEnSilencio(cantidad);
+        if (cantidad > 0) {
+            this.cambiosDeEnergia.add(-cantidad);
+        }
+    }
+
+    /**
+     * Resta energía igual que {@link #restarEnergia}, pero sin dejarla anotada
+     * para mostrar. Es para el costo normal de caminar por el piso, que no es
+     * un daño.
+     *
+     * @param cantidad energia a restar.
+     * @throws IllegalArgumentException si la cantidad dada es negativa
+     */
+    public void restarEnergiaEnSilencio(int cantidad) {
         if (cantidad < 0) {
             throw new IllegalArgumentException(
                     "La energia a restar no puede ser negativa, se recibio: " + cantidad);
@@ -157,10 +180,27 @@ public class Heroe {
             throw new IllegalArgumentException(
                     "La energia a sumar no puede ser negativa, se recibio: " + cantidad);
         }
+        int antes = this.energia;
         this.energia += cantidad;
         if (energia > energiaMaxima) {
             this.energia = energiaMaxima;
         }
+        // se anota lo que de verdad ganó: con la energía llena no sube nada
+        if (this.energia > antes) {
+            this.cambiosDeEnergia.add(this.energia - antes);
+        }
+    }
+
+    /**
+     * Entrega los cambios de energía que pasaron desde la última vez que se
+     * pidieron, y los borra: cada cambio se muestra una sola vez.
+     *
+     * @return los cambios en orden; negativos son daño y positivos, energía recuperada
+     */
+    public List<Integer> retirarCambiosDeEnergia() {
+        List<Integer> cambios = new ArrayList<>(this.cambiosDeEnergia);
+        this.cambiosDeEnergia.clear();
+        return cambios;
     }
 
     /**
@@ -209,16 +249,24 @@ public class Heroe {
         return costo;
     }
 
+
     /**
-     * Elimina un efecto dentro de los efectos activos.
+     * Quita el primer efecto activo de ese tipo. Si no hay
+     * ninguno, no hace nada.
      *
-     * @param efecto a quitar
+     * @param tipo de efecto a sacar
+     * @throws IllegalArgumentException si el tipo es nulo.
      */
-    public void quitarEfecto(Efecto efecto) {
-        if (efecto == null) {
-            throw new IllegalArgumentException("El efecto no puede ser nulo.");
+    public void quitarEfecto(TipoDeEfecto tipo) {
+        if (tipo == null) {
+            throw new IllegalArgumentException("El tipo de efecto no puede ser nulo.");
         }
-        efectosActivos.remove(efecto);
+        for (Efecto efecto : this.efectosActivos) {
+            if (efecto.getTipo() == tipo) {
+                this.efectosActivos.remove(efecto);
+                return; // corta la ejecucion para sacar solo el que se indico
+            }
+        }
     }
 
     /**

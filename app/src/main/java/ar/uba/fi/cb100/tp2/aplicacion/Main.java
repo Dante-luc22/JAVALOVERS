@@ -1,27 +1,32 @@
 package ar.uba.fi.cb100.tp2.aplicacion;
 
+import java.awt.GraphicsEnvironment;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.util.Random;
 
 import ar.uba.fi.cb100.tp2.generador.GeneradorGrupoNN;
 import ar.uba.fi.cb100.tp2.modelo.partida.Configuracion;
 import ar.uba.fi.cb100.tp2.modelo.partida.EstadoPartida;
 import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
+import ar.uba.fi.cb100.tp2.modelo.ranking.EntradaDeRanking;
+import ar.uba.fi.cb100.tp2.modelo.ranking.Ranking;
 import ar.uba.fi.cb100.tp2.modelo.valores.Dificultad;
+import ar.uba.fi.cb100.tp2.persistencia.ArchivoDeRanking;
 import ar.uba.fi.cb100.tp2.persistencia.LectorConfiguracion;
 import ar.uba.fi.cb100.tp2.vista.EntradaConsola;
+import ar.uba.fi.cb100.tp2.vista.MenuGrafico;
 import ar.uba.fi.cb100.tp2.vista.Vista;
 import ar.uba.fi.cb100.tp2.vista.VistaBmp;
 import ar.uba.fi.cb100.tp2.vista.VistaGrafica;
-import java.awt.GraphicsEnvironment;
-import ar.uba.fi.cb100.tp2.vista.MenuGrafico;
+
 /**
- * Punto de entrada del juego. Arma las piezas y las conecta:
- * configuración → dificultad → partida → vista → controlador.
- * La lógica del juego no está acá, está en el modelo.
+ * Punto de entrada del juego. Lee la configuración, crea la partida
+ * y conecta la vista con el controlador.
  */
 public class Main {
 
-    /** Carpeta donde quedan los BMP de cada paso, como pide el enunciado. */
+    /** Carpeta donde quedan los BMP de cada paso. */
     private static final Path CARPETA_BMP = Path.of("salida");
 
     public static void main(String[] args) {
@@ -33,33 +38,27 @@ public class Main {
             Configuracion configuracion =
                     LectorConfiguracion.leer(LectorConfiguracion.RUTA_POR_DEFECTO);
 
-            Dificultad dificultad;
-            boolean usarBmp;
-
             if (sinPantalla) {
-                dificultad = elegirDificultad(entrada);
-                usarBmp = true;
-            } else {
-                var opciones = menu.mostrarInicio();
-                if (opciones.isEmpty()) {
-                    return;
-                }
-
-                var inicio = opciones.get();
-                dificultad = inicio.dificultad();
-                usarBmp = inicio.modoVista() == MenuGrafico.ModoVista.BMP;
-            }
-
-            CreadorPartida creador = new CreadorPartida(configuracion, new GeneradorGrupoNN());
-
-            while (true) {
+                Dificultad dificultad = elegirDificultad(entrada);
+                CreadorPartida creador = new CreadorPartida(configuracion, new GeneradorGrupoNN());
                 Partida partida = creador.crear(dificultad);
                 EstadoPartida fin = jugarPartida(
-                        partida, usarBmp, configuracion.energiaInicial(), entrada);
-                mostrarFinal(fin, partida, usarBmp);
+                        partida, true, configuracion.energiaInicial(), entrada);
+                mostrarFinal(fin, partida, true);
+                if (fin != EstadoPartida.EN_CURSO) {
+                    ofrecerGuardarPorConsola(partida, dificultad, entrada);
+                }
+                return;
+            }
 
-                if (sinPantalla || fin == EstadoPartida.EN_CURSO
-                        || !menu.mostrarResultado(fin, partida.puntaje())) {
+            while (true) {
+                var opciones = menu.mostrarInicio(configuracion.semilla());
+                if (opciones.isEmpty()) {
+                    break;
+                }
+
+                if (jugarDesdeMenu(configuracion, opciones.get(), menu, entrada)
+                        == MenuGrafico.Decision.SALIR) {
                     break;
                 }
             }
@@ -68,6 +67,40 @@ public class Main {
         } finally {
             entrada.cerrar();
         }
+    }
+
+    private static MenuGrafico.Decision jugarDesdeMenu(
+            Configuracion configuracion, MenuGrafico.OpcionesInicio opciones,
+            MenuGrafico menu, EntradaConsola entrada) {
+
+        Long semillaElegida = opciones.semilla();
+        long semilla = semillaElegida == null ? new Random().nextLong() : semillaElegida;
+
+        Configuracion configuracionPartida = new Configuracion(
+                configuracion.energiaInicial(),
+                configuracion.costos(),
+                semilla,
+                configuracion.dificultades()
+        );
+
+        CreadorPartida creador =
+                new CreadorPartida(configuracionPartida, new GeneradorGrupoNN());
+        boolean usarBmp = opciones.modoVista() == MenuGrafico.ModoVista.BMP;
+
+        MenuGrafico.Decision decision;
+        do {
+            Partida partida = creador.crear(opciones.dificultad());
+            EstadoPartida fin = jugarPartida(
+                    partida, usarBmp, configuracionPartida.energiaInicial(), entrada);
+            mostrarFinal(fin, partida, usarBmp);
+
+            if (fin == EstadoPartida.EN_CURSO) {
+                return MenuGrafico.Decision.MENU_PRINCIPAL;
+            }
+            decision = menu.mostrarResultado(fin, partida.puntaje(), semilla,
+                    nombre -> guardarEnRanking(partida, opciones.dificultad(), nombre));
+        } while (decision == MenuGrafico.Decision.REINTENTAR);
+        return decision;
     }
 
     private static EstadoPartida jugarPartida(
@@ -83,17 +116,45 @@ public class Main {
         }
     }
 
-    /**
-     * Muestra las dificultades numeradas y devuelve la elegida.
-     */
+    /** Muestra las dificultades numeradas y devuelve la elegida. */
     private static Dificultad elegirDificultad(EntradaConsola entrada) {
         Dificultad[] opciones = Dificultad.values();
         System.out.println("Elegi la dificultad:");
         for (int i = 0; i < opciones.length; i++) {
             System.out.println("  " + (i + 1) + ") " + opciones[i]);
         }
+
         int elegida = entrada.leerEnteroEnRango("Opcion:", 1, opciones.length);
         return opciones[elegida - 1];
+    }
+
+    private static void ofrecerGuardarPorConsola(
+            Partida partida, Dificultad dificultad, EntradaConsola entrada) {
+        String respuesta = entrada.leerTexto("¿Guardar tu puntaje en el ranking? (s/n):").strip();
+        if (!respuesta.equalsIgnoreCase("s")) {
+            return;
+        }
+
+        String nombre = entrada.leerTexto("Tu nombre para el ranking ("
+                + EntradaDeRanking.LARGO_DEL_NOMBRE + " caracteres, sin espacios):").strip();
+        while (!EntradaDeRanking.esNombreValido(nombre)) {
+            nombre = entrada.leerTexto("El nombre tiene que tener exactamente "
+                    + EntradaDeRanking.LARGO_DEL_NOMBRE + " caracteres, sin espacios:").strip();
+        }
+        guardarEnRanking(partida, dificultad, nombre);
+    }
+
+    private static void guardarEnRanking(Partida partida, Dificultad dificultad, String nombre) {
+        Ranking ranking = ArchivoDeRanking.cargar(ArchivoDeRanking.RUTA_POR_DEFECTO);
+        ranking.registrarPartida(nombre, partida.puntaje(), dificultad, LocalDateTime.now());
+        ArchivoDeRanking.guardar(ranking, ArchivoDeRanking.RUTA_POR_DEFECTO);
+
+        System.out.println("Top 10 (" + dificultad + "):");
+        int lugar = 1;
+        for (EntradaDeRanking mejor : ranking.obtenerTop10(dificultad)) {
+            System.out.println("  " + lugar + ") " + mejor.nombre() + " - " + mejor.puntaje());
+            lugar++;
+        }
     }
 
     private static void mostrarFinal(EstadoPartida fin, Partida partida, boolean mostrarBmp) {
@@ -102,9 +163,11 @@ public class Main {
             case PERDIDA -> System.out.println("Perdiste: te quedaste sin energía.");
             case EN_CURSO -> System.out.println("Saliste de la partida.");
         }
+
         if (fin != EstadoPartida.EN_CURSO) {
             System.out.println("Puntaje: " + partida.puntaje());
         }
+
         if (mostrarBmp) {
             System.out.println("Los BMP de cada paso quedaron en " + CARPETA_BMP.toAbsolutePath());
         }

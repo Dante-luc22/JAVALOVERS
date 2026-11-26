@@ -5,7 +5,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Collections;
 
+import ar.uba.fi.cb100.tp2.modelo.efectos.QuitarEfecto;
+import ar.uba.fi.cb100.tp2.modelo.efectos.TipoDeEfecto;
 import ar.uba.fi.cb100.tp2.modelo.eventos.Agenda;
+import ar.uba.fi.cb100.tp2.modelo.eventos.EventoProgramado;
 import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Entidad;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Mazmorra;
@@ -136,6 +139,25 @@ public class Partida {
 
 
     /**
+     * Cuántos pasos faltan para que se le pase el veneno al héroe: recién
+     * envenenado por un cofre son 10, y baja de a uno por paso. Se lee de la
+     * agenda, donde está anotado cuándo se le quita el efecto. Si se envenenó
+     * más de una vez, cuenta hasta el último que se le pasa.
+     *
+     * @return los pasos que faltan, o 0 si el héroe no está envenenado
+     */
+    public int pasosParaQueSePaseElVeneno() {
+        int pasos = 0;
+        for (EventoProgramado programado : this.agenda.getPendientes()) {
+            if (programado.evento() instanceof QuitarEfecto quitar
+                    && quitar.getTipo() == TipoDeEfecto.ENVENENADO) {
+                pasos = Math.max(pasos, programado.paso() - this.agenda.getPasoActual());
+            }
+        }
+        return pasos;
+    }
+
+    /**
      * @param terreno el terreno al que entra el héroe
      * @return cuánta energía cuesta entrar ahí
      * @throws IllegalArgumentException si ese terreno no tiene costo (la pared no se pisa)
@@ -178,7 +200,14 @@ public class Partida {
         this.empezarPaso();
 
         Terreno terreno = plano.getTablero().getTerreno(destino);
-        this.heroe.restarEnergia(this.heroe.ajustarCosto(terreno, this.costoDe(terreno), this.costoDe(Terreno.PISO)));
+        int costo = this.heroe.ajustarCosto(terreno, this.costoDe(terreno), this.costoDe(Terreno.PISO));
+        if (costo > this.costoDe(Terreno.PISO)) {
+            // agua, lava o un efecto que encarece el paso: es un daño y se muestra
+            this.heroe.restarEnergia(costo);
+        } else {
+            // caminar por un piso común no se muestra
+            this.heroe.restarEnergiaEnSilencio(costo);
+        }
         Ubicacion ubicacionNueva = new Ubicacion(actual.tablero(), actual.piso(), destino);
         this.heroe.mover(ubicacionNueva);
         this.encontrarEntidades(plano, destino);
@@ -198,6 +227,7 @@ public class Partida {
             return new ResultadoTurno(false, this.estadoActual());
         }
         this.empezarPaso();
+        this.heroe.sumarEnergia(1);
         return this.cerrarTurno();
     }
 

@@ -19,6 +19,6 @@ public class BotasIgnifugas extends Objeto {
     public void usar(Heroe heroe, Agenda agenda) {
         Efecto efecto = new LavaComoPiso();
         heroe.agregarEfecto(efecto);
-        agenda.programar(DURACION, new QuitarEfecto(efecto));
+        agenda.programar(DURACION, new QuitarEfecto(efecto.getTipo()));
     }
 }
