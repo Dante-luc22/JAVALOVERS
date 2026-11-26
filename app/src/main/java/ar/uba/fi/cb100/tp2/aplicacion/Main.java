@@ -2,13 +2,17 @@ package ar.uba.fi.cb100.tp2.aplicacion;
 
 import java.awt.GraphicsEnvironment;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.Random;
 
 import ar.uba.fi.cb100.tp2.generador.GeneradorGrupoNN;
 import ar.uba.fi.cb100.tp2.modelo.partida.Configuracion;
 import ar.uba.fi.cb100.tp2.modelo.partida.EstadoPartida;
 import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
+import ar.uba.fi.cb100.tp2.modelo.ranking.EntradaDeRanking;
+import ar.uba.fi.cb100.tp2.modelo.ranking.Ranking;
 import ar.uba.fi.cb100.tp2.modelo.valores.Dificultad;
+import ar.uba.fi.cb100.tp2.persistencia.ArchivoDeRanking;
 import ar.uba.fi.cb100.tp2.persistencia.LectorConfiguracion;
 import ar.uba.fi.cb100.tp2.vista.EntradaConsola;
 import ar.uba.fi.cb100.tp2.vista.MenuGrafico;
@@ -41,6 +45,9 @@ public class Main {
                 EstadoPartida fin = jugarPartida(
                         partida, true, configuracion.energiaInicial(), entrada);
                 mostrarFinal(fin, partida, true);
+                if (fin != EstadoPartida.EN_CURSO) {
+                    ofrecerGuardarPorConsola(partida, dificultad, entrada);
+                }
                 return;
             }
 
@@ -50,7 +57,10 @@ public class Main {
                     break;
                 }
 
-                jugarDesdeMenu(configuracion, opciones.get(), menu, entrada);
+                if (jugarDesdeMenu(configuracion, opciones.get(), menu, entrada)
+                        == MenuGrafico.Decision.SALIR) {
+                    break;
+                }
             }
         } catch (IllegalStateException e) {
             System.out.println("No se pudo ejecutar el juego: " + e.getMessage());
@@ -59,7 +69,7 @@ public class Main {
         }
     }
 
-    private static void jugarDesdeMenu(
+    private static MenuGrafico.Decision jugarDesdeMenu(
             Configuracion configuracion, MenuGrafico.OpcionesInicio opciones,
             MenuGrafico menu, EntradaConsola entrada) {
 
@@ -77,15 +87,20 @@ public class Main {
                 new CreadorPartida(configuracionPartida, new GeneradorGrupoNN());
         boolean usarBmp = opciones.modoVista() == MenuGrafico.ModoVista.BMP;
 
-        Partida partida;
-        EstadoPartida fin;
+        MenuGrafico.Decision decision;
         do {
-            partida = creador.crear(opciones.dificultad());
-            fin = jugarPartida(
+            Partida partida = creador.crear(opciones.dificultad());
+            EstadoPartida fin = jugarPartida(
                     partida, usarBmp, configuracionPartida.energiaInicial(), entrada);
             mostrarFinal(fin, partida, usarBmp);
-        } while (fin != EstadoPartida.EN_CURSO
-                && menu.mostrarResultado(fin, partida.puntaje(), semilla));
+
+            if (fin == EstadoPartida.EN_CURSO) {
+                return MenuGrafico.Decision.MENU_PRINCIPAL;
+            }
+            decision = menu.mostrarResultado(fin, partida.puntaje(), semilla,
+                    nombre -> guardarEnRanking(partida, opciones.dificultad(), nombre));
+        } while (decision == MenuGrafico.Decision.REINTENTAR);
+        return decision;
     }
 
     private static EstadoPartida jugarPartida(
@@ -111,6 +126,35 @@ public class Main {
 
         int elegida = entrada.leerEnteroEnRango("Opcion:", 1, opciones.length);
         return opciones[elegida - 1];
+    }
+
+    private static void ofrecerGuardarPorConsola(
+            Partida partida, Dificultad dificultad, EntradaConsola entrada) {
+        String respuesta = entrada.leerTexto("¿Guardar tu puntaje en el ranking? (s/n):").strip();
+        if (!respuesta.equalsIgnoreCase("s")) {
+            return;
+        }
+
+        String nombre = entrada.leerTexto("Tu nombre para el ranking ("
+                + EntradaDeRanking.LARGO_DEL_NOMBRE + " caracteres, sin espacios):").strip();
+        while (!EntradaDeRanking.esNombreValido(nombre)) {
+            nombre = entrada.leerTexto("El nombre tiene que tener exactamente "
+                    + EntradaDeRanking.LARGO_DEL_NOMBRE + " caracteres, sin espacios:").strip();
+        }
+        guardarEnRanking(partida, dificultad, nombre);
+    }
+
+    private static void guardarEnRanking(Partida partida, Dificultad dificultad, String nombre) {
+        Ranking ranking = ArchivoDeRanking.cargar(ArchivoDeRanking.RUTA_POR_DEFECTO);
+        ranking.registrarPartida(nombre, partida.puntaje(), dificultad, LocalDateTime.now());
+        ArchivoDeRanking.guardar(ranking, ArchivoDeRanking.RUTA_POR_DEFECTO);
+
+        System.out.println("Top 10 (" + dificultad + "):");
+        int lugar = 1;
+        for (EntradaDeRanking mejor : ranking.obtenerTop10(dificultad)) {
+            System.out.println("  " + lugar + ") " + mejor.nombre() + " - " + mejor.puntaje());
+            lugar++;
+        }
     }
 
     private static void mostrarFinal(EstadoPartida fin, Partida partida, boolean mostrarBmp) {

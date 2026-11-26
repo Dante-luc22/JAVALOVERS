@@ -1,6 +1,7 @@
 package ar.uba.fi.cb100.tp2.vista;
 
 import ar.uba.fi.cb100.tp2.modelo.partida.EstadoPartida;
+import ar.uba.fi.cb100.tp2.modelo.ranking.EntradaDeRanking;
 import ar.uba.fi.cb100.tp2.modelo.ranking.Ranking;
 import ar.uba.fi.cb100.tp2.modelo.valores.Dificultad;
 import ar.uba.fi.cb100.tp2.persistencia.ArchivoDeRanking;
@@ -37,6 +38,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import javax.imageio.ImageIO;
@@ -94,6 +96,11 @@ public final class MenuGrafico {
         GRAFICA, BMP
     }
 
+    /** El destino elegido al cerrar el resultado de la partida. */
+    public enum Decision {
+        REINTENTAR, MENU_PRINCIPAL, SALIR
+    }
+
     public record OpcionesInicio(Dificultad dificultad, ModoVista modoVista, Long semilla) {
     }
 
@@ -115,10 +122,14 @@ public final class MenuGrafico {
         return enHiloGrafico(() -> new Navegacion(semillaConfigurada).mostrar());
     }
 
-    /** Devuelve true si el jugador elige reintentar. */
-    public boolean mostrarResultado(EstadoPartida estado, int puntaje, long semilla) {
+    /**
+     * Muestra la semilla y ofrece guardar el puntaje en el ranking.
+     * Devuelve la acción elegida para continuar después del resultado.
+     */
+    public Decision mostrarResultado(
+            EstadoPartida estado, int puntaje, long semilla, Consumer<String> guardarEnRanking) {
         if (estado == EstadoPartida.EN_CURSO) {
-            return false;
+            return Decision.SALIR;
         }
 
         return enHiloGrafico(() -> {
@@ -142,17 +153,68 @@ public final class MenuGrafico {
             filaSemilla.add(copiar, BorderLayout.EAST);
 
             JPanel contenido = new JPanel(new BorderLayout(0, 10));
-            contenido.add(new JLabel("Puntaje: " + puntaje), BorderLayout.NORTH);
+            JLabel detalle = new JLabel("Puntaje: " + puntaje);
+            contenido.add(detalle, BorderLayout.NORTH);
             contenido.add(filaSemilla, BorderLayout.CENTER);
 
-            Object[] acciones = {"Reintentar", "Menú principal"};
-            int opcion = JOptionPane.showOptionDialog(
-                    null, contenido, titulo,
-                    JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE,
-                    null, acciones, acciones[0]
-            );
-            return opcion == 0;
+            String guardar = "Guardar en el ranking";
+            String reintentar = "Reintentar";
+            String menuPrincipal = "Menú principal";
+            String salir = "Salir";
+            boolean guardado = false;
+
+            while (true) {
+                String[] acciones = guardado
+                        ? new String[]{reintentar, menuPrincipal, salir}
+                        : new String[]{guardar, reintentar, menuPrincipal, salir};
+                int opcion = JOptionPane.showOptionDialog(
+                        null, contenido, titulo,
+                        JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE,
+                        null, acciones, reintentar
+                );
+                if (opcion == JOptionPane.CLOSED_OPTION || salir.equals(acciones[opcion])) {
+                    return Decision.SALIR;
+                }
+                if (reintentar.equals(acciones[opcion])) {
+                    return Decision.REINTENTAR;
+                }
+                if (menuPrincipal.equals(acciones[opcion])) {
+                    return Decision.MENU_PRINCIPAL;
+                }
+
+                Optional<String> nombre = pedirNombre();
+                if (nombre.isPresent()) {
+                    try {
+                        guardarEnRanking.accept(nombre.get());
+                        guardado = true;
+                        detalle.setText("Puntaje: " + puntaje + " (guardado como " + nombre.get() + ")");
+                    } catch (IllegalStateException error) {
+                        JOptionPane.showMessageDialog(null, error.getMessage(),
+                                "No se pudo guardar el puntaje", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            }
         });
+    }
+
+    /** Devuelve el nombre válido elegido, o vacío si el jugador cancela. */
+    private Optional<String> pedirNombre() {
+        String aviso = "Tu nombre para el ranking (" + EntradaDeRanking.LARGO_DEL_NOMBRE
+                + " caracteres, sin espacios):";
+        while (true) {
+            String texto = JOptionPane.showInputDialog(null, aviso, "Ranking", JOptionPane.PLAIN_MESSAGE);
+            if (texto == null) {
+                return Optional.empty();
+            }
+            String nombre = texto.strip();
+            if (EntradaDeRanking.esNombreValido(nombre)) {
+                return Optional.of(nombre);
+            }
+            JOptionPane.showMessageDialog(null,
+                    "El nombre tiene que tener exactamente " + EntradaDeRanking.LARGO_DEL_NOMBRE
+                            + " caracteres, sin espacios.",
+                    "Nombre inválido", JOptionPane.WARNING_MESSAGE);
+        }
     }
 
     private final class Navegacion {

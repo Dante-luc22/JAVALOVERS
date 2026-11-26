@@ -55,9 +55,9 @@ class RankingTest {
 
     @Test
     void elTopVaDelMejorPuntajeAlPeor() {
-        this.ranking.registrar(entrada("Juan", 100, Dificultad.FACIL, 0));
-        this.ranking.registrar(entrada("Facu", 300, Dificultad.FACIL, 1));
-        this.ranking.registrar(entrada("Mati", 200, Dificultad.FACIL, 2));
+        this.ranking.registrar(entrada("JUA", 100, Dificultad.FACIL, 0));
+        this.ranking.registrar(entrada("FAC", 300, Dificultad.FACIL, 1));
+        this.ranking.registrar(entrada("MAT", 200, Dificultad.FACIL, 2));
 
         assertEquals(List.of(300, 200, 100), puntajes(this.ranking.obtenerTop10(Dificultad.FACIL)));
     }
@@ -65,7 +65,7 @@ class RankingTest {
     @Test
     void elTopTieneComoMuchoDiezPartidasYSonLasMejores() {
         for (int puntaje = 1; puntaje <= 12; puntaje++) {
-            this.ranking.registrar(entrada("Juan", puntaje * 10, Dificultad.MEDIO, puntaje));
+            this.ranking.registrar(entrada("JUA", puntaje * 10, Dificultad.MEDIO, puntaje));
         }
 
         List<EntradaDeRanking> top = this.ranking.obtenerTop10(Dificultad.MEDIO);
@@ -76,8 +76,8 @@ class RankingTest {
 
     @Test
     void cadaTopTieneSoloLasPartidasDeSuDificultad() {
-        EntradaDeRanking facil = entrada("Juan", 100, Dificultad.FACIL, 0);
-        EntradaDeRanking medio = entrada("Facu", 500, Dificultad.MEDIO, 1);
+        EntradaDeRanking facil = entrada("JUA", 100, Dificultad.FACIL, 0);
+        EntradaDeRanking medio = entrada("FAC", 500, Dificultad.MEDIO, 1);
         this.ranking.registrar(facil);
         this.ranking.registrar(medio);
 
@@ -88,8 +88,8 @@ class RankingTest {
 
     @Test
     void unEmpateDePuntajeNoPierdeNingunaPartidaYVaPrimeroLaMasVieja() {
-        EntradaDeRanking despues = entrada("Facu", 200, Dificultad.FACIL, 5);
-        EntradaDeRanking antes = entrada("Juan", 200, Dificultad.FACIL, 1);
+        EntradaDeRanking despues = entrada("FAC", 200, Dificultad.FACIL, 5);
+        EntradaDeRanking antes = entrada("JUA", 200, Dificultad.FACIL, 1);
         this.ranking.registrar(despues);
         this.ranking.registrar(antes);
 
@@ -101,7 +101,7 @@ class RankingTest {
     void puntajesQueLleganEnOrdenCrecienteQuedanOrdenados() {
         // el caso en que un ABB sin balancear se vuelve una lista
         for (int puntaje = 1; puntaje <= 50; puntaje++) {
-            this.ranking.registrar(entrada("Juan", puntaje, Dificultad.DIFICIL, puntaje));
+            this.ranking.registrar(entrada("JUA", puntaje, Dificultad.DIFICIL, puntaje));
         }
 
         assertEquals(List.of(50, 49, 48, 47, 46, 45, 44, 43, 42, 41),
@@ -110,8 +110,8 @@ class RankingTest {
 
     @Test
     void registrarDosVecesLaMismaPartidaLaGuardaUnaSolaVez() {
-        this.ranking.registrar(entrada("Juan", 100, Dificultad.FACIL, 0));
-        this.ranking.registrar(entrada("Juan", 100, Dificultad.FACIL, 0));
+        this.ranking.registrar(entrada("JUA", 100, Dificultad.FACIL, 0));
+        this.ranking.registrar(entrada("JUA", 100, Dificultad.FACIL, 0));
 
         assertEquals(1, this.ranking.cantidadDePartidas());
     }
@@ -119,9 +119,9 @@ class RankingTest {
     @Test
     void obtenerTodasDevuelveTambienLasQueQuedanFueraDelTop() {
         for (int puntaje = 1; puntaje <= 12; puntaje++) {
-            this.ranking.registrar(entrada("Juan", puntaje, Dificultad.FACIL, puntaje));
+            this.ranking.registrar(entrada("JUA", puntaje, Dificultad.FACIL, puntaje));
         }
-        this.ranking.registrar(entrada("Facu", 7, Dificultad.DIFICIL, 0));
+        this.ranking.registrar(entrada("FAC", 7, Dificultad.DIFICIL, 0));
 
         List<EntradaDeRanking> todas = this.ranking.obtenerTodas();
 
@@ -135,7 +135,7 @@ class RankingTest {
 
     @Test
     void cambiarLaListaDelTopNoCambiaElRanking() {
-        this.ranking.registrar(entrada("Juan", 100, Dificultad.FACIL, 0));
+        this.ranking.registrar(entrada("JUA", 100, Dificultad.FACIL, 0));
 
         this.ranking.obtenerTop10(Dificultad.FACIL).clear();
         this.ranking.obtenerTodas().clear();
@@ -156,7 +156,7 @@ class RankingTest {
 
     @Test
     void registraEnCeroUnaPartidaConPuntajeNegativo() {
-        this.ranking.registrarPartida("Facu", -40, Dificultad.FACIL, INICIO);
+        this.ranking.registrarPartida("FAC", -40, Dificultad.FACIL, INICIO);
 
         assertEquals(List.of(0),
                 puntajes(this.ranking.obtenerTop10(Dificultad.FACIL)));

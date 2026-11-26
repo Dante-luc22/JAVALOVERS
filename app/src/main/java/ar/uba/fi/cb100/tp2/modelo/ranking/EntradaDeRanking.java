@@ -16,7 +16,8 @@ import ar.uba.fi.cb100.tp2.modelo.valores.Dificultad;
  * segunda de dos entradas que comparan 0, así que se perdería una partida.
  * Con los cuatro campos, compareTo da 0 sólo cuando equals da true.
  *
- * @param nombre     quién jugó la partida
+ * @param nombre     quién jugó la partida, con estilo arcade: exactamente tres
+ *                   caracteres, por ejemplo "JCP"
  * @param puntaje    los puntos que sacó; nunca son negativos, el puntaje tiene piso 0
  * @param dificultad la dificultad en la que jugó
  * @param fecha      cuándo terminó la partida
@@ -24,16 +25,37 @@ import ar.uba.fi.cb100.tp2.modelo.valores.Dificultad;
 public record EntradaDeRanking(String nombre, int puntaje, Dificultad dificultad, LocalDateTime fecha)
         implements Comparable<EntradaDeRanking> {
 
+    /** Cuántos caracteres tiene el nombre de una entrada. */
+    public static final int LARGO_DEL_NOMBRE = 3;
+
+    /**
+     * Dice si un texto sirve como nombre de una entrada: exactamente
+     * {@value #LARGO_DEL_NOMBRE} caracteres y ninguno es un espacio.
+     *
+     * @param nombre el texto a revisar
+     * @return true si es un nombre válido; false si es nulo o no cumple
+     */
+    public static boolean esNombreValido(String nombre) {
+        return nombre != null
+                && nombre.length() == LARGO_DEL_NOMBRE
+                && nombre.chars().noneMatch(Character::isWhitespace);
+    }
+
     /**
      * Verifica que la entrada esté completa.
      *
-     * @throws IllegalArgumentException si el nombre es nulo o vacío, si el
-     *                                  puntaje es negativo, o si la dificultad
-     *                                  o la fecha son nulas
+     * @throws IllegalArgumentException si el nombre es nulo, no tiene exactamente
+     *                                  {@value #LARGO_DEL_NOMBRE} caracteres o
+     *                                  tiene espacios, si el puntaje es negativo,
+     *                                  o si la dificultad o la fecha son nulas
      */
     public EntradaDeRanking {
-        if (nombre == null || nombre.isBlank()) {
-            throw new IllegalArgumentException("El nombre no puede ser nulo ni vacío.");
+        if (nombre == null) {
+            throw new IllegalArgumentException("El nombre no puede ser nulo.");
+        }
+        if (!esNombreValido(nombre)) {
+            throw new IllegalArgumentException("El nombre son exactamente " + LARGO_DEL_NOMBRE
+                    + " caracteres sin espacios, como en un arcade, se recibió: \"" + nombre + "\"");
         }
         if (puntaje < 0) {
             throw new IllegalArgumentException(
