@@ -21,6 +21,7 @@ public enum Tecla {
     ENTER(0, 0),
     ESCAPE(0, 0),
     RETROCESO(0, 0),
+    INTERACTUAR(0, 0),
     OTRA(0, 0),
     CERRAR(0, 0);
 
@@ -59,6 +60,7 @@ public enum Tecla {
             case KeyEvent.VK_RIGHT, KeyEvent.VK_D -> DERECHA;
             case KeyEvent.VK_SPACE -> ESPACIO;
             case KeyEvent.VK_ENTER -> ENTER;
+            case KeyEvent.VK_E -> INTERACTUAR;
             case KeyEvent.VK_ESCAPE -> ESCAPE;
             case KeyEvent.VK_BACK_SPACE, KeyEvent.VK_Z -> RETROCESO;
             default -> OTRA;

@@ -380,16 +380,105 @@ class PartidaTest {
     // =================== COFRES =================== //
 
     @Test
-    void pisarUnCofreLoAbreUnaSolaVezPorPaso() {
+    void pisarUnCofreNoLoAbre() {
         CofreDePuntos cofre = new CofreDePuntos(new Posicion(2, 3));
         Partida partida = partidaConEnergia(100, cofre);
 
         partida.moverHeroe(Direccion.DERECHA);
 
+        assertEquals(0, this.heroe.getCofresAbiertos());
+        assertTrue(partida.puedeInteractuar());
+    }
+
+    @Test
+    void interactuarSobreUnCofreLoAbreUnaSolaVez() {
+        CofreDePuntos cofre = new CofreDePuntos(new Posicion(2, 3));
+        Partida partida = partidaConEnergia(100, cofre);
+
+        partida.moverHeroe(Direccion.DERECHA);
+        ResultadoTurno resultado = partida.interactuar();
+
         // el turno de los monstruos no vuelve a abrir el cofre que está bajo el héroe
+        assertTrue(resultado.accionValida());
         assertEquals(1, this.heroe.getCofresAbiertos());
         assertEquals(1, partida.getCofresAbiertos());
-        // 1 cofre × 100 + 99 de energía × 2 - 1 paso
-        assertEquals(297, partida.puntaje());
+        // 1 cofre × 100 + 99 de energía × 2 - 2 pasos
+        assertEquals(296, partida.puntaje());
+    }
+
+    @Test
+    void interactuarCuentaUnPasoYNoCuestaEnergia() {
+        CofreDePuntos cofre = new CofreDePuntos(new Posicion(2, 3));
+        Partida partida = partidaConEnergia(100, cofre);
+        partida.moverHeroe(Direccion.DERECHA);
+
+        partida.interactuar();
+
+        assertEquals(2, partida.getPasos());
+        assertEquals(99, this.heroe.getEnergia());
+    }
+
+    @Test
+    void unCofreAbiertoDesapareceYNoSePuedeVolverAInteractuar() {
+        CofreDePuntos cofre = new CofreDePuntos(new Posicion(2, 3));
+        Partida partida = partidaConEnergia(100, cofre);
+        partida.moverHeroe(Direccion.DERECHA);
+        partida.interactuar();
+
+        ResultadoTurno resultado = partida.interactuar();
+
+        assertFalse(resultado.accionValida());
+        assertFalse(partida.puedeInteractuar());
+        assertEquals(2, partida.getPasos());
+        assertEquals(1, this.heroe.getCofresAbiertos());
+    }
+
+    @Test
+    void interactuarDondeNoHayNadaNoEsValidoNiCuentaComoPaso() {
+        Partida partida = partidaConEnergia(100);
+
+        ResultadoTurno resultado = partida.interactuar();
+
+        assertFalse(resultado.accionValida());
+        assertEquals(0, partida.getPasos());
+    }
+
+    @Test
+    void unaPartidaTerminadaNoAceptaInteractuar() {
+        CofreDePuntos cofre = new CofreDePuntos(new Posicion(2, 3));
+        Partida partida = partidaConEnergia(1, cofre);
+        partida.moverHeroe(Direccion.DERECHA);
+
+        ResultadoTurno resultado = partida.interactuar();
+
+        assertTrue(partida.estaPerdida());
+        assertFalse(resultado.accionValida());
+        assertEquals(0, this.heroe.getCofresAbiertos());
+    }
+
+    @Test
+    void salirDeLaCeldaSinAbrirElCofreLoDejaAhi() {
+        CofreDePuntos cofre = new CofreDePuntos(new Posicion(2, 3));
+        Partida partida = partidaConEnergia(100, cofre);
+
+        partida.moverHeroe(Direccion.DERECHA);
+        partida.moverHeroe(Direccion.IZQUIERDA);
+        partida.moverHeroe(Direccion.DERECHA);
+        partida.interactuar();
+
+        assertEquals(1, this.heroe.getCofresAbiertos());
+    }
+
+    @Test
+    void sobreUnCofreLaInteraccionDisponibleEsAbrirlo() {
+        CofreDePuntos cofre = new CofreDePuntos(new Posicion(2, 3));
+        Partida partida = partidaConEnergia(100, cofre);
+        assertEquals(Interaccion.NINGUNA, partida.interaccionDisponible());
+
+        partida.moverHeroe(Direccion.DERECHA);
+        assertEquals(Interaccion.ABRIR_COFRE, partida.interaccionDisponible());
+
+        partida.interactuar();
+        assertEquals(Interaccion.NINGUNA, partida.interaccionDisponible());
     }
 }

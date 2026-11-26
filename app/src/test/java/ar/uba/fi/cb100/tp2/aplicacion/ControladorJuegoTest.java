@@ -114,4 +114,15 @@ public class ControladorJuegoTest {
         assertEquals(2, vista.vecesMostrada);
         assertEquals(1, this.partida.getPasos());
     }
+
+    @Test
+    void interactuarDondeNoHayNadaAvisaYNoCuentaComoPaso() {
+        VistaFalsa vista = new VistaFalsa(Accion.INTERACTUAR, Accion.SALIR);
+
+        new ControladorJuego(this.partida, vista).jugar();
+
+        assertEquals(1, vista.vecesMostrada);
+        assertEquals(0, this.partida.getPasos());
+        assertEquals(1, vista.avisos);
+    }
 }

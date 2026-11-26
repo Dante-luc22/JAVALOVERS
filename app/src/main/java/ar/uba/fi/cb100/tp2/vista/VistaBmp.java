@@ -72,7 +72,8 @@ public class VistaBmp implements Vista {
 
         System.out.println("Paso " + partida.getPasos()
                 + " | energía " + heroe.getEnergia()
-                + " | cofres " + heroe.getCofresAbiertos());
+                + " | cofres " + heroe.getCofresAbiertos()
+                + VistaGrafica.avisoDeInteraccion(partida.interaccionDisponible()));
     
     }
 
@@ -80,7 +81,7 @@ public class VistaBmp implements Vista {
     public Accion leerAccion() {
         while (true) {
             String texto = this.entrada.leerTexto(
-                    "Acción (w a s d mover, e esperar, u usar, g guardar, q salir):");
+                    "Acción (w a s d mover, e interactuar, x esperar, u usar, g guardar, q salir):");
             Accion accion = accionDe(texto);
             if (accion != null) {
                 return accion;
@@ -106,7 +107,8 @@ public class VistaBmp implements Vista {
             case 'a' -> Accion.MOVER_IZQUIERDA;
             case 's' -> Accion.MOVER_ABAJO;
             case 'd' -> Accion.MOVER_DERECHA;
-            case 'e' -> Accion.ESPERAR;
+            case 'e' -> Accion.INTERACTUAR;
+            case 'x' -> Accion.ESPERAR;
             case 'u' -> Accion.USAR;
             case 'g' -> Accion.GUARDAR;
             case 'q' -> Accion.SALIR;
