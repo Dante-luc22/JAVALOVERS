@@ -17,6 +17,7 @@ import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
 import ar.uba.fi.cb100.tp2.modelo.valores.Direccion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
+import ar.uba.fi.cb100.tp2.modelo.valores.Dificultad;
 
 /**
  * Una partida en curso: junta la mazmorra, el héroe y la cuenta de pasos, y
@@ -33,6 +34,8 @@ public class Partida {
     private final Map<Terreno, Integer> costos;
     private final Agenda agenda;
     private final AzarPersistible azar;
+    private Dificultad dificultad;
+    private Long semilla;
 
     private int pasos;
 
@@ -141,6 +144,53 @@ public class Partida {
         this.azar = azar;
     }
 
+    /**
+     * Constructor para crear o restaurar partidas conservando
+     * su dificultad y semilla originales.
+     */
+    public Partida(
+            Mazmorra mazmorra,
+            Heroe heroe,
+            Map<Terreno, Integer> costos,
+            int pasos,
+            Agenda agenda,
+            AzarPersistible azar,
+            Dificultad dificultad,
+            long semilla) {
+
+        this(mazmorra, heroe, costos, pasos, agenda, azar);
+
+        if (dificultad == null) {
+            throw new IllegalArgumentException("La dificultad no puede ser nula.");
+        }
+
+        this.dificultad = dificultad;
+        this.semilla = semilla;
+    }
+
+    /**
+     * Constructor para una partida nueva con dificultad y semilla.
+     */
+    public Partida(
+            Mazmorra mazmorra,
+            Heroe heroe,
+            Map<Terreno, Integer> costos,
+            AzarPersistible azar,
+            Dificultad dificultad,
+            long semilla) {
+
+        this(
+                mazmorra,
+                heroe,
+                costos,
+                0,
+                new Agenda(),
+                azar,
+                dificultad,
+                semilla
+        );
+    }
+
     /** @return cuántos pasos se dieron; las acciones inválidas no cuentan */
     public int getPasos() {
         return this.pasos;
@@ -187,6 +237,14 @@ public class Partida {
     public AzarPersistible getAzar() {
         return this.azar;
     }
+    public Dificultad getDificultad() {
+        return this.dificultad;
+    }
+
+    public Long getSemilla() {
+        return this.semilla;
+    }
+
 
     /**
      * Cuántos pasos faltan para que se le pase el veneno al héroe: recién

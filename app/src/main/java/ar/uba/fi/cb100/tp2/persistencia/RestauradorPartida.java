@@ -9,6 +9,7 @@ import ar.uba.fi.cb100.tp2.modelo.partida.AzarPersistible;
 import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.AgendaDTO;
+import ar.uba.fi.cb100.tp2.modelo.valores.Dificultad;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -65,27 +66,35 @@ public class RestauradorPartida {
      * @return partida reconstruida
      */
     public Partida restaurar(PartidaGuardadaDTO datos) {
-
         if (datos == null) {
             throw new IllegalArgumentException(
-                    "Los datos de la partida no pueden ser nulos."
-            );
+                    "Los datos de la partida no pueden ser nulos.");
         }
 
         if (datos.pasos == null || datos.pasos < 0) {
-            throw new IllegalArgumentException(
-                    "La cantidad de pasos guardados es inválida."
-            );
+            throw new IllegalArgumentException("La cantidad de pasos guardados es inválida.");
+        }
+        // Recuperar la dificultad original.
+        if (datos.dificultad == null || datos.dificultad.isBlank()) {
+            throw new IllegalArgumentException("La dificultad guardada es inválida.");
+        }
+
+        Dificultad dificultad;
+
+        try {
+            dificultad = Dificultad.valueOf(datos.dificultad);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("La dificultad guardada no existe: " + datos.dificultad, e);
+        }
+
+        // Recuperar la semilla original.
+        if (datos.semilla == null) {
+            throw new IllegalArgumentException("La semilla original no puede ser nula.");
         }
 
         // 1. Recuperar el generador aleatorio en el estado guardado.
-        if (datos.estadoAzar == null
-                || datos.estadoAzar < 0
-                || datos.estadoAzar > ((1L << 48) - 1)) {
-
-            throw new IllegalArgumentException(
-                    "El estado del generador aleatorio es inválido."
-            );
+        if (datos.estadoAzar == null || datos.estadoAzar < 0 || datos.estadoAzar > ((1L << 48) - 1)) {
+            throw new IllegalArgumentException("El estado del generador aleatorio es inválido.");
         }
 
         AzarPersistible azar =
@@ -128,7 +137,9 @@ public class RestauradorPartida {
                 costos,
                 datos.pasos,
                 agenda,
-                azar
+                azar,
+                dificultad,
+                datos.semilla
         );
     }
 

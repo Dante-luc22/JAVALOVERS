@@ -22,7 +22,7 @@ import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
 
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
-
+import ar.uba.fi.cb100.tp2.modelo.valores.Dificultad;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO;
 
 import com.google.gson.Gson;
@@ -85,40 +85,19 @@ class MapeadorRestauradorPartidaTest {
 
         // Comparar estado general de la partida.
         assertEquals(original.getPasos(), restaurada.getPasos());
-
-        assertEquals(
-                original.getAzar().getEstadoInterno(),
-                restaurada.getAzar().getEstadoInterno()
-        );
-
-        assertEquals(
-                original.getCostos(),
-                restaurada.getCostos()
-        );
-
+        assertEquals(original.getDificultad(), restaurada.getDificultad());
+        assertEquals(original.getSemilla(), restaurada.getSemilla());
+        assertEquals(original.getAzar().getEstadoInterno(), restaurada.getAzar().getEstadoInterno());
+        assertEquals(original.getCostos(), restaurada.getCostos());
         // Comparar atributos del héroe.
         Heroe heroeOriginal = original.getHeroe();
         Heroe heroeRestaurado = restaurada.getHeroe();
+        assertEquals(heroeOriginal.getEnergia(), heroeRestaurado.getEnergia());
+        assertEquals(heroeOriginal.getEnergiaMaxima(),heroeRestaurado.getEnergiaMaxima());
 
-        assertEquals(
-                heroeOriginal.getEnergia(),
-                heroeRestaurado.getEnergia()
-        );
+        assertEquals(heroeOriginal.getCofresAbiertos(), heroeRestaurado.getCofresAbiertos());
 
-        assertEquals(
-                heroeOriginal.getEnergiaMaxima(),
-                heroeRestaurado.getEnergiaMaxima()
-        );
-
-        assertEquals(
-                heroeOriginal.getCofresAbiertos(),
-                heroeRestaurado.getCofresAbiertos()
-        );
-
-        assertEquals(
-                heroeOriginal.getUbicacion(),
-                heroeRestaurado.getUbicacion()
-        );
+        assertEquals(heroeOriginal.getUbicacion(), heroeRestaurado.getUbicacion());
 
         // Comparar inventarios.
         Map<String, Integer> inventarioOriginal =
@@ -407,7 +386,9 @@ class MapeadorRestauradorPartidaTest {
                 costos,
                 7,
                 agenda,
-                azar
+                azar,
+                Dificultad.MEDIO,
+                12345L
         );
     }
 }

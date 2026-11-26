@@ -141,7 +141,9 @@ public class CreadorPartida {
                 mazmorra,
                 heroe,
                 costosPorTerreno(),
-                azar
+                azar,
+                dificultad,
+                semilla
         );
     }
 

@@ -42,18 +42,14 @@ public class MapeadorPartida {
 
         this.mapeadorHeroe = Objects.requireNonNull(
                 mapeadorHeroe,
-                "El mapeador del héroe no puede ser nulo."
-        );
-
+                "El mapeador del héroe no puede ser nulo.");
         this.mapeadorMazmorra = Objects.requireNonNull(
                 mapeadorMazmorra,
-                "El mapeador de la mazmorra no puede ser nulo."
-        );
+                "El mapeador de la mazmorra no puede ser nulo.");
 
         this.mapeadorAgenda = Objects.requireNonNull(
                 mapeadorAgenda,
-                "El mapeador de la agenda no puede ser nulo."
-        );
+                "El mapeador de la agenda no puede ser nulo.");
     }
 
     /**
@@ -77,6 +73,14 @@ public class MapeadorPartida {
 
         // Contador de pasos.
         datos.pasos = partida.getPasos();
+
+        // Dificultad original de la partida.
+        datos.dificultad = partida.getDificultad() == null
+                ? null
+                : partida.getDificultad().name();
+
+// Semilla original utilizada para generar la mazmorra.
+        datos.semilla = partida.getSemilla();
 
         // Estado actual del generador aleatorio compartido.
         datos.estadoAzar = partida.getAzar().getEstadoInterno();
@@ -173,7 +177,6 @@ public class MapeadorPartida {
                 );
             }
         }
-
         return costos;
     }
 }

@@ -119,8 +119,9 @@ public class Main {
             if (fin == EstadoPartida.EN_CURSO) {
                 return MenuGrafico.Decision.MENU_PRINCIPAL;
             }
-            decision = menu.mostrarResultado(fin, partida.puntaje(), semilla,
-                    nombre -> guardarEnRanking(partida, opciones.dificultad(), nombre));
+            decision = menu.mostrarResultado(fin, partida.puntaje(), partida.getSemilla(),
+                    nombre -> guardarEnRanking(partida, partida.getDificultad(), nombre)
+            );
         } while (decision == MenuGrafico.Decision.REINTENTAR);
         return decision;
     }

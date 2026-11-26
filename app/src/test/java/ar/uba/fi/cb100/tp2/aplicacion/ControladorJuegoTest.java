@@ -23,6 +23,8 @@ import ar.uba.fi.cb100.tp2.vista.Vista;
 import ar.uba.fi.cb100.tp2.persistencia.ServicioPersistenciaPartida;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import ar.uba.fi.cb100.tp2.modelo.partida.AzarPersistible;
+import ar.uba.fi.cb100.tp2.modelo.valores.Dificultad;
 
 /**
  * Tests del ciclo del juego, con una vista falsa que devuelve acciones
@@ -78,10 +80,17 @@ public class ControladorJuegoTest {
 
         Heroe heroe = new Heroe(mazmorra.getEntrada(), 100);
 
-        this.partida = new Partida(mazmorra, heroe, Map.of(
-                Terreno.PISO, 1,
-                Terreno.AGUA, 3,
-                Terreno.LAVA, 10)
+        this.partida = new Partida(
+                mazmorra,
+                heroe,
+                Map.of(
+                        Terreno.PISO, 1,
+                        Terreno.AGUA, 3,
+                        Terreno.LAVA, 10
+                ),
+                new AzarPersistible(12345L),
+                Dificultad.FACIL,
+                12345L
         );
     }
 
@@ -173,7 +182,8 @@ public class ControladorJuegoTest {
         Partida recuperada = servicio.cargar(destino);
 
         assertEquals(0, recuperada.getPasos());
-
+        assertEquals(Dificultad.FACIL, recuperada.getDificultad());
+        assertEquals(12345L, recuperada.getSemilla());
         assertEquals(this.partida.getHeroe().getUbicacion(), recuperada.getHeroe().getUbicacion());
 
         assertEquals(this.partida.getHeroe().getEnergia(), recuperada.getHeroe().getEnergia());

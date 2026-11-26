@@ -8,6 +8,7 @@ import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.*;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO;
+import ar.uba.fi.cb100.tp2.modelo.valores.Dificultad;
 
 import org.junit.jupiter.api.Test;
 
@@ -82,26 +83,12 @@ class RestauradorPartidaTest {
         Partida partida = restaurador.restaurar(datos);
 
         assertEquals(15, partida.getPasos());
-
-        assertEquals(
-                datos.estadoAzar,
-                partida.getAzar().getEstadoInterno()
-        );
-
-        assertEquals(
-                1,
-                partida.getCostos().get(Terreno.PISO)
-        );
-
-        assertEquals(
-                3,
-                partida.getCostos().get(Terreno.AGUA)
-        );
-
-        assertEquals(
-                5,
-                partida.getCostos().get(Terreno.LAVA)
-        );
+        assertEquals(Dificultad.FACIL, partida.getDificultad());
+        assertEquals(12345L, partida.getSemilla());
+        assertEquals(datos.estadoAzar, partida.getAzar().getEstadoInterno());
+        assertEquals(1, partida.getCostos().get(Terreno.PISO));
+        assertEquals(3, partida.getCostos().get(Terreno.AGUA));
+        assertEquals(5, partida.getCostos().get(Terreno.LAVA));
 
         assertNotNull(partida.getMazmorra());
         assertNotNull(partida.getAgenda());
@@ -116,6 +103,8 @@ class RestauradorPartidaTest {
 
         datos.version = 1;
         datos.pasos = 15;
+        datos.dificultad = "FACIL";
+        datos.semilla = 12345L;
 
         AzarPersistible azarOriginal =
                 new AzarPersistible(12345L);

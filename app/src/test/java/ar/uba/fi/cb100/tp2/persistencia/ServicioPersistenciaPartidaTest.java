@@ -10,6 +10,7 @@ import ar.uba.fi.cb100.tp2.modelo.partida.AzarPersistible;
 import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
+import ar.uba.fi.cb100.tp2.modelo.valores.Dificultad;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -54,16 +55,10 @@ class ServicioPersistenciaPartidaTest {
 
         // Estado general.
         assertEquals(original.getPasos(), recuperada.getPasos());
-
-        assertEquals(
-                original.getAzar().getEstadoInterno(),
-                recuperada.getAzar().getEstadoInterno()
-        );
-
-        assertEquals(
-                original.getCostos(),
-                recuperada.getCostos()
-        );
+        assertEquals(original.getDificultad(), recuperada.getDificultad());
+        assertEquals(original.getSemilla(), recuperada.getSemilla());
+        assertEquals(original.getAzar().getEstadoInterno(), recuperada.getAzar().getEstadoInterno());
+        assertEquals(original.getCostos(), recuperada.getCostos());
 
         // Héroe.
         Heroe originalHeroe = original.getHeroe();
@@ -375,7 +370,9 @@ class ServicioPersistenciaPartidaTest {
                 costos,
                 7,
                 agenda,
-                new AzarPersistible(12345L)
+                new AzarPersistible(12345L),
+                Dificultad.MEDIO,
+                12345L
         );
     }
 }

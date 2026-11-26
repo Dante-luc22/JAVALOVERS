@@ -10,6 +10,8 @@ import ar.uba.fi.cb100.tp2.modelo.mundo.Tablero;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
+import ar.uba.fi.cb100.tp2.modelo.partida.AzarPersistible;
+import ar.uba.fi.cb100.tp2.modelo.valores.Dificultad;
 
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.AgendaDTO;
@@ -103,6 +105,8 @@ class PersistenciaPartidaTest {
         // Pasos.
         assertEquals(original.getPasos(), reconstruida.getPasos());
 
+        assertEquals(original.getDificultad(), reconstruida.getDificultad());
+        assertEquals(original.getSemilla(), reconstruida.getSemilla());
         // Ubicación del héroe.
         assertEquals(
                 original.getHeroe().getUbicacion(),
@@ -192,7 +196,10 @@ class PersistenciaPartidaTest {
                 heroe,
                 costos,
                 7,
-                new Agenda()
+                new Agenda(),
+                new AzarPersistible(12345L),
+                Dificultad.MEDIO,
+                12345L
         );
     }
 
