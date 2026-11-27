@@ -8,6 +8,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.DirectoryStream;
+import java.awt.Font;
 
 import javax.imageio.ImageIO;
 
@@ -69,6 +70,7 @@ public class VistaBmp implements Vista {
         dibujarEntidades(lapiz, plano);
         dibujarHeroe(lapiz, heroe);
         dibujarEnergia(lapiz, heroe, ancho, tablero.getFilas());
+        dibujarIdentificacion(lapiz, heroe, tablero.getFilas());
 
         lapiz.dispose();
         guardar(imagen, partida.getPasos());
@@ -179,6 +181,18 @@ public class VistaBmp implements Vista {
         lapiz.setColor(Color.GREEN);
         lapiz.fillRect(0, y + 2, lleno, TAMANIO_CELDA - 4);
     }
+
+    private void dibujarIdentificacion(Graphics2D lapiz, Heroe heroe, int filas) {
+        var ubicacion = heroe.getUbicacion();
+        String texto = "Tablero " + ubicacion.tablero() + " | Piso " + ubicacion.piso();
+        int y = filas * TAMANIO_CELDA;
+        lapiz.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 9));
+        lapiz.setColor(Color.BLACK);
+        lapiz.drawString(texto, 4, y + 12);
+        lapiz.setColor(Color.WHITE);
+        lapiz.drawString(texto, 3, y + 11);
+    }
+
     private void dibujarEscaleras(Graphics2D lapiz, Partida partida) {
         var ubicacion = partida.getHeroe().getUbicacion();
 
@@ -229,14 +243,12 @@ public class VistaBmp implements Vista {
             default -> Color.WHITE;
         };
     }
-
     // ---------- coordenadas y archivo ----------
 
     /** Columna 1 empieza en el píxel 0. */
     private int x(Posicion posicion) {
         return (posicion.columna() - 1) * TAMANIO_CELDA;
     }
-
     /** Fila 1 empieza en el píxel 0. */
     private int y(Posicion posicion) {
         return (posicion.fila() - 1) * TAMANIO_CELDA;

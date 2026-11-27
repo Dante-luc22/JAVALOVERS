@@ -151,6 +151,29 @@ public class VistaBmpTest {
         assertTrue(captura.toString().contains("tablero 1"));
         assertTrue(captura.toString().contains("piso 2"));
     }
+    @Test
+    void identificaTableroYPisoActualEnElBmp() throws IOException {
+        Partida partida = crearPartidaConDosPisos(2);
+        this.vista.mostrar(partida);
+        BufferedImage imagen = ImageIO.read(
+                this.carpeta.resolve("paso-0000.bmp").toFile()
+        );
+        int inicioBarra = FILAS * VistaBmp.TAMANIO_CELDA;
+        boolean tieneIdentificacion = false;
+
+        for (int y = inicioBarra; y < imagen.getHeight(); y++) {
+            for (int x = 0; x < imagen.getWidth(); x++) {
+                if (imagen.getRGB(x, y) == Color.WHITE.getRGB()) {
+                    tieneIdentificacion = true;
+                    break;
+                }
+            }
+            if (tieneIdentificacion) {
+                break;
+            }
+        }
+        assertTrue(tieneIdentificacion, "El BMP debe identificar el tablero y el piso actual");
+    }
 
     private Partida crearPartidaConDosPisos(int pisoHeroe) {
         Tablero tablero1 = crearTablero();
