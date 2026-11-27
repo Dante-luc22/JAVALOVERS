@@ -4,6 +4,7 @@ import ar.uba.fi.cb100.tp2.modelo.eventos.Agenda;
 import ar.uba.fi.cb100.tp2.modelo.eventos.RepelerMonstruos;
 import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
+import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
 
 
 /**
@@ -23,15 +24,9 @@ public class CofreDeRepelente extends Cofre{
         super(posicion);
     }
 
-    /**
-     * Programa para el próximo paso que los monstruos del plano
-     * vuelvan a su inicio
-     *
-     * @param heroe  el que abre el cofre;
-     * @param agenda la agenda, para efectos que vencen más adelante
-     */
     @Override
-    protected void abrir(Heroe heroe, Agenda agenda){
-        agenda.programar(1, new RepelerMonstruos());
+    protected void abrir(Heroe heroe, Agenda agenda) {
+        Ubicacion donde = heroe.getUbicacion();
+        agenda.programar(1, new RepelerMonstruos(donde.tablero(), donde.piso()));
     }
 }

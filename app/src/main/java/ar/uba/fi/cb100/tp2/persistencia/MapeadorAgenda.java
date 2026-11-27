@@ -104,20 +104,20 @@ public class MapeadorAgenda {
 
         // Inicializar los datos específicos.
         datos.datos = new JsonObject();
-
-        if (evento.getClass() == AdormecerMonstruos.class) {
-
+        if (evento instanceof AdormecerMonstruos adormecer) {
             datos.tipo = "ADORMECER_MONSTRUOS";
+            guardarPlano(datos, adormecer.tablero(), adormecer.piso());
 
-        } else if (evento.getClass() == DespertarMonstruos.class) {
-
+        } else if (evento instanceof DespertarMonstruos despertar) {
             datos.tipo = "DESPERTAR_MONSTRUOS";
+            guardarPlano(datos, despertar.tablero(), despertar.piso());
 
-        } else if (evento.getClass() == RepelerMonstruos.class) {
-
+        } else if (evento instanceof RepelerMonstruos repeler) {
             datos.tipo = "REPELER_MONSTRUOS";
+            guardarPlano(datos, repeler.tablero(), repeler.piso());
 
         } else if (evento.getClass() == RomperPared.class) {
+            // ... el resto queda igual else if (evento.getClass() == RomperPared.class) {
 
             datos.tipo = "ROMPER_PARED";
 
@@ -149,5 +149,10 @@ public class MapeadorAgenda {
         }
 
         return datos;
+    }
+
+        private static void guardarPlano(EventoDTO datos, int tablero, int piso) {
+        datos.datos.addProperty("tablero", tablero);
+        datos.datos.addProperty("piso", piso);
     }
 }
