@@ -14,17 +14,23 @@ public class LogDePartida {
 
     private final LinkedList<EntradaDelLog> entradas = new LinkedList<>();
 
-    /**
+     /**
+     * Agrega una entrada al final. Es de paquete: solo la partida escribe
+     * en su historial; los demás lo leen.
+     *
      * @param paso  el paso en que pasó
      * @param texto qué pasó
      */
-    public void anotar(int paso, String texto) {
+    void anotar(int paso, String texto) {
         this.entradas.addLast(new EntradaDelLog(paso, texto));
     }
 
     /**
-     * Lo que pasó en un paso. Recorre desde el final, porque lo que se busca
-     * casi siempre es lo último que pasó, y corta apenas encuentra un paso anterior.
+     * Lo que pasó en un paso. Recorre desde el final y corta apenas encuentra
+     * un paso anterior, así que cuesta O(k), con k la cantidad de entradas
+     * recorridas desde el final: las del paso buscado y las de pasos
+     * posteriores, más una. Para el último paso, k es la cantidad de cosas
+     * que pasaron en ese paso, que suele ser chica.
      *
      * @param paso el paso buscado
      * @return las entradas de ese paso, en el orden en que pasaron
