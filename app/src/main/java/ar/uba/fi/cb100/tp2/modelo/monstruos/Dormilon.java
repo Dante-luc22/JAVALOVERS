@@ -31,6 +31,21 @@ public class Dormilon extends Cazador{
         this.radio = radio;
     }
 
+    public Dormilon(
+            Posicion posicionInicial,
+            Posicion posicionActual,
+            int danio,
+            int radio) {
+
+        if (radio <= 0) {
+            throw new IllegalArgumentException(
+                    "El radio debe ser mayor que 0."
+            );
+        }
+
+        super(posicionInicial, posicionActual, danio);
+        this.radio = radio;
+    }
     /**
      * @return el tipo de este monstruo, para que la vista elija su imagen
      */
@@ -59,5 +74,9 @@ public class Dormilon extends Cazador{
             // caza como un cazador
             return super.decidirMovimiento(plano, heroe);
         }
+    }
+    //-----GETTERS SIMPLES-----
+    public int getRadio() {
+        return this.radio;
     }
 }

@@ -1,15 +1,15 @@
 
 package ar.uba.fi.cb100.tp2.persistencia;
 
-import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
 import ar.uba.fi.cb100.tp2.modelo.eventos.Agenda;
+import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
+import ar.uba.fi.cb100.tp2.modelo.mundo.Mazmorra;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
-
+import ar.uba.fi.cb100.tp2.modelo.partida.AzarPersistible;
+import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.AgendaDTO;
-
-import ar.uba.fi.cb100.tp2.modelo.mundo.Mazmorra;
-import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
+import ar.uba.fi.cb100.tp2.modelo.valores.Dificultad;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -34,8 +34,9 @@ public class RestauradorPartida {
     /**
      * Constructor con restauradores especializados.
      *
-     * La función de agenda permite incorporar posteriormente
-     * la implementación que está desarrollando el equipo.
+     * @param restauradorMazmorra restaurador de la mazmorra
+     * @param restauradorHeroe restaurador del héroe
+     * @param restauradorAgenda restaurador de la agenda
      */
     public RestauradorPartida(
             RestauradorMazmorra restauradorMazmorra,
@@ -65,31 +66,50 @@ public class RestauradorPartida {
      * @return partida reconstruida
      */
     public Partida restaurar(PartidaGuardadaDTO datos) {
-
         if (datos == null) {
             throw new IllegalArgumentException(
-                    "Los datos de la partida no pueden ser nulos."
-            );
+                    "Los datos de la partida no pueden ser nulos.");
         }
 
         if (datos.pasos == null || datos.pasos < 0) {
-            throw new IllegalArgumentException(
-                    "La cantidad de pasos guardados es inválida."
-            );
+            throw new IllegalArgumentException("La cantidad de pasos guardados es inválida.");
+        }
+        // Recuperar la dificultad original.
+        if (datos.dificultad == null || datos.dificultad.isBlank()) {
+            throw new IllegalArgumentException("La dificultad guardada es inválida.");
         }
 
-        // 1. Reconstruir la mazmorra.
-        Mazmorra mazmorra =
-                restauradorMazmorra.restaurar(datos.mazmorra);
+        Dificultad dificultad;
 
-        // 2. Reconstruir al héroe.
-        Heroe heroe =
-                restauradorHeroe.restaurar(datos.heroe);
+        try {
+            dificultad = Dificultad.valueOf(datos.dificultad);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("La dificultad guardada no existe: " + datos.dificultad, e);
+        }
 
-        // 3. Reconstruir los costos efectivos de la partida.
+        // Recuperar la semilla original.
+        if (datos.semilla == null) {
+            throw new IllegalArgumentException("La semilla original no puede ser nula.");
+        }
+
+        // 1. Recuperar el generador aleatorio en el estado guardado.
+        if (datos.estadoAzar == null || datos.estadoAzar < 0 || datos.estadoAzar > ((1L << 48) - 1)) {
+            throw new IllegalArgumentException("El estado del generador aleatorio es inválido.");
+        }
+
+        AzarPersistible azar =
+                AzarPersistible.desdeEstado(datos.estadoAzar);
+
+        // 2. Reconstruir la mazmorra.
+        Mazmorra mazmorra = restauradorMazmorra.restaurar(datos.mazmorra,azar);
+
+        // 3. Reconstruir al héroe.
+        Heroe heroe = restauradorHeroe.restaurar(datos.heroe);
+
+        // 4. Reconstruir los costos efectivos de la partida.
         Map<Terreno, Integer> costos = restaurarCostos(datos.costos);
 
-        // 4. Reconstruir la agenda mediante su restaurador específico.
+        // 5. Reconstruir la agenda mediante su restaurador específico.
         Agenda agenda;
 
         try {
@@ -109,13 +129,17 @@ public class RestauradorPartida {
             );
         }
 
-        // 5. Crear una partida conservando los valores originales.
+        // 6. Crear la partida conservando todos sus valores originales,
+        // incluido el estado del generador aleatorio.
         return new Partida(
                 mazmorra,
                 heroe,
                 costos,
                 datos.pasos,
-                agenda
+                agenda,
+                azar,
+                dificultad,
+                datos.semilla
         );
     }
 

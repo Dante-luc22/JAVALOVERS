@@ -27,6 +27,14 @@ public class Ladron extends Errante{
         super(posicionInicial, danio, azar);
     }
 
+    public Ladron(
+            Posicion posicionInicial,
+            Posicion posicionActual,
+            int danio,
+            Random azar) {
+
+        super(posicionInicial, posicionActual, danio, azar);
+    }
     /**
      * @return el tipo de este monstruo, para que la vista elija su imagen
      */

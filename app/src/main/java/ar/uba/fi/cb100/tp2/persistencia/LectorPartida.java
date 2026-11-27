@@ -1,4 +1,3 @@
-
 package ar.uba.fi.cb100.tp2.persistencia;
 
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO;
@@ -116,7 +115,7 @@ public class LectorPartida {
         );
 
         validarCostos(partida.costos);
-
+        validarEstadoAzar(partida.estadoAzar);
         validarHeroe(partida.heroe);
 
         validarMazmorra(
@@ -590,6 +589,19 @@ public class LectorPartida {
                         && posicion.columna <= tablero.columnas,
                 contexto + ": columna fuera del tablero."
         );
+    }
+    private void validarEstadoAzar(Long estadoAzar) {
+
+        long estadoMaximo = (1L << 48) - 1;
+
+        if (estadoAzar == null
+                || estadoAzar < 0
+                || estadoAzar > estadoMaximo) {
+
+            throw new IllegalArgumentException(
+                    "El estado del generador aleatorio es inválido."
+            );
+        }
     }
 
     /**

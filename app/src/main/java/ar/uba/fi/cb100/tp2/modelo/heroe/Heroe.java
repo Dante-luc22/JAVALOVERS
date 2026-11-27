@@ -104,9 +104,12 @@ public class Heroe {
                     "La lista de efectos activos no puede ser nula.");
         }
 
-        if (efectosActivos.contains(null)) {
-            throw new IllegalArgumentException(
-                    "La lista de efectos no puede contener valores nulos.");
+        for (Efecto efecto : efectosActivos) {
+            if (efecto == null) {
+                throw new IllegalArgumentException(
+                        "La lista de efectos no puede contener valores nulos."
+                );
+            }
         }
 
         this.ubicacion = ubicacion;

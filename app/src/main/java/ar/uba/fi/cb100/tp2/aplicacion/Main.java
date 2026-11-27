@@ -19,6 +19,9 @@ import ar.uba.fi.cb100.tp2.vista.MenuGrafico;
 import ar.uba.fi.cb100.tp2.vista.Vista;
 import ar.uba.fi.cb100.tp2.vista.VistaBmp;
 import ar.uba.fi.cb100.tp2.vista.VistaGrafica;
+import java.nio.file.Files;
+import javax.swing.JOptionPane;
+import ar.uba.fi.cb100.tp2.persistencia.ServicioPersistenciaPartida;
 
 /**
  * Punto de entrada del juego. Lee la configuración, crea la partida
@@ -28,11 +31,15 @@ public class Main {
 
     /** Carpeta donde quedan los BMP de cada paso. */
     private static final Path CARPETA_BMP = Path.of("salida");
+    /** Archivo donde se guarda y desde donde se recupera la partida. */
+    private static final Path RUTA_GUARDADO = Path.of("partida.json");
 
     public static void main(String[] args) {
         EntradaConsola entrada = new EntradaConsola();
         boolean sinPantalla = GraphicsEnvironment.isHeadless();
         MenuGrafico menu = new MenuGrafico();
+        ServicioPersistenciaPartida servicioPersistencia =
+                new ServicioPersistenciaPartida();
 
         try {
             Configuracion configuracion =
@@ -43,7 +50,7 @@ public class Main {
                 CreadorPartida creador = new CreadorPartida(configuracion, new GeneradorGrupoNN());
                 Partida partida = creador.crear(dificultad);
                 EstadoPartida fin = jugarPartida(
-                        partida, true, configuracion.energiaInicial(), entrada);
+                        partida, true, configuracion.energiaInicial(),entrada, servicioPersistencia);
                 mostrarFinal(fin, partida, true);
                 if (fin != EstadoPartida.EN_CURSO) {
                     ofrecerGuardarPorConsola(partida, dificultad, entrada);
@@ -57,7 +64,8 @@ public class Main {
                     break;
                 }
 
-                if (jugarDesdeMenu(configuracion, opciones.get(), menu, entrada)
+                if (jugarDesdeMenu(
+                        configuracion, opciones.get(), menu, entrada, servicioPersistencia)
                         == MenuGrafico.Decision.SALIR) {
                     break;
                 }
@@ -70,8 +78,11 @@ public class Main {
     }
 
     private static MenuGrafico.Decision jugarDesdeMenu(
-            Configuracion configuracion, MenuGrafico.OpcionesInicio opciones,
-            MenuGrafico menu, EntradaConsola entrada) {
+            Configuracion configuracion,
+            MenuGrafico.OpcionesInicio opciones,
+            MenuGrafico menu,
+            EntradaConsola entrada,
+            ServicioPersistenciaPartida servicioPersistencia) {
 
         Long semillaElegida = opciones.semilla();
         long semilla = semillaElegida == null ? new Random().nextLong() : semillaElegida;
@@ -85,34 +96,46 @@ public class Main {
 
         CreadorPartida creador =
                 new CreadorPartida(configuracionPartida, new GeneradorGrupoNN());
+        boolean cargarGuardada = preguntarSiCargarGuardada();
         boolean usarBmp = opciones.modoVista() == MenuGrafico.ModoVista.BMP;
 
         MenuGrafico.Decision decision;
         do {
-            Partida partida = creador.crear(opciones.dificultad());
+            Partida partida;
+
+            if (cargarGuardada) {
+                partida = servicioPersistencia.cargar(RUTA_GUARDADO);
+                cargarGuardada = false;
+            } else {
+                partida = creador.crear(opciones.dificultad());
+            }
             EstadoPartida fin = jugarPartida(
-                    partida, usarBmp, configuracionPartida.energiaInicial(), entrada);
-            mostrarFinal(fin, partida, usarBmp);
+                    partida,
+                    usarBmp,
+                    configuracionPartida.energiaInicial(),
+                    entrada,
+                    servicioPersistencia);
 
             if (fin == EstadoPartida.EN_CURSO) {
                 return MenuGrafico.Decision.MENU_PRINCIPAL;
             }
-            decision = menu.mostrarResultado(fin, partida.puntaje(), semilla,
-                    nombre -> guardarEnRanking(partida, opciones.dificultad(), nombre));
+            decision = menu.mostrarResultado(fin, partida.puntaje(), partida.getSemilla(),
+                    nombre -> guardarEnRanking(partida, partida.getDificultad(), nombre)
+            );
         } while (decision == MenuGrafico.Decision.REINTENTAR);
         return decision;
     }
 
-    private static EstadoPartida jugarPartida(
-            Partida partida, boolean usarBmp, int energiaInicial, EntradaConsola entrada) {
+    private static EstadoPartida jugarPartida(Partida partida, boolean usarBmp, int energiaInicial, EntradaConsola entrada,
+            ServicioPersistenciaPartida servicioPersistencia) {
 
         if (usarBmp) {
             Vista vista = new VistaBmp(CARPETA_BMP, energiaInicial, entrada);
-            return new ControladorJuego(partida, vista).jugar();
+            return new ControladorJuego(partida, vista, servicioPersistencia, RUTA_GUARDADO).jugar();
         }
 
         try (VistaGrafica vista = new VistaGrafica()) {
-            return new ControladorJuego(partida, vista).jugar();
+            return new ControladorJuego(partida, vista, servicioPersistencia, RUTA_GUARDADO).jugar();
         }
     }
 
@@ -126,6 +149,27 @@ public class Main {
 
         int elegida = entrada.leerEnteroEnRango("Opcion:", 1, opciones.length);
         return opciones[elegida - 1];
+    }
+
+    /**
+     * Pregunta si se desea recuperar una partida guardada.
+     *
+     * @return true si el jugador acepta cargarla
+     */
+    private static boolean preguntarSiCargarGuardada() {
+        if (!Files.isRegularFile(RUTA_GUARDADO)) {
+            return false;
+        }
+
+        int respuesta = JOptionPane.showConfirmDialog(
+                null,
+                "Se encontró una partida guardada. ¿Querés cargarla?",
+                "Partida guardada",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+        );
+
+        return respuesta == JOptionPane.YES_OPTION;
     }
 
     private static void ofrecerGuardarPorConsola(

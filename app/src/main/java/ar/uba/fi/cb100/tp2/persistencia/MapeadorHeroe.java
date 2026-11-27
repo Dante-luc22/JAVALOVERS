@@ -3,20 +3,24 @@ package ar.uba.fi.cb100.tp2.persistencia;
 import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
+import ar.uba.fi.cb100.tp2.modelo.efectos.Efecto;
+import ar.uba.fi.cb100.tp2.modelo.efectos.TipoDeEfecto;
 
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.HeroeDTO;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.ObjetoInventarioDTO;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.PosicionDTO;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.UbicacionDTO;
+import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.EfectoDTO;
 
+import com.google.gson.JsonObject;
+
+import java.util.List;
 import java.util.Map;
 
 /**
  * Convierte el estado actual de un héroe en su representación DTO.
- *
- * Conserva ubicación, energía, cofres abiertos e inventario.
- * Los efectos activos se incorporarán cuando se conozcan sus
- * implementaciones concretas.
+ * Conserva ubicación, energía, cofres abiertos, inventario y efectos activos.
+ * La duración de los efectos se conserva mediante los eventos de la agenda.
  */
 public class MapeadorHeroe {
 
@@ -77,20 +81,63 @@ public class MapeadorHeroe {
             datos.inventario.add(objeto);
         }
 
-        // No descartar silenciosamente los efectos activos.
-        // Su representación se incorporará al estudiar Efecto.
-        if (heroe.getEfectosActivos() == null) {
+        // Conservar los efectos activos.
+        List<Efecto> efectosActivos = heroe.getEfectosActivos();
+
+        if (efectosActivos == null) {
             throw new IllegalStateException(
                     "La lista de efectos activos no puede ser nula."
             );
         }
 
-        if (!heroe.getEfectosActivos().isEmpty()) {
-            throw new UnsupportedOperationException(
-                    "Todavía no está implementado el guardado "
-                            + "de los efectos activos del héroe."
+        for (Efecto efecto : efectosActivos) {
+            datos.efectosActivos.add(mapearEfecto(efecto));
+        }
+
+        return datos;
+    }
+
+    /**
+     * Convierte un efecto activo en su representación DTO.
+     * Conserva su tipo. La duración se representa mediante
+     * los eventos pendientes de la agenda.
+     *
+     * @param efecto efecto activo del héroe
+     * @return representación DTO del efecto
+     */
+    private EfectoDTO mapearEfecto(Efecto efecto) {
+
+        if (efecto == null) {
+            throw new IllegalStateException(
+                    "No se puede guardar un efecto nulo."
             );
         }
+
+        TipoDeEfecto tipo = efecto.getTipo();
+
+        if (tipo == null) {
+            throw new IllegalStateException(
+                    "El efecto no tiene un tipo válido."
+            );
+        }
+
+        if (tipo != TipoDeEfecto.AGUA_COMO_PISO
+                && tipo != TipoDeEfecto.LAVA_COMO_PISO
+                && tipo != TipoDeEfecto.ENVENENADO) {
+
+            throw new UnsupportedOperationException(
+                    "Todavía no está implementado el guardado del efecto: "
+                            + tipo
+            );
+        }
+
+        EfectoDTO datos = new EfectoDTO();
+
+        // Guardar el nombre del enum, no el nombre de la clase.
+        datos.tipo = tipo.name();
+
+        // El efecto no tiene datos adicionales propios.
+        datos.datos = new JsonObject();
 
         return datos;
     }

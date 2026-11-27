@@ -11,3 +11,5 @@ Thumbs.db
 
 # BMP que escribe el juego en cada paso
 salida/
+# Partida guardada durante la ejecución
+partida.json

@@ -1,16 +1,22 @@
 
 package ar.uba.fi.cb100.tp2.persistencia;
 
-// Imports del modelo. Ajustar los paquetes según la ubicación
-// real de las clases en el proyecto.
 import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
+
 import ar.uba.fi.cb100.tp2.modelo.objetos.Inventario;
 import ar.uba.fi.cb100.tp2.modelo.objetos.Objeto;
+import ar.uba.fi.cb100.tp2.modelo.objetos.BotasIgnifugas;
+import ar.uba.fi.cb100.tp2.modelo.objetos.ZapatosDeAgua;
+
 import ar.uba.fi.cb100.tp2.modelo.efectos.Efecto;
+import ar.uba.fi.cb100.tp2.modelo.efectos.TipoDeEfecto;
+import ar.uba.fi.cb100.tp2.modelo.efectos.AguaComoPiso;
+import ar.uba.fi.cb100.tp2.modelo.efectos.LavaComoPiso;
+import ar.uba.fi.cb100.tp2.modelo.efectos.Envenenado;
+
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
 
-import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.HeroeDTO;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.ObjetoInventarioDTO;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.EfectoDTO;
@@ -24,9 +30,8 @@ import java.util.function.Function;
 
 /**
  * Reconstruye un héroe a partir de los datos de una partida guardada.
- *
  * La reconstrucción de objetos y efectos concretos se delega
- * en fábricas que se incorporarán progresivamente.
+ * en fábricas.
  */
 public class RestauradorHeroe {
 
@@ -35,26 +40,14 @@ public class RestauradorHeroe {
     private final Function<EfectoDTO, Efecto> fabricaEfectos;
 
     /**
-     * Constructor provisional.
-     *
-     * Permite restaurar héroes sin objetos ni efectos activos.
-     * Si encuentra alguno, informa que todavía falta implementar
-     * su reconstrucción.
+     * Constructor predeterminado.
+     * Permite reconstruir los objetos y efectos actualmente soportados.
      */
     public RestauradorHeroe() {
 
         this(
-                id -> {
-                    throw new UnsupportedOperationException(
-                            "Todavía no se puede reconstruir el objeto: " + id
-                    );
-                },
-                datos -> {
-                    throw new UnsupportedOperationException(
-                            "Todavía no se puede reconstruir el efecto: "
-                                    + datos.tipo
-                    );
-                }
+                RestauradorHeroe::crearObjeto,
+                RestauradorHeroe::crearEfecto
         );
     }
 
@@ -77,6 +70,94 @@ public class RestauradorHeroe {
                 fabricaEfectos,
                 "La fábrica de efectos no puede ser nula."
         );
+    }
+
+    /**
+     * Construye un objeto concreto a partir de su identificador.
+     *
+     * @param id identificador del objeto guardado
+     * @return objeto reconstruido
+     */
+    private static Objeto crearObjeto(String id) {
+
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException(
+                    "El identificador del objeto no puede ser nulo ni vacío."
+            );
+        }
+
+        if (BotasIgnifugas.ID.equals(id)) {
+            return new BotasIgnifugas();
+        }
+
+        if (ZapatosDeAgua.ID.equals(id)) {
+            return new ZapatosDeAgua();
+        }
+
+        throw new IllegalArgumentException(
+                "No existe un objeto registrado con el identificador: "
+                        + id
+        );
+    }
+
+    /**
+     * Construye un efecto concreto a partir de su representación DTO.
+     * Los efectos no guardan su duración internamente.
+     * Esa duración se recupera mediante los eventos pendientes de la agenda.
+     *
+     * @param datos representación DTO del efecto
+     * @return efecto reconstruido
+     */
+    private static Efecto crearEfecto(EfectoDTO datos) {
+
+        if (datos == null) {
+            throw new IllegalArgumentException(
+                    "Los datos del efecto no pueden ser nulos."
+            );
+        }
+
+        if (datos.tipo == null || datos.tipo.isBlank()) {
+            throw new IllegalArgumentException(
+                    "El tipo de efecto no puede ser nulo ni vacío."
+            );
+        }
+
+        if (datos.datos == null) {
+            throw new IllegalArgumentException(
+                    "Los datos específicos del efecto no pueden ser nulos."
+            );
+        }
+
+        TipoDeEfecto tipo;
+
+        try {
+            tipo = TipoDeEfecto.valueOf(datos.tipo);
+
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(
+                    "No existe un efecto registrado con el tipo: "
+                            + datos.tipo,
+                    e
+            );
+        }
+
+        switch (tipo) {
+
+            case AGUA_COMO_PISO:
+                return new AguaComoPiso();
+
+            case LAVA_COMO_PISO:
+                return new LavaComoPiso();
+
+            case ENVENENADO:
+                return new Envenenado();
+
+            default:
+                throw new IllegalArgumentException(
+                        "No existe un efecto registrado con el tipo: "
+                                + datos.tipo
+                );
+        }
     }
 
     /**
@@ -135,15 +216,28 @@ public class RestauradorHeroe {
                 );
             }
 
+            if (entrada.id == null || entrada.id.isBlank()) {
+                throw new IllegalStateException(
+                        "El inventario contiene un identificador de objeto inválido."
+                );
+            }
+
+            if (entrada.cantidad <= 0) {
+                throw new IllegalStateException(
+                        "La cantidad del objeto debe ser mayor que cero: "
+                                + entrada.id
+                );
+            }
+
             Objeto objeto;
 
             try {
                 objeto = fabricaObjetos.apply(entrada.id);
 
             } catch (RuntimeException e) {
-
                 throw new IllegalStateException(
-                        "No se pudo reconstruir el objeto: " + entrada.id,
+                        "No se pudo reconstruir el objeto: "
+                                + entrada.id,
                         e
                 );
             }
@@ -196,7 +290,6 @@ public class RestauradorHeroe {
                 efecto = fabricaEfectos.apply(efectoDTO);
 
             } catch (RuntimeException e) {
-
                 throw new IllegalStateException(
                         "No se pudo reconstruir el efecto: "
                                 + efectoDTO.tipo,
