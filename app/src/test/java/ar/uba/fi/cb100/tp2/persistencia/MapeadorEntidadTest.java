@@ -35,6 +35,21 @@ class MapeadorEntidadTest {
     }
 
     @Test
+    void mapeaMonstruoConservaCantidadDeAdormecimientos() {
+
+        Posicion posicion = new Posicion(2, 3);
+        Cazador monstruo = new Cazador(posicion, 30);
+
+        monstruo.adormecer();
+        monstruo.adormecer();
+        monstruo.adormecer();
+
+        EntidadDTO dto = mapeador.mapear(monstruo);
+
+        assertEquals(3, dto.datos.get("adormecimientos").getAsInt());
+    }
+
+    @Test
     void mapeaDormilonConSuRadio() {
 
         Posicion posicion = new Posicion(3, 4);

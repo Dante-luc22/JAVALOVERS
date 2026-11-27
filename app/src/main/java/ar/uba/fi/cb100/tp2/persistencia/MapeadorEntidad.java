@@ -191,5 +191,6 @@ public class MapeadorEntidad {
         datos.datos.addProperty("filaInicial", inicial.fila());
         datos.datos.addProperty("columnaInicial", inicial.columna());
         datos.datos.addProperty("danio", monstruo.getDanio());
+        datos.datos.addProperty("adormecimientos", monstruo.getAdormecimientos());
     }
 }

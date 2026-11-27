@@ -45,6 +45,25 @@ class RestauradorEntidadTest {
     }
 
     @Test
+    void restauraCazadorConservaCantidadDeAdormecimientos() {
+
+        Posicion actual = new Posicion(5, 7);
+        Posicion inicial = new Posicion(2, 3);
+
+        EntidadDTO dto = crearDatosMonstruo(
+                "Cazador", actual, inicial, 30
+        );
+
+        dto.datos.addProperty("adormecimientos", 3);
+
+        Monstruo restaurado = (Monstruo)
+                restaurador.restaurar(dto, azar);
+
+        assertEquals(3, restaurado.getAdormecimientos());
+        assertTrue(restaurado.estaAdormecido());
+    }
+
+    @Test
     void restauraDormilonConRadio() {
 
         Posicion actual = new Posicion(4, 6);
@@ -60,7 +79,6 @@ class RestauradorEntidadTest {
                 restaurador.restaurar(dto, azar);
 
         assertDatosComunes(restaurado, actual, inicial, 30);
-
         assertEquals(Dormilon.class, restaurado.getClass());
         assertEquals(3, ((Dormilon) restaurado).getRadio());
     }

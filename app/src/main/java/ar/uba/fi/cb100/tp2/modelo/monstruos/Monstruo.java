@@ -220,10 +220,10 @@ public abstract class Monstruo extends Entidad {
     }
 
     // ================ GETTERS SIMPLES ================= //
+    public final int getAdormecimientos() {return adormecimientos;}
 
     /**
      * Devuelve la posición inicial del monstruo.
-     *
      * @return posición inicial
      */
     public Posicion getPosicionInicial() {
@@ -232,7 +232,6 @@ public abstract class Monstruo extends Entidad {
 
     /**
      * Devuelve el daño que realiza el monstruo.
-     *
      * @return daño
      */
     public int getDanio() {
@@ -246,7 +245,6 @@ public abstract class Monstruo extends Entidad {
 
     /**
      * Cada tipo de monstruo indica cuál es.
-     *
      * @return el tipo de este monstruo
      */
     public abstract TipoDeMonstruo getTipoDeMonstruo();
