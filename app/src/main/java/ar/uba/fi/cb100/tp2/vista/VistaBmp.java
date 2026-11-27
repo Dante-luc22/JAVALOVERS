@@ -71,11 +71,14 @@ public class VistaBmp implements Vista {
         lapiz.dispose();
         guardar(imagen, partida.getPasos());
 
-        System.out.println("Paso " + partida.getPasos()
+               System.out.println("Paso " + partida.getPasos()
                 + " | energía " + heroe.getEnergia()
                 + " | cofres " + heroe.getCofresAbiertos()
+                + " | exploradas " + partida.getCeldasVisitadas().cantidadEn(
+                        heroe.getUbicacion().tablero(), heroe.getUbicacion().piso())
                 + VistaGrafica.avisoDeInteraccion(partida.interaccionDisponible()));
 
+                
         for (EntradaDelLog entrada : partida.getLog().entradasDelPaso(partida.getPasos())) {
             System.out.println("  · " + entrada.texto());
         }
