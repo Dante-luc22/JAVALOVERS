@@ -101,6 +101,19 @@ public class VistaBmpTest {
 
         assertEquals(Color.CYAN.getRGB(), imagen.getRGB(x, y));
     }
+    @Test
+    void elBmpDibujaLosPasillosDelPlanoActual() throws IOException {
+        Partida partida = crearPartidaConDosTableros();
+
+        this.vista.mostrar(partida);
+
+        BufferedImage imagen = ImageIO.read(this.carpeta.resolve("paso-0000.bmp").toFile());
+
+        int x = (4 - 1) * VistaBmp.TAMANIO_CELDA + 8;
+        int y = (2 - 1) * VistaBmp.TAMANIO_CELDA + 8;
+
+        assertEquals(Color.PINK.getRGB(), imagen.getRGB(x, y));
+    }
 
     @Test
     void noAceptaEnergiaMaximaCero() {
@@ -142,21 +155,34 @@ public class VistaBmpTest {
     private Partida crearPartidaConDosPisos(int pisoHeroe) {
         Tablero tablero1 = crearTablero();
         Tablero tablero2 = crearTablero();
-
         Plano plano1 = new Plano(tablero1, new Posicion(2, 2), null);
         Plano plano2 = new Plano(tablero2, new Posicion(2, 2), new Posicion(2, 6));
-
         Mazmorra mazmorra = new Mazmorra(List.of(plano1, plano2), 2);
-
         mazmorra.conectar(
                 new Ubicacion(1, 1, new Posicion(2, 4)),
                 new Ubicacion(1, 2, new Posicion(2, 4))
         );
-
         Heroe heroe = new Heroe(
                 new Ubicacion(1, pisoHeroe, new Posicion(2, 2)), 100
         );
+        return new Partida(mazmorra, heroe, Map.of(
+                Terreno.PISO, 1, Terreno.AGUA, 3, Terreno.LAVA, 10
+        ));
+    }
 
+    private Partida crearPartidaConDosTableros() {
+        Tablero tablero1 = crearTablero();
+        Tablero tablero2 = crearTablero();
+        Plano plano1 = new Plano(tablero1, new Posicion(2, 2), null);
+        Plano plano2 = new Plano(tablero2, new Posicion(2, 2), new Posicion(2, 6));
+        Mazmorra mazmorra = new Mazmorra(List.of(plano1, plano2), 1);
+        mazmorra.conectar(
+                new Ubicacion(1, 1, new Posicion(2, 4)),
+                new Ubicacion(2, 1, new Posicion(2, 4))
+        );
+        Heroe heroe = new Heroe(
+                new Ubicacion(1, 1, new Posicion(2, 2)), 100
+        );
         return new Partida(mazmorra, heroe, Map.of(
                 Terreno.PISO, 1, Terreno.AGUA, 3, Terreno.LAVA, 10
         ));

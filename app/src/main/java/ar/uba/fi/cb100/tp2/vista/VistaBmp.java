@@ -65,6 +65,7 @@ public class VistaBmp implements Vista {
         dibujarTerreno(lapiz, tablero);
         dibujarSalida(lapiz, plano);
         dibujarEscaleras(lapiz, partida);
+        dibujarPasillos(lapiz, partida);
         dibujarEntidades(lapiz, plano);
         dibujarHeroe(lapiz, heroe);
         dibujarEnergia(lapiz, heroe, ancho, tablero.getFilas());
@@ -191,6 +192,21 @@ public class VistaBmp implements Vista {
                 lapiz.fillRect(x(posicion) + 4, y(posicion) + 3, 2, TAMANIO_CELDA - 6);
                 lapiz.fillRect(x(posicion) + 10, y(posicion) + 3, 2, TAMANIO_CELDA - 6);
                 lapiz.fillRect(x(posicion) + 4, y(posicion) + 7, 8, 2);
+            }
+        }
+    }
+
+    private void dibujarPasillos(Graphics2D lapiz, Partida partida) {
+        var ubicacion = partida.getHeroe().getUbicacion();
+
+        for (var conexion : partida.getMazmorra().conexionesDelPlano(
+                ubicacion.tablero(), ubicacion.piso())) {
+
+            if (conexion.origen().tablero() != conexion.destino().tablero()) {
+                Posicion posicion = conexion.origen().posicion();
+
+                lapiz.setColor(Color.PINK);
+                lapiz.fillOval(x(posicion) + 4, y(posicion) + 4, 8, 8);
             }
         }
     }
