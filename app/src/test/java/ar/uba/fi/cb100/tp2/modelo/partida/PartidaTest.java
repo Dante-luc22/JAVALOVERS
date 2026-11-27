@@ -493,4 +493,16 @@ class PartidaTest {
         List<EntradaDelLog> ultimas = partida.getLog().entradasDelPaso(partida.getPasos());
         assertEquals("encontró la salida", ultimas.get(ultimas.size() - 1).texto());
     }
+
+    @Test
+    void laPartidaCuentaLasCeldasVisitadasSinRepetir() {
+        Partida partida = partidaConEnergia(100);
+
+        partida.moverHeroe(Direccion.DERECHA);
+        partida.moverHeroe(Direccion.DERECHA);
+        partida.moverHeroe(Direccion.IZQUIERDA);
+
+        Ubicacion donde = partida.getHeroe().getUbicacion();
+        assertEquals(3, partida.getCeldasVisitadas().cantidadEn(donde.tablero(), donde.piso()));
+    }
 }
