@@ -211,7 +211,7 @@ class PartidaCoincidenciasTest {
         MonstruoDePrueba monstruo = new MonstruoDePrueba(LEJOS, true);
         monstruo.adormecer();
         Partida partida = partida(ENTRADA, 100, monstruo);
-        partida.getAgenda().programar(1, new DespertarMonstruos());
+        partida.getAgenda().programar(1, new DespertarMonstruos(1,1));
 
         partida.esperar();
 
@@ -226,7 +226,7 @@ class PartidaCoincidenciasTest {
         MonstruoDePrueba monstruo = new MonstruoDePrueba(LEJOS, true);
         monstruo.adormecer();
         Partida partida = partida(ENTRADA, 100, monstruo);
-        partida.getAgenda().programar(2, new DespertarMonstruos());
+        partida.getAgenda().programar(2, new DespertarMonstruos(1,1));
 
         partida.esperar();
 
@@ -240,7 +240,7 @@ class PartidaCoincidenciasTest {
         MonstruoDePrueba monstruo = new MonstruoDePrueba(DERECHA_DE_ENTRADA, false);
         monstruo.adormecer();
         Partida partida = partida(ENTRADA, 100, monstruo);
-        partida.getAgenda().programar(1, new DespertarMonstruos());
+        partida.getAgenda().programar(1, new DespertarMonstruos(1,1));
 
         partida.moverHeroe(Direccion.DERECHA);
 
@@ -253,7 +253,7 @@ class PartidaCoincidenciasTest {
         MonstruoDePrueba monstruo = new MonstruoDePrueba(DERECHA_DE_ENTRADA, false);
         monstruo.adormecer();
         Partida partida = partida(ENTRADA, 100, monstruo);
-        partida.getAgenda().programar(2, new DespertarMonstruos());
+        partida.getAgenda().programar(2, new DespertarMonstruos(1,1));
 
         partida.moverHeroe(Direccion.DERECHA);
 
@@ -266,7 +266,7 @@ class PartidaCoincidenciasTest {
         MonstruoDePrueba monstruo = new MonstruoDePrueba(DERECHA_DE_ENTRADA, false);
         monstruo.adormecer();
         Partida partida = partida(ENTRADA, 100, monstruo);
-        partida.getAgenda().programar(2, new DespertarMonstruos());
+        partida.getAgenda().programar(2, new DespertarMonstruos(1,1));
 
         partida.moverHeroe(Direccion.DERECHA);   // el héroe lo despierta del todo
         partida.moverHeroe(Direccion.IZQUIERDA); // vence el evento, ya no hay nada que despertar
@@ -284,7 +284,7 @@ class PartidaCoincidenciasTest {
         AguaComoPiso zapatos = new AguaComoPiso();
         this.heroe.agregarEfecto(zapatos);
         partida.getAgenda().programar(1, new QuitarEfecto(zapatos.getTipo()));
-        partida.getAgenda().programar(1, new DespertarMonstruos());
+        partida.getAgenda().programar(1, new DespertarMonstruos(1,1));
 
         partida.moverHeroe(Direccion.ABAJO);
 

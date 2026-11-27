@@ -86,13 +86,13 @@ public class RestauradorAgenda {
         switch (datos.tipo) {
 
             case "ADORMECER_MONSTRUOS":
-                return new AdormecerMonstruos();
+                return new AdormecerMonstruos(leerEntero(datos, "tablero"), leerEntero(datos, "piso"));
 
             case "DESPERTAR_MONSTRUOS":
-                return new DespertarMonstruos();
+                return new DespertarMonstruos(leerEntero(datos, "tablero"), leerEntero(datos, "piso"));
 
             case "REPELER_MONSTRUOS":
-                return new RepelerMonstruos();
+                return new RepelerMonstruos(leerEntero(datos, "tablero"), leerEntero(datos, "piso"));
 
             case "ROMPER_PARED":
                 return new RomperPared();
@@ -106,6 +106,16 @@ public class RestauradorAgenda {
                                 + "del evento: " + datos.tipo
                 );
         }
+    }
+
+
+    private static int leerEntero(EventoDTO datos, String campo) {
+        JsonElement valor = datos.datos.get(campo);
+        if (valor == null || !valor.isJsonPrimitive() || !valor.getAsJsonPrimitive().isNumber()) {
+            throw new IllegalArgumentException(
+                    "El evento " + datos.tipo + " no tiene un " + campo + " válido.");
+        }
+        return valor.getAsInt();
     }
 
     /**
