@@ -7,6 +7,10 @@ import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDePuntos;
 import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeTrampaDePinchos;
 import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeVeneno;
 import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeZapatosDeAgua;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeEscudo;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDePico;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeRepelente;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeSomnifero;
 
 import ar.uba.fi.cb100.tp2.modelo.mundo.Entidad;
 
@@ -27,25 +31,18 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 public class RestauradorEntidad {
-
-    private static final String TIPO_BOTAS_IGNIFUGAS =
-            "CofreDeBotasIgnifugas";
-
-    private static final String TIPO_POCION =
-            "CofreDePocion";
-
-    private static final String TIPO_PUNTOS =
-            "CofreDePuntos";
-
-    private static final String TIPO_TRAMPA_PINCHOS =
-            "CofreDeTrampaDePinchos";
-
-    private static final String TIPO_VENENO =
-            "CofreDeVeneno";
-
-    private static final String TIPO_ZAPATOS_AGUA =
-            "CofreDeZapatosDeAgua";
-
+    //Cofres
+    private static final String TIPO_ESCUDO = "CofreDeEscudo";
+    private static final String TIPO_PICO = "CofreDePico";
+    private static final String TIPO_REPELENTE = "CofreDeRepelente";
+    private static final String TIPO_SOMNIFERO = "CofreDeSomnifero";
+    private static final String TIPO_BOTAS_IGNIFUGAS = "CofreDeBotasIgnifugas";
+    private static final String TIPO_POCION = "CofreDePocion";
+    private static final String TIPO_PUNTOS = "CofreDePuntos";
+    private static final String TIPO_TRAMPA_PINCHOS = "CofreDeTrampaDePinchos";
+    private static final String TIPO_VENENO = "CofreDeVeneno";
+    private static final String TIPO_ZAPATOS_AGUA = "CofreDeZapatosDeAgua";
+    //Mounstros
     private static final String TIPO_CAZADOR = "Cazador";
     private static final String TIPO_DORMILON = "Dormilon";
     private static final String TIPO_ERRANTE = "Errante";
@@ -98,33 +95,27 @@ public class RestauradorEntidad {
 
             case TIPO_BOTAS_IGNIFUGAS -> {
                 validarCamposExactos(atributos);
-
                 yield new CofreDeBotasIgnifugas(posicionActual);
             }
 
             case TIPO_POCION -> {
                 validarCamposExactos(atributos, "cantidad");
-
                 int cantidad = leerEnteroPositivo(
                         atributos, "cantidad"
                 );
-
                 yield new CofreDePocion(posicionActual, cantidad);
             }
 
             case TIPO_PUNTOS -> {
                 validarCamposExactos(atributos);
-
                 yield new CofreDePuntos(posicionActual);
             }
 
             case TIPO_TRAMPA_PINCHOS -> {
                 validarCamposExactos(atributos, "danio");
-
                 int danio = leerEnteroPositivo(
                         atributos, "danio"
                 );
-
                 yield new CofreDeTrampaDePinchos(
                         posicionActual, danio
                 );
@@ -132,22 +123,34 @@ public class RestauradorEntidad {
 
             case TIPO_VENENO -> {
                 validarCamposExactos(atributos);
-
                 yield new CofreDeVeneno(posicionActual);
             }
 
             case TIPO_ZAPATOS_AGUA -> {
                 validarCamposExactos(atributos);
-
                 yield new CofreDeZapatosDeAgua(posicionActual);
             }
-
+            case TIPO_ESCUDO -> {
+                validarCamposExactos(atributos);
+                yield new CofreDeEscudo(posicionActual);
+            }
+            case TIPO_PICO -> {
+                validarCamposExactos(atributos);
+                yield new CofreDePico(posicionActual);
+            }
+            case TIPO_REPELENTE -> {
+                validarCamposExactos(atributos);
+                yield new CofreDeRepelente(posicionActual);
+            }
+            case TIPO_SOMNIFERO -> {
+                validarCamposExactos(atributos);
+                yield new CofreDeSomnifero(posicionActual);
+            }
             // ================= MONSTRUOS =================
 
             case TIPO_CAZADOR -> {
                 PosicionesMonstruo posiciones =
                         leerDatosComunesMonstruo(atributos);
-
                 yield restaurarAdormecimientos(
                         new Cazador(
                                 posiciones.inicial(),
@@ -160,11 +163,9 @@ public class RestauradorEntidad {
 
             case TIPO_DORMILON -> {
                 validarCamposMonstruo(atributos, "radio");
-
                 Posicion inicial = leerPosicionInicial(atributos);
                 int danio = leerEnteroPositivo(atributos, "danio");
                 int radio = leerEnteroPositivo(atributos, "radio");
-
                 yield restaurarAdormecimientos(
                         new Dormilon(
                                 inicial,
@@ -179,7 +180,6 @@ public class RestauradorEntidad {
             case TIPO_ERRANTE -> {
                 PosicionesMonstruo posiciones =
                         leerDatosComunesMonstruo(atributos);
-
                 if (azar == null) {
                     throw new IllegalArgumentException(
                             "Se necesita el generador aleatorio "
@@ -200,7 +200,6 @@ public class RestauradorEntidad {
 
             case TIPO_FANTASMA -> {
                 validarCamposMonstruo(atributos, "descansaEsteTurno");
-
                 Posicion inicial = leerPosicionInicial(atributos);
                 int danio = leerEnteroPositivo(atributos, "danio");
                 boolean descansa = leerBooleano(
@@ -221,14 +220,12 @@ public class RestauradorEntidad {
             case TIPO_LADRON -> {
                 PosicionesMonstruo posiciones =
                         leerDatosComunesMonstruo(atributos);
-
                 if (azar == null) {
                     throw new IllegalArgumentException(
                             "Se necesita el generador aleatorio "
                                     + "para reconstruir un Ladron."
                     );
                 }
-
                 yield restaurarAdormecimientos(
                         new Ladron(
                                 posiciones.inicial(),
@@ -240,10 +237,7 @@ public class RestauradorEntidad {
                 );
             }
 
-            default -> throw new UnsupportedOperationException(
-                    "Todavía no está implementada la restauración "
-                            + "de la entidad: " + datos.tipo
-            );
+            default -> throw new UnsupportedOperationException("Todavía no está implementada la restauración " + "de la entidad: " + datos.tipo);
         };
     }
 

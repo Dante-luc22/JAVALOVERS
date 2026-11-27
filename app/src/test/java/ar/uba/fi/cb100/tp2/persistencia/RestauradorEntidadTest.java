@@ -1,6 +1,11 @@
 
 package ar.uba.fi.cb100.tp2.persistencia;
 
+import ar.uba.fi.cb100.tp2.modelo.mundo.Entidad;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeEscudo;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDePico;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeRepelente;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeSomnifero;
 import ar.uba.fi.cb100.tp2.modelo.monstruos.Cazador;
 import ar.uba.fi.cb100.tp2.modelo.monstruos.Dormilon;
 import ar.uba.fi.cb100.tp2.modelo.monstruos.Errante;
@@ -42,6 +47,15 @@ class RestauradorEntidadTest {
         assertDatosComunes(restaurado, actual, inicial, 30);
 
         assertEquals(Cazador.class, restaurado.getClass());
+    }
+    @Test
+    void restauraLosCuatroNuevosCofres() {
+        Posicion posicion = new Posicion(2, 3);
+
+        assertCofreRestaurado("CofreDeEscudo", CofreDeEscudo.class, posicion);
+        assertCofreRestaurado("CofreDePico", CofreDePico.class, posicion);
+        assertCofreRestaurado("CofreDeRepelente", CofreDeRepelente.class, posicion);
+        assertCofreRestaurado("CofreDeSomnifero", CofreDeSomnifero.class, posicion);
     }
 
     @Test
@@ -200,5 +214,16 @@ class RestauradorEntidadTest {
         assertEquals(actual, monstruo.getPosicion());
         assertEquals(inicial, monstruo.getPosicionInicial());
         assertEquals(danio, monstruo.getDanio());
+    }
+    private void assertCofreRestaurado(String tipo, Class<? extends Entidad> clase, Posicion posicion) {
+        EntidadDTO dto = new EntidadDTO();
+        dto.tipo = tipo;
+        dto.posicion = crearPosicionDTO(posicion);
+        dto.datos = new JsonObject();
+
+        Entidad restaurado = restaurador.restaurar(dto);
+
+        assertEquals(clase, restaurado.getClass());
+        assertEquals(posicion, restaurado.getPosicion());
     }
 }

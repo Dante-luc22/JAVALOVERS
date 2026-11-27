@@ -6,6 +6,10 @@ import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDePuntos;
 import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeTrampaDePinchos;
 import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeVeneno;
 import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeZapatosDeAgua;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeEscudo;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDePico;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeRepelente;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeSomnifero;
 
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.EntidadDTO;
@@ -23,24 +27,16 @@ import ar.uba.fi.cb100.tp2.modelo.monstruos.Monstruo;
 import com.google.gson.JsonObject;
 
 public class MapeadorEntidad {
-
-    private static final String TIPO_BOTAS_IGNIFUGAS =
-            "CofreDeBotasIgnifugas";
-
-    private static final String TIPO_POCION =
-            "CofreDePocion";
-
-    private static final String TIPO_PUNTOS =
-            "CofreDePuntos";
-
-    private static final String TIPO_TRAMPA_PINCHOS =
-            "CofreDeTrampaDePinchos";
-
-    private static final String TIPO_VENENO =
-            "CofreDeVeneno";
-
-    private static final String TIPO_ZAPATOS_AGUA =
-            "CofreDeZapatosDeAgua";
+    private static final String TIPO_ESCUDO = "CofreDeEscudo";
+    private static final String TIPO_PICO = "CofreDePico";
+    private static final String TIPO_REPELENTE = "CofreDeRepelente";
+    private static final String TIPO_SOMNIFERO = "CofreDeSomnifero";
+    private static final String TIPO_BOTAS_IGNIFUGAS = "CofreDeBotasIgnifugas";
+    private static final String TIPO_POCION = "CofreDePocion";
+    private static final String TIPO_PUNTOS = "CofreDePuntos";
+    private static final String TIPO_TRAMPA_PINCHOS = "CofreDeTrampaDePinchos";
+    private static final String TIPO_VENENO = "CofreDeVeneno";
+    private static final String TIPO_ZAPATOS_AGUA = "CofreDeZapatosDeAgua";
 
     private static final String TIPO_CAZADOR = "Cazador";
     private static final String TIPO_DORMILON = "Dormilon";
@@ -84,10 +80,7 @@ public class MapeadorEntidad {
 
         Class<?> tipo = entidad.getClass();
 
-        if (tipo == CofreDeBotasIgnifugas.class) {
-
-            datos.tipo = TIPO_BOTAS_IGNIFUGAS;
-
+        if (tipo == CofreDeBotasIgnifugas.class) {datos.tipo = TIPO_BOTAS_IGNIFUGAS;
         } else if (tipo == CofreDePocion.class) {
 
             CofreDePocion cofre = (CofreDePocion) entidad;
@@ -95,10 +88,7 @@ public class MapeadorEntidad {
             datos.tipo = TIPO_POCION;
             datos.datos.addProperty("cantidad", cofre.getCantidad());
 
-        } else if (tipo == CofreDePuntos.class) {
-
-            datos.tipo = TIPO_PUNTOS;
-
+        } else if (tipo == CofreDePuntos.class) {datos.tipo = TIPO_PUNTOS;
         } else if (tipo == CofreDeTrampaDePinchos.class) {
 
             CofreDeTrampaDePinchos cofre =
@@ -107,16 +97,13 @@ public class MapeadorEntidad {
             datos.tipo = TIPO_TRAMPA_PINCHOS;
             datos.datos.addProperty("danio", cofre.getDanio());
 
-        } else if (tipo == CofreDeVeneno.class) {
-
-            datos.tipo = TIPO_VENENO;
-
-        } else if (tipo == CofreDeZapatosDeAgua.class) {
-
-            datos.tipo = TIPO_ZAPATOS_AGUA;
-
-        }
-        else if (tipo == Dormilon.class) {
+        } else if (tipo == CofreDeVeneno.class) {datos.tipo = TIPO_VENENO;
+        } else if (tipo == CofreDeZapatosDeAgua.class) {datos.tipo = TIPO_ZAPATOS_AGUA;
+        }else if (tipo == CofreDeEscudo.class) {datos.tipo = TIPO_ESCUDO;
+        } else if (tipo == CofreDePico.class) {datos.tipo = TIPO_PICO;
+        } else if (tipo == CofreDeRepelente.class) {datos.tipo = TIPO_REPELENTE;
+        } else if (tipo == CofreDeSomnifero.class) {datos.tipo = TIPO_SOMNIFERO;
+        } else if (tipo == Dormilon.class) {
 
         Dormilon monstruo = (Dormilon) entidad;
 
