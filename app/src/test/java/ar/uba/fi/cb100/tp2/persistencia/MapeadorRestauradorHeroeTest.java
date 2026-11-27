@@ -79,16 +79,11 @@ class MapeadorRestauradorHeroeTest {
                 restaurado.getCofresAbiertos()
         );
 
-        assertEquals(
-                original.getUbicacion(),
-                restaurado.getUbicacion()
-        );
+        assertEquals(original.getUbicacion(), restaurado.getUbicacion());
+        assertEquals(original.getEscudos(), restaurado.getEscudos());
 
         // Comprobar cantidades y orden del inventario.
-        assertEquals(
-                original.getInventario().getCantidades(),
-                restaurado.getInventario().getCantidades()
-        );
+        assertEquals(original.getInventario().getCantidades(), restaurado.getInventario().getCantidades());
 
         assertEquals(
                 new ArrayList<>(
@@ -210,7 +205,7 @@ class MapeadorRestauradorHeroeTest {
                 new Envenenado()
         );
 
-        return new Heroe(
+        Heroe heroe = new Heroe(
                 new Ubicacion(
                         1,
                         2,
@@ -222,5 +217,9 @@ class MapeadorRestauradorHeroeTest {
                 inventario,
                 efectos
         );
-    }
+
+        heroe.agregarEscudo();
+        heroe.agregarEscudo();
+
+        return heroe;}
 }

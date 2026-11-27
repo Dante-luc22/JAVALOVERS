@@ -173,6 +173,12 @@ public class RestauradorHeroe {
                     "Los datos del héroe no pueden ser nulos."
             );
         }
+        // Recuperar la cantidad de escudos.
+        int escudos = datos.escudos == null ? 0 : datos.escudos;
+
+        if (escudos < 0) {
+            throw new IllegalArgumentException("La cantidad de escudos no puede ser negativa.");
+        }
 
         // Recuperar la ubicación.
         Ubicacion ubicacion = convertir(datos.ubicacion);
@@ -184,7 +190,7 @@ public class RestauradorHeroe {
         List<Efecto> efectos = restaurarEfectos(datos.efectosActivos);
 
         // Construir el héroe con todos sus valores originales.
-        return new Heroe(
+        Heroe heroe = new Heroe(
                 ubicacion,
                 datos.energia,
                 datos.energiaMaxima,
@@ -192,6 +198,10 @@ public class RestauradorHeroe {
                 inventario,
                 efectos
         );
+        // Restaurar los escudos.
+        for (int i = 0; i < escudos; i++) {
+            heroe.agregarEscudo();}
+        return heroe;
     }
 
     /**

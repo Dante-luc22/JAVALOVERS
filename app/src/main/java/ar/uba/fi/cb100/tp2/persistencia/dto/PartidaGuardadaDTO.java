@@ -42,6 +42,7 @@ public class PartidaGuardadaDTO {
         public Integer energia;
         public Integer energiaMaxima;
         public Integer cofresAbiertos;
+        public Integer escudos;
         public List<ObjetoInventarioDTO> inventario = new ArrayList<>();
         public List<EfectoDTO> efectosActivos = new ArrayList<>();
     }
