@@ -229,13 +229,15 @@ public class CreadorPartidaTest {
     }
 
     @Test
-    void elCatalogoTieneLosCofresTerminados() {
+    void elCatalogoTieneLosDiezCofres() {
         CatalogoDeCofres catalogo = CreadorPartida.crearCatalogoDeCofres();
 
         for (String tipo : List.of("PUNTOS", "ZAPATOS_DE_AGUA", "BOTAS_IGNIFUGAS",
-                "POCION", "TRAMPA_DE_PINCHOS", "VENENO")) {
+                "POCION", "TRAMPA_DE_PINCHOS", "VENENO",
+                "ESCUDO", "PICO", "REPELENTE", "SOMNIFERO")) {
             assertTrue(catalogo.estaRegistrado(tipo), tipo);
         }
+        assertEquals(10, catalogo.cantidadDeTipos());
     }
 
     @Test
