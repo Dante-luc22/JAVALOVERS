@@ -99,7 +99,7 @@ class CofreDeRepelenteTest {
     void elEventoMandaATodosLosMonstruosASuInicio() {
         acercarLosMonstruos();
 
-        new RepelerMonstruos().ejecutar(this.partida);
+        new RepelerMonstruos(1,1).ejecutar(this.partida);
 
         assertEquals(INICIO_IZQUIERDA, this.izquierdo.getPosicion());
         assertEquals(INICIO_DERECHA, this.derecho.getPosicion());
@@ -107,14 +107,14 @@ class CofreDeRepelenteTest {
 
     @Test
     void elEventoNoMueveLosCofres() {
-        new RepelerMonstruos().ejecutar(this.partida);
+        new RepelerMonstruos(1,1).ejecutar(this.partida);
 
         assertEquals(HEROE, this.cofre.getPosicion());
     }
 
     @Test
     void conLosMonstruosEnSuInicioNoCambiaNada() {
-        new RepelerMonstruos().ejecutar(this.partida);
+        new RepelerMonstruos(1,1).ejecutar(this.partida);
 
         assertEquals(INICIO_IZQUIERDA, this.izquierdo.getPosicion());
         assertEquals(INICIO_DERECHA, this.derecho.getPosicion());

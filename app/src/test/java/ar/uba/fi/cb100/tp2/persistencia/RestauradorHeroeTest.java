@@ -38,6 +38,7 @@ class RestauradorHeroeTest {
 
         agregarObjeto(datos, "BOTAS_IGNIFUGAS", 2);
         agregarObjeto(datos, "ZAPATOS_DE_AGUA", 3);
+        agregarObjeto(datos, "PICO", 1);
 
         Heroe heroe = restaurador.restaurar(datos);
 
@@ -46,9 +47,10 @@ class RestauradorHeroeTest {
 
         assertEquals(2, cantidades.get("BOTAS_IGNIFUGAS"));
         assertEquals(3, cantidades.get("ZAPATOS_DE_AGUA"));
+        assertEquals(1, cantidades.get("PICO"));
 
         assertEquals(
-                List.of("BOTAS_IGNIFUGAS", "ZAPATOS_DE_AGUA"),
+                List.of("BOTAS_IGNIFUGAS", "ZAPATOS_DE_AGUA", "PICO"),
                 new ArrayList<>(cantidades.keySet())
         );
     }
@@ -63,11 +65,30 @@ class RestauradorHeroeTest {
 
         Heroe heroe = restaurador.restaurar(datos);
 
-        assertTrue(
-                heroe.getInventario().getCantidades().isEmpty()
-        );
+        assertTrue(heroe.getInventario().getCantidades().isEmpty());
+        assertEquals(0, heroe.getEscudos());
     }
 
+    @Test
+    void restaurarConservaCantidadDeEscudos() {
+        HeroeDTO datos = crearHeroeDTO();
+        datos.escudos = 3;
+
+        Heroe heroe = restaurador.restaurar(datos);
+
+        assertEquals(3, heroe.getEscudos());
+    }
+
+    @Test
+    void restaurarRechazaEscudosNegativos() {
+        HeroeDTO datos = crearHeroeDTO();
+        datos.escudos = -1;
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> restaurador.restaurar(datos)
+        );
+    }
     /**
      * Comprueba que se rechacen identificadores desconocidos.
      */

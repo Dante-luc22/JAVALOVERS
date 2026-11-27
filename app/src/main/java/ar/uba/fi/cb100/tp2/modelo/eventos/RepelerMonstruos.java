@@ -5,22 +5,18 @@ import ar.uba.fi.cb100.tp2.modelo.mundo.Entidad;
 import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
 
 
-/**
- * Clase Repeler Monstruos, sirve para indicarle al evento que
- * si una entidad es un monstruo, lo envie al inicio con el
- * metodo repeler()
- */
-public class RepelerMonstruos implements Evento {
+public record RepelerMonstruos(int tablero, int piso) implements Evento {
 
-    /**
-     * Manda los monstruos del plano donde esta el heroe
-     * a su posicion inicial (los cofres no se tocan).
-     * @param partida la partida en curso, para llegar al héroe, al plano y a los monstruos
-     */
+    public RepelerMonstruos {
+        if (tablero < 1 || piso < 1) {
+            throw new IllegalArgumentException("Tablero y piso empiezan en 1");
+        }
+    }
+
     @Override
     public void ejecutar(Partida partida) {
-        for (Entidad e : partida.getPlanoActual().getEntidades()) {
-            e.repeler();
+        for (Entidad entidad : partida.getMazmorra().getPlano(this.tablero, this.piso).getEntidades()) {
+            entidad.repeler();
         }
     }
 }

@@ -162,7 +162,7 @@ class CofreDeSomniferoTest {
         Cazador otro = new Cazador(new Posicion(2, 7), 30);
         this.plano.agregarEntidad(otro);
 
-        new AdormecerMonstruos().ejecutar(this.partida);
+        new AdormecerMonstruos(1,1).ejecutar(this.partida);
 
         assertTrue(this.cazador.estaAdormecido());
         assertTrue(otro.estaAdormecido());
@@ -170,9 +170,9 @@ class CofreDeSomniferoTest {
 
     @Test
     void despertarMonstruosLosDespierta() {
-        new AdormecerMonstruos().ejecutar(this.partida);
+        new AdormecerMonstruos(1,1).ejecutar(this.partida);
 
-        new DespertarMonstruos().ejecutar(this.partida);
+        new DespertarMonstruos(1,1).ejecutar(this.partida);
 
         assertFalse(this.cazador.estaAdormecido());
     }
@@ -266,5 +266,24 @@ class CofreDeSomniferoTest {
         catalogo.registrar("SOMNIFERO", CofreDeSomnifero::new);
 
         assertTrue(catalogo.crearAlAzar(HEROE, new Random(1)) instanceof CofreDeSomnifero);
+    }
+
+        @Test
+    void despiertaALosMonstruosDelPisoDondeSeAbrioAunqueElHeroeHayaSubido() {
+        Tablero tablero2 = new Tablero(3, 7);
+        tablero2.setTerreno(HEROE, Terreno.PISO);
+        Plano piso2 = new Plano(tablero2, HEROE, null);
+        Mazmorra mazmorra = new Mazmorra(List.of(this.plano, piso2), 2);
+        Partida partida = new Partida(mazmorra, this.heroe,
+                Map.of(Terreno.PISO, 1, Terreno.AGUA, 3, Terreno.LAVA, 8));
+
+        this.cofre.alEncontrarseConHeroe(this.heroe, partida.getAgenda());
+        this.heroe.mover(new Ubicacion(1, 2, HEROE));
+
+        partida.getAgenda().ejecutarLosQueVencen(1, partida);
+        assertTrue(this.cazador.estaAdormecido());
+
+        partida.getAgenda().ejecutarLosQueVencen(1 + DURACION, partida);
+        assertFalse(this.cazador.estaAdormecido());
     }
 }

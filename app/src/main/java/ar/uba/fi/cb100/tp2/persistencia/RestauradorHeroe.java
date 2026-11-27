@@ -13,6 +13,7 @@ import ar.uba.fi.cb100.tp2.modelo.efectos.TipoDeEfecto;
 import ar.uba.fi.cb100.tp2.modelo.efectos.AguaComoPiso;
 import ar.uba.fi.cb100.tp2.modelo.efectos.LavaComoPiso;
 import ar.uba.fi.cb100.tp2.modelo.efectos.Envenenado;
+import ar.uba.fi.cb100.tp2.modelo.objetos.Pico;
 
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
@@ -89,15 +90,14 @@ public class RestauradorHeroe {
         if (BotasIgnifugas.ID.equals(id)) {
             return new BotasIgnifugas();
         }
-
         if (ZapatosDeAgua.ID.equals(id)) {
             return new ZapatosDeAgua();
         }
-
+        if (Pico.ID.equals(id)) {
+            return new Pico();
+        }
         throw new IllegalArgumentException(
-                "No existe un objeto registrado con el identificador: "
-                        + id
-        );
+                "No existe un objeto registrado con el identificador: " + id);
     }
 
     /**
@@ -173,6 +173,12 @@ public class RestauradorHeroe {
                     "Los datos del héroe no pueden ser nulos."
             );
         }
+        // Recuperar la cantidad de escudos.
+        int escudos = datos.escudos == null ? 0 : datos.escudos;
+
+        if (escudos < 0) {
+            throw new IllegalArgumentException("La cantidad de escudos no puede ser negativa.");
+        }
 
         // Recuperar la ubicación.
         Ubicacion ubicacion = convertir(datos.ubicacion);
@@ -184,7 +190,7 @@ public class RestauradorHeroe {
         List<Efecto> efectos = restaurarEfectos(datos.efectosActivos);
 
         // Construir el héroe con todos sus valores originales.
-        return new Heroe(
+        Heroe heroe = new Heroe(
                 ubicacion,
                 datos.energia,
                 datos.energiaMaxima,
@@ -192,6 +198,10 @@ public class RestauradorHeroe {
                 inventario,
                 efectos
         );
+        // Restaurar los escudos.
+        for (int i = 0; i < escudos; i++) {
+            heroe.agregarEscudo();}
+        return heroe;
     }
 
     /**

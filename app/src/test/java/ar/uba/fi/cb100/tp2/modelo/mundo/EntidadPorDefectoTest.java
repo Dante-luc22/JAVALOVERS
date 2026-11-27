@@ -88,7 +88,7 @@ class EntidadPorDefectoTest {
     void adormecerConUnCofreEnElPlanoSoloDuermeAlMonstruo() {
         armar();
 
-        new AdormecerMonstruos().ejecutar(this.partida);
+        new AdormecerMonstruos(1,1).ejecutar(this.partida);
 
         assertTrue(this.cazador.estaAdormecido());
         assertEquals(2, this.plano.getEntidades().size());
@@ -97,9 +97,9 @@ class EntidadPorDefectoTest {
     @Test
     void despertarConUnCofreEnElPlanoSoloDespiertaAlMonstruo() {
         armar();
-        new AdormecerMonstruos().ejecutar(this.partida);
+        new AdormecerMonstruos(1,1).ejecutar(this.partida);
 
-        new DespertarMonstruos().ejecutar(this.partida);
+        new DespertarMonstruos(1,1).ejecutar(this.partida);
 
         assertFalse(this.cazador.estaAdormecido());
     }
@@ -109,7 +109,7 @@ class EntidadPorDefectoTest {
         armar();
         this.cazador.setPosicion(new Posicion(2, 4));
 
-        new RepelerMonstruos().ejecutar(this.partida);
+        new RepelerMonstruos(1,1).ejecutar(this.partida);
 
         assertEquals(INICIO_DEL_CAZADOR, this.cazador.getPosicion());
         assertEquals(POSICION_DEL_COFRE, this.cofre.getPosicion());

@@ -47,23 +47,32 @@ public class Mazmorra {
         this.pisosPorTablero = pisosPorTablero;
     }
 
-    /**
-     * @param ubicacion tablero y piso (desde 1) del plano buscado
+     /**
+     * @param ubicacion tablero y piso (desde 1) del plano buscado; la posición no se usa
      * @return el plano que está en esa ubicación
      * @throws IllegalArgumentException si el tablero o el piso no existen
      */
     public Plano getPlano(Ubicacion ubicacion) {
-        int tablero = ubicacion.tablero();
-        int piso = ubicacion.piso();
+        return getPlano(ubicacion.tablero(), ubicacion.piso());
+    }
+
+    /**
+     * @param tablero desde 1
+     * @param piso    desde 1
+     * @return el plano de ese tablero y piso
+     * @throws IllegalArgumentException si el tablero o el piso no existen
+     */
+    public Plano getPlano(int tablero, int piso) {
         if (tablero < 1 || piso < 1 || piso > this.pisosPorTablero) {
-            throw new IllegalArgumentException("No existe el plano de: " + ubicacion);
+            throw new IllegalArgumentException("No existe el plano del tablero " + tablero + ", piso " + piso);
         }
         int indice = (tablero - 1) * this.pisosPorTablero + (piso - 1);
         if (indice >= this.planos.size()) {
-            throw new IllegalArgumentException("No existe el plano de: " + ubicacion);
+            throw new IllegalArgumentException("No existe el plano del tablero " + tablero + ", piso " + piso);
         }
         return this.planos.get(indice);
     }
+
 
     /**
      * El héroe siempre empieza en el primer plano: tablero 1, piso 1.
@@ -171,7 +180,4 @@ public class Mazmorra {
     public List<Plano> getPlanos() {
         return new ArrayList<>(this.planos);
     }
-
-
-
 }

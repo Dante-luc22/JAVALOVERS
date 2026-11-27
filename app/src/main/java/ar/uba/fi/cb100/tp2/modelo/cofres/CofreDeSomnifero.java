@@ -5,7 +5,7 @@ import ar.uba.fi.cb100.tp2.modelo.eventos.Agenda;
 import ar.uba.fi.cb100.tp2.modelo.eventos.DespertarMonstruos;
 import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
-
+import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
 
 /**
  * Clase cofre de somnifero, adormece a todos los monstruos del plano
@@ -26,17 +26,10 @@ public class CofreDeSomnifero extends Cofre{
         super(posicion);
     }
 
-    /**
-     * Metodo que dice que sucede al abrirse el cofre.
-     * Al primer paso de abrirse, adormece a los monstruos, pasado
-     * la duracion del evento, los despierta.
-     *
-     * @param heroe  el que abre el cofre;
-     * @param agenda la agenda, para efectos que vencen más adelante
-     */
-    @Override
+     @Override
     protected void abrir(Heroe heroe, Agenda agenda) {
-        agenda.programar(1, new AdormecerMonstruos());
-        agenda.programar(1 + DURACION, new DespertarMonstruos());
+        Ubicacion donde = heroe.getUbicacion();
+        agenda.programar(1, new AdormecerMonstruos(donde.tablero(), donde.piso()));
+        agenda.programar(1 + DURACION, new DespertarMonstruos(donde.tablero(), donde.piso()));
     }
 }

@@ -1,6 +1,11 @@
 
 package ar.uba.fi.cb100.tp2.persistencia;
 
+import ar.uba.fi.cb100.tp2.modelo.mundo.Entidad;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeEscudo;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDePico;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeRepelente;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeSomnifero;
 import ar.uba.fi.cb100.tp2.modelo.monstruos.Cazador;
 import ar.uba.fi.cb100.tp2.modelo.monstruos.Dormilon;
 import ar.uba.fi.cb100.tp2.modelo.monstruos.Errante;
@@ -43,6 +48,34 @@ class RestauradorEntidadTest {
 
         assertEquals(Cazador.class, restaurado.getClass());
     }
+    @Test
+    void restauraLosCuatroNuevosCofres() {
+        Posicion posicion = new Posicion(2, 3);
+
+        assertCofreRestaurado("CofreDeEscudo", CofreDeEscudo.class, posicion);
+        assertCofreRestaurado("CofreDePico", CofreDePico.class, posicion);
+        assertCofreRestaurado("CofreDeRepelente", CofreDeRepelente.class, posicion);
+        assertCofreRestaurado("CofreDeSomnifero", CofreDeSomnifero.class, posicion);
+    }
+
+    @Test
+    void restauraCazadorConservaCantidadDeAdormecimientos() {
+
+        Posicion actual = new Posicion(5, 7);
+        Posicion inicial = new Posicion(2, 3);
+
+        EntidadDTO dto = crearDatosMonstruo(
+                "Cazador", actual, inicial, 30
+        );
+
+        dto.datos.addProperty("adormecimientos", 3);
+
+        Monstruo restaurado = (Monstruo)
+                restaurador.restaurar(dto, azar);
+
+        assertEquals(3, restaurado.getAdormecimientos());
+        assertTrue(restaurado.estaAdormecido());
+    }
 
     @Test
     void restauraDormilonConRadio() {
@@ -60,7 +93,6 @@ class RestauradorEntidadTest {
                 restaurador.restaurar(dto, azar);
 
         assertDatosComunes(restaurado, actual, inicial, 30);
-
         assertEquals(Dormilon.class, restaurado.getClass());
         assertEquals(3, ((Dormilon) restaurado).getRadio());
     }
@@ -182,5 +214,16 @@ class RestauradorEntidadTest {
         assertEquals(actual, monstruo.getPosicion());
         assertEquals(inicial, monstruo.getPosicionInicial());
         assertEquals(danio, monstruo.getDanio());
+    }
+    private void assertCofreRestaurado(String tipo, Class<? extends Entidad> clase, Posicion posicion) {
+        EntidadDTO dto = new EntidadDTO();
+        dto.tipo = tipo;
+        dto.posicion = crearPosicionDTO(posicion);
+        dto.datos = new JsonObject();
+
+        Entidad restaurado = restaurador.restaurar(dto);
+
+        assertEquals(clase, restaurado.getClass());
+        assertEquals(posicion, restaurado.getPosicion());
     }
 }

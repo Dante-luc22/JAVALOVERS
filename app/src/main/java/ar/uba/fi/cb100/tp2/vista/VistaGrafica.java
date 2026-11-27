@@ -405,7 +405,9 @@ public class VistaGrafica implements Vista, AutoCloseable {
     private void mostrarEstado(Partida partida) {
 
         String mensaje =
-                "Energia: " + partida.getHeroe().getEnergia()
+                "Tablero: " + partida.getHeroe().getUbicacion().tablero()
+                        + " | Piso: " + partida.getHeroe().getUbicacion().piso()
+                        + " | Energia: " + partida.getHeroe().getEnergia()
                         + " | Cofres: " + partida.getCofresAbiertos()
                         + " | Pasos: " + partida.getPasos()
                         + " | Puntaje: " + partida.puntaje()

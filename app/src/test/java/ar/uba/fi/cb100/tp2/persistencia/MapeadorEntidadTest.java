@@ -1,6 +1,6 @@
-
 package ar.uba.fi.cb100.tp2.persistencia;
 
+import ar.uba.fi.cb100.tp2.modelo.mundo.Entidad;
 import ar.uba.fi.cb100.tp2.modelo.monstruos.Cazador;
 import ar.uba.fi.cb100.tp2.modelo.monstruos.Dormilon;
 import ar.uba.fi.cb100.tp2.modelo.monstruos.Errante;
@@ -8,6 +8,11 @@ import ar.uba.fi.cb100.tp2.modelo.monstruos.Fantasma;
 import ar.uba.fi.cb100.tp2.modelo.monstruos.Ladron;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.EntidadDTO;
+
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeEscudo;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDePico;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeRepelente;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeSomnifero;
 
 import org.junit.jupiter.api.Test;
 
@@ -32,6 +37,30 @@ class MapeadorEntidadTest {
         assertDatosComunes(
                 dto, "Cazador", posicion, posicion, 30
         );
+    }
+
+    @Test
+    void mapeaMonstruoConservaCantidadDeAdormecimientos() {
+
+        Posicion posicion = new Posicion(2, 3);
+        Cazador monstruo = new Cazador(posicion, 30);
+
+        monstruo.adormecer();
+        monstruo.adormecer();
+        monstruo.adormecer();
+
+        EntidadDTO dto = mapeador.mapear(monstruo);
+
+        assertEquals(3, dto.datos.get("adormecimientos").getAsInt());
+    }
+    @Test
+    void mapeaLosCuatroNuevosCofres() {
+        Posicion posicion = new Posicion(2, 3);
+
+        assertCofreMapeado(new CofreDeEscudo(posicion), "CofreDeEscudo", posicion);
+        assertCofreMapeado(new CofreDePico(posicion), "CofreDePico", posicion);
+        assertCofreMapeado(new CofreDeRepelente(posicion), "CofreDeRepelente", posicion);
+        assertCofreMapeado(new CofreDeSomnifero(posicion), "CofreDeSomnifero", posicion);
     }
 
     @Test
@@ -95,7 +124,14 @@ class MapeadorEntidadTest {
                 dto, "Ladron", posicion, posicion, 30
         );
     }
+    private void assertCofreMapeado(Entidad cofre, String tipo, Posicion posicion) {
+        EntidadDTO dto = mapeador.mapear(cofre);
 
+        assertEquals(tipo, dto.tipo);
+        assertEquals(posicion.fila(), dto.posicion.fila);
+        assertEquals(posicion.columna(), dto.posicion.columna);
+        assertEquals(0, dto.datos.size());
+    }
     private void assertDatosComunes(
             EntidadDTO dto,
             String tipo,

@@ -49,7 +49,8 @@ public class MapeadorHeroe {
 
         // Conservar cantidad de cofres abiertos.
         datos.cofresAbiertos = heroe.getCofresAbiertos();
-
+        // Conservar cantidad de escudos.
+        datos.escudos = heroe.getEscudos();
         // Conservar inventario y orden de inserción.
         if (heroe.getInventario() == null) {
             throw new IllegalStateException(

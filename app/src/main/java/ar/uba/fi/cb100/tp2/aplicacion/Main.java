@@ -37,7 +37,6 @@ public class Main {
     public static void main(String[] args) {
         EntradaConsola entrada = new EntradaConsola();
         boolean sinPantalla = GraphicsEnvironment.isHeadless();
-        MenuGrafico menu = new MenuGrafico();
         ServicioPersistenciaPartida servicioPersistencia =
                 new ServicioPersistenciaPartida();
 
@@ -46,18 +45,27 @@ public class Main {
                     LectorConfiguracion.leer(LectorConfiguracion.RUTA_POR_DEFECTO);
 
             if (sinPantalla) {
-                Dificultad dificultad = elegirDificultad(entrada);
-                CreadorPartida creador = new CreadorPartida(configuracion, new GeneradorGrupoNN());
-                Partida partida = creador.crear(dificultad);
-                EstadoPartida fin = jugarPartida(
-                        partida, true, configuracion.energiaInicial(),entrada, servicioPersistencia);
-                mostrarFinal(fin, partida, true);
-                if (fin != EstadoPartida.EN_CURSO) {
-                    ofrecerGuardarPorConsola(partida, dificultad, entrada);
+                Partida partida;
+
+                if (preguntarSiCargarGuardadaPorConsola(entrada)) {
+                    partida = servicioPersistencia.cargar(RUTA_GUARDADO);
+                } else {
+                    Dificultad dificultad = elegirDificultad(entrada);
+                    CreadorPartida creador = new CreadorPartida(configuracion, new GeneradorGrupoNN());
+                    partida = creador.crear(dificultad);
                 }
+
+                EstadoPartida fin = jugarPartida(
+                        partida, true, configuracion.energiaInicial(), entrada, servicioPersistencia);
+                mostrarFinal(fin, partida, true);
+
+                if (fin != EstadoPartida.EN_CURSO) {
+                    ofrecerGuardarPorConsola(partida, partida.getDificultad(), entrada);
+                }
+
                 return;
             }
-
+            MenuGrafico menu = new MenuGrafico();
             while (true) {
                 var opciones = menu.mostrarInicio(configuracion.semilla());
                 if (opciones.isEmpty()) {
@@ -149,6 +157,24 @@ public class Main {
 
         int elegida = entrada.leerEnteroEnRango("Opcion:", 1, opciones.length);
         return opciones[elegida - 1];
+    }
+
+    private static boolean preguntarSiCargarGuardadaPorConsola(EntradaConsola entrada) {
+        if (!Files.isRegularFile(RUTA_GUARDADO)) {
+            return false;
+        }
+        while (true) {
+            String respuesta = entrada.leerTexto(
+                    "Se encontró una partida guardada. ¿Querés cargarla? (s/n):"
+            ).strip();
+            if (respuesta.equalsIgnoreCase("s")) {
+                return true;
+            }
+            if (respuesta.equalsIgnoreCase("n")) {
+                return false;
+            }
+            System.out.println("Respuesta inválida. Ingresá s o n.");
+        }
     }
 
     /**
