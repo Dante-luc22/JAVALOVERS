@@ -17,6 +17,7 @@ import ar.uba.fi.cb100.tp2.modelo.mundo.Plano;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Tablero;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
 import ar.uba.fi.cb100.tp2.modelo.partida.Accion;
+import ar.uba.fi.cb100.tp2.modelo.partida.EntradaDelLog;
 import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 
@@ -74,6 +75,10 @@ public class VistaBmp implements Vista {
                 + " | energía " + heroe.getEnergia()
                 + " | cofres " + heroe.getCofresAbiertos()
                 + VistaGrafica.avisoDeInteraccion(partida.interaccionDisponible()));
+
+        for (EntradaDelLog entrada : partida.getLog().entradasDelPaso(partida.getPasos())) {
+            System.out.println("  · " + entrada.texto());
+        }
     
     }
 
