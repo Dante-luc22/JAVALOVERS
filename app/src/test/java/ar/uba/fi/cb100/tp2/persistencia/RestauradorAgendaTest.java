@@ -1,6 +1,9 @@
 package ar.uba.fi.cb100.tp2.persistencia;
 
+import ar.uba.fi.cb100.tp2.modelo.eventos.AdormecerMonstruos;
 import ar.uba.fi.cb100.tp2.modelo.eventos.Agenda;
+import ar.uba.fi.cb100.tp2.modelo.eventos.DespertarMonstruos;
+import ar.uba.fi.cb100.tp2.modelo.eventos.RepelerMonstruos;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.AgendaDTO;
 import ar.uba.fi.cb100.tp2.persistencia.dto.PartidaGuardadaDTO.EventoDTO;
 
@@ -186,5 +189,17 @@ class RestauradorAgendaTest {
         datos.tipo = tipo;
 
         return datos;
+    }
+
+        @Test
+    void losEventosDeMonstruosConservanElPlanoAlGuardarYCargar() {
+        Agenda agenda = new Agenda();
+        agenda.programar(1, new AdormecerMonstruos(2, 3));
+        agenda.programar(6, new DespertarMonstruos(2, 3));
+        agenda.programar(1, new RepelerMonstruos(1, 2));
+
+        Agenda cargada = new RestauradorAgenda().restaurar(new MapeadorAgenda().mapear(agenda));
+
+        assertEquals(agenda.getPendientes(), cargada.getPendientes());
     }
 }
