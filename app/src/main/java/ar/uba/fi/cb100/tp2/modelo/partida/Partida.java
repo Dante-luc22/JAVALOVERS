@@ -34,9 +34,11 @@ public class Partida {
     private final Map<Terreno, Integer> costos;
     private final Agenda agenda;
     private final AzarPersistible azar;
+    private final LogDePartida log = new LogDePartida();
+    private final CeldasVisitadas visitadas = new CeldasVisitadas();
     private Dificultad dificultad;
     private Long semilla;
-    private final LogDePartida log = new LogDePartida();
+
 
     private int pasos;
 
@@ -232,6 +234,13 @@ public class Partida {
      */
     public LogDePartida getLog() {
         return this.log;
+    }
+
+        /**
+     * @return las celdas que fue pisando el héroe, por plano
+     */
+    public CeldasVisitadas getCeldasVisitadas() {
+        return this.visitadas;
     }
 
     private void anotar(String texto) {
@@ -469,6 +478,7 @@ public class Partida {
      * hacerla.
      */
     private void empezarPaso() {
+        this.visitadas.visitar(this.heroe.getUbicacion());
         this.pasos++;
         this.agenda.ejecutarLosQueVencen(this.pasos, this);
     }
@@ -528,6 +538,8 @@ public class Partida {
      * Si el héroe ganó o perdió en este paso, los monstruos no juegan.
      */
     private ResultadoTurno cerrarTurno() {
+        
+        this.visitadas.visitar(this.heroe.getUbicacion());
 
         if (this.estadoActual() == EstadoPartida.EN_CURSO) {
             this.moverMonstruos(this.getPlanoActual());

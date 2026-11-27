@@ -76,11 +76,15 @@ public class VistaBmp implements Vista {
         guardar(imagen, partida.getPasos());
         var ubicacion = heroe.getUbicacion();
 
+        var ubicacion = heroe.getUbicacion();
+
         System.out.println("Paso " + partida.getPasos()
                 + " | tablero " + ubicacion.tablero()
                 + " | piso " + ubicacion.piso()
                 + " | energía " + heroe.getEnergia()
                 + " | cofres " + heroe.getCofresAbiertos()
+                + " | exploradas " + partida.getCeldasVisitadas().cantidadEn(
+                        ubicacion.tablero(), ubicacion.piso())
                 + VistaGrafica.avisoDeInteraccion(partida.interaccionDisponible()));
 
         for (EntradaDelLog entrada : partida.getLog().entradasDelPaso(partida.getPasos())) {
