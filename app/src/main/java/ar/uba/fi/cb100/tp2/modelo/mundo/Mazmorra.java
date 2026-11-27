@@ -180,7 +180,4 @@ public class Mazmorra {
     public List<Plano> getPlanos() {
         return new ArrayList<>(this.planos);
     }
-
-
-
 }

@@ -18,7 +18,6 @@ import javax.imageio.ImageIO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Mazmorra;
@@ -27,6 +26,9 @@ import ar.uba.fi.cb100.tp2.modelo.mundo.Tablero;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
 import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
 
 /**
  * Tests de VistaBmp: el archivo de cada paso y su tamaño en píxeles.
@@ -85,6 +87,20 @@ public class VistaBmpTest {
         int centroY = (2 - 1) * VistaBmp.TAMANIO_CELDA + VistaBmp.TAMANIO_CELDA / 2;
         assertEquals(Color.RED.getRGB(), imagen.getRGB(centroX, centroY));
     }
+    @Test
+    void elBmpDibujaLasEscalerasDelPlanoActual() throws IOException {
+        Partida partida = crearPartidaConDosPisos(1);
+        this.vista = new VistaBmp(this.carpeta, 100, new EntradaConsola());
+
+        this.vista.mostrar(partida);
+
+        BufferedImage imagen = ImageIO.read(this.carpeta.resolve("paso-0000.bmp").toFile());
+
+        int x = (4 - 1) * VistaBmp.TAMANIO_CELDA + 4;
+        int y = (2 - 1) * VistaBmp.TAMANIO_CELDA + 3;
+
+        assertEquals(Color.CYAN.getRGB(), imagen.getRGB(x, y));
+    }
 
     @Test
     void noAceptaEnergiaMaximaCero() {
@@ -103,5 +119,56 @@ public class VistaBmpTest {
 
         assertFalse(Files.exists(pasoViejo));
         assertTrue(Files.exists(otroArchivo));
+    }
+    @Test
+    void muestraTableroYPisoActualEnConsola() {
+        Partida partida = crearPartidaConDosPisos(2);
+        this.vista = new VistaBmp(this.carpeta, 100, new EntradaConsola());
+
+        ByteArrayOutputStream captura = new ByteArrayOutputStream();
+        PrintStream salidaOriginal = System.out;
+        System.setOut(new PrintStream(captura));
+
+        try {
+            this.vista.mostrar(partida);
+        } finally {
+            System.setOut(salidaOriginal);
+        }
+
+        assertTrue(captura.toString().contains("tablero 1"));
+        assertTrue(captura.toString().contains("piso 2"));
+    }
+
+    private Partida crearPartidaConDosPisos(int pisoHeroe) {
+        Tablero tablero1 = crearTablero();
+        Tablero tablero2 = crearTablero();
+
+        Plano plano1 = new Plano(tablero1, new Posicion(2, 2), null);
+        Plano plano2 = new Plano(tablero2, new Posicion(2, 2), new Posicion(2, 6));
+
+        Mazmorra mazmorra = new Mazmorra(List.of(plano1, plano2), 2);
+
+        mazmorra.conectar(
+                new Ubicacion(1, 1, new Posicion(2, 4)),
+                new Ubicacion(1, 2, new Posicion(2, 4))
+        );
+
+        Heroe heroe = new Heroe(
+                new Ubicacion(1, pisoHeroe, new Posicion(2, 2)), 100
+        );
+
+        return new Partida(mazmorra, heroe, Map.of(
+                Terreno.PISO, 1, Terreno.AGUA, 3, Terreno.LAVA, 10
+        ));
+    }
+
+    private Tablero crearTablero() {
+        Tablero tablero = new Tablero(FILAS, COLUMNAS);
+
+        for (int columna = 2; columna <= 6; columna++) {
+            tablero.setTerreno(new Posicion(2, columna), Terreno.PISO);
+        }
+
+        return tablero;
     }
 }

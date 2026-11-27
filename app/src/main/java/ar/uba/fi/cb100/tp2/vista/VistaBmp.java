@@ -64,14 +64,18 @@ public class VistaBmp implements Vista {
 
         dibujarTerreno(lapiz, tablero);
         dibujarSalida(lapiz, plano);
+        dibujarEscaleras(lapiz, partida);
         dibujarEntidades(lapiz, plano);
         dibujarHeroe(lapiz, heroe);
         dibujarEnergia(lapiz, heroe, ancho, tablero.getFilas());
 
         lapiz.dispose();
         guardar(imagen, partida.getPasos());
+        var ubicacion = heroe.getUbicacion();
 
         System.out.println("Paso " + partida.getPasos()
+                + " | tablero " + ubicacion.tablero()
+                + " | piso " + ubicacion.piso()
                 + " | energía " + heroe.getEnergia()
                 + " | cofres " + heroe.getCofresAbiertos()
                 + VistaGrafica.avisoDeInteraccion(partida.interaccionDisponible()));
@@ -173,6 +177,22 @@ public class VistaBmp implements Vista {
         lapiz.fillRect(0, y, ancho, TAMANIO_CELDA);
         lapiz.setColor(Color.GREEN);
         lapiz.fillRect(0, y + 2, lleno, TAMANIO_CELDA - 4);
+    }
+    private void dibujarEscaleras(Graphics2D lapiz, Partida partida) {
+        var ubicacion = partida.getHeroe().getUbicacion();
+
+        for (var conexion : partida.getMazmorra().conexionesDelPlano(
+                ubicacion.tablero(), ubicacion.piso())) {
+
+            if (conexion.origen().tablero() == conexion.destino().tablero()) {
+                Posicion posicion = conexion.origen().posicion();
+
+                lapiz.setColor(Color.CYAN);
+                lapiz.fillRect(x(posicion) + 4, y(posicion) + 3, 2, TAMANIO_CELDA - 6);
+                lapiz.fillRect(x(posicion) + 10, y(posicion) + 3, 2, TAMANIO_CELDA - 6);
+                lapiz.fillRect(x(posicion) + 4, y(posicion) + 7, 8, 2);
+            }
+        }
     }
 
     // ---------- colores ----------
