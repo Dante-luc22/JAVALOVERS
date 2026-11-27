@@ -38,6 +38,7 @@ class RestauradorHeroeTest {
 
         agregarObjeto(datos, "BOTAS_IGNIFUGAS", 2);
         agregarObjeto(datos, "ZAPATOS_DE_AGUA", 3);
+        agregarObjeto(datos, "PICO", 1);
 
         Heroe heroe = restaurador.restaurar(datos);
 
@@ -46,9 +47,10 @@ class RestauradorHeroeTest {
 
         assertEquals(2, cantidades.get("BOTAS_IGNIFUGAS"));
         assertEquals(3, cantidades.get("ZAPATOS_DE_AGUA"));
+        assertEquals(1, cantidades.get("PICO"));
 
         assertEquals(
-                List.of("BOTAS_IGNIFUGAS", "ZAPATOS_DE_AGUA"),
+                List.of("BOTAS_IGNIFUGAS", "ZAPATOS_DE_AGUA", "PICO"),
                 new ArrayList<>(cantidades.keySet())
         );
     }

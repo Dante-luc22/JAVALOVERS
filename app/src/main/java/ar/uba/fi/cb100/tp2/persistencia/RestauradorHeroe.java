@@ -13,6 +13,7 @@ import ar.uba.fi.cb100.tp2.modelo.efectos.TipoDeEfecto;
 import ar.uba.fi.cb100.tp2.modelo.efectos.AguaComoPiso;
 import ar.uba.fi.cb100.tp2.modelo.efectos.LavaComoPiso;
 import ar.uba.fi.cb100.tp2.modelo.efectos.Envenenado;
+import ar.uba.fi.cb100.tp2.modelo.objetos.Pico;
 
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
@@ -89,15 +90,14 @@ public class RestauradorHeroe {
         if (BotasIgnifugas.ID.equals(id)) {
             return new BotasIgnifugas();
         }
-
         if (ZapatosDeAgua.ID.equals(id)) {
             return new ZapatosDeAgua();
         }
-
+        if (Pico.ID.equals(id)) {
+            return new Pico();
+        }
         throw new IllegalArgumentException(
-                "No existe un objeto registrado con el identificador: "
-                        + id
-        );
+                "No existe un objeto registrado con el identificador: " + id);
     }
 
     /**

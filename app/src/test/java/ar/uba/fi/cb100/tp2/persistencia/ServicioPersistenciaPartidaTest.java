@@ -11,6 +11,7 @@ import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Dificultad;
+import ar.uba.fi.cb100.tp2.modelo.monstruos.Errante;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -34,7 +35,6 @@ class ServicioPersistenciaPartidaTest {
     /**
      * Comprueba el guardado físico y la posterior carga
      * de una partida completa.
-     *
      * Conserva los atributos del héroe, inventario,
      * efectos activos, agenda, mazmorra y generador aleatorio.
      */
@@ -174,6 +174,37 @@ class ServicioPersistenciaPartidaTest {
         // En el paso 19 se elimina LavaComoPiso.
         assertTrue(heroe.getEfectosActivos().isEmpty());
     }
+
+    @Test
+    void partidaContinuaYRestauradaMantienenElMismoComportamiento() throws Exception {
+        Partida continua = crearPartida();
+
+        continua.getPlanoActual().agregarEntidad(
+                new Errante(new Posicion(1, 1), 1, continua.getAzar())
+        );
+
+        continua.esperar();
+
+        Path archivo = directorioTemporal.resolve("partida-equivalencia.json");
+        servicio.guardar(continua, archivo);
+
+        Partida restaurada = servicio.cargar(archivo);
+
+        assertEquals(continua.getAzar().getEstadoInterno(), restaurada.getAzar().getEstadoInterno());
+
+        for (int i = 0; i < 3; i++) {
+            continua.esperar();
+            restaurada.esperar();
+
+            assertEquals(continua.getPasos(), restaurada.getPasos());
+            assertEquals(continua.getHeroe().getUbicacion(), restaurada.getHeroe().getUbicacion());
+            assertEquals(continua.getHeroe().getEnergia(), restaurada.getHeroe().getEnergia());
+            assertEquals(posicionDelErrante(continua), posicionDelErrante(restaurada));
+            assertEquals(continua.getAzar().getEstadoInterno(), restaurada.getAzar().getEstadoInterno());
+            assertEquals(tiposDeEfectos(continua.getHeroe()), tiposDeEfectos(restaurada.getHeroe()));
+        }
+    }
+
 
     /**
      * Comprueba que se rechace una partida nula.
@@ -375,4 +406,13 @@ class ServicioPersistenciaPartidaTest {
                 12345L
         );
     }
+    private Posicion posicionDelErrante(Partida partida) {
+        return partida.getPlanoActual().getEntidades().stream()
+                .filter(Errante.class::isInstance)
+                .map(Errante.class::cast)
+                .findFirst()
+                .orElseThrow()
+                .getPosicion();
+    }
+
 }
