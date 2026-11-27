@@ -481,4 +481,16 @@ class PartidaTest {
         partida.interactuar();
         assertEquals(Interaccion.NINGUNA, partida.interaccionDisponible());
     }
+
+    @Test
+    void elLogAnotaQueEncontroLaSalida() {
+        Partida partida = partidaConEnergia(100);
+
+        partida.moverHeroe(Direccion.DERECHA);
+        partida.moverHeroe(Direccion.DERECHA);
+        partida.moverHeroe(Direccion.DERECHA);
+
+        List<EntradaDelLog> ultimas = partida.getLog().entradasDelPaso(partida.getPasos());
+        assertEquals("encontró la salida", ultimas.get(ultimas.size() - 1).texto());
+    }
 }

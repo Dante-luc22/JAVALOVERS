@@ -36,6 +36,7 @@ public class Partida {
     private final AzarPersistible azar;
     private Dificultad dificultad;
     private Long semilla;
+    private final LogDePartida log = new LogDePartida();
 
     private int pasos;
 
@@ -226,6 +227,17 @@ public class Partida {
         return this.agenda;
     }
 
+        /**
+     * @return el log de lo que fue pasando en la partida
+     */
+    public LogDePartida getLog() {
+        return this.log;
+    }
+
+    private void anotar(String texto) {
+        this.log.anotar(this.pasos, texto);
+    }
+
     /**
      * Devuelve el generador aleatorio compartido por la partida.
      *
@@ -357,6 +369,7 @@ public class Partida {
             this.activarAlInteractuar(plano, actual.posicion());
         } else {
             this.heroe.mover(destino.get());
+            this.anotar("pasó al tablero " + destino.get().tablero() + ", piso " + destino.get().piso());   
             this.encontrarEntidades(this.getPlanoActual(), destino.get().posicion());
         }
         return this.cerrarTurno();
@@ -427,6 +440,7 @@ public class Partida {
 
         this.empezarPaso();
         this.heroe.getInventario().usar(id, this.heroe, this.agenda);
+        this.anotar("usó " + id);
         return this.cerrarTurno();
     }
 
@@ -467,6 +481,7 @@ public class Partida {
     private void encontrarEntidades(Plano plano, Posicion posicion) {
         for (Entidad entidad : plano.obtenerEntidades(posicion)) {
             if (!entidad.seActivaAlInteractuar()) {
+                this.anotar("chocó con un " + entidad.getTipo().toLowerCase());   
                 this.activar(plano, entidad);
             }
         }
@@ -479,6 +494,7 @@ public class Partida {
     private void activarAlInteractuar(Plano plano, Posicion posicion) {
         for (Entidad entidad : plano.obtenerEntidades(posicion)) {
             if (entidad.seActivaAlInteractuar()) {
+                 this.anotar("abrió un cofre");   
                 this.activar(plano, entidad);
             }
         }
@@ -516,6 +532,11 @@ public class Partida {
         if (this.estadoActual() == EstadoPartida.EN_CURSO) {
             this.moverMonstruos(this.getPlanoActual());
         }
+         if (this.estadoActual() == EstadoPartida.GANADA) {          
+            this.anotar("encontró la salida");                    
+        } else if (this.estadoActual() == EstadoPartida.PERDIDA) {  
+            this.anotar("se quedó sin energía");                  
+        }
 
         return new ResultadoTurno(true, this.estadoActual());
     }
@@ -540,7 +561,7 @@ public class Partida {
 
             if (!entidad.getPosicion().equals(antes)
                     && entidad.getPosicion().equals(posicionHeroe)) {
-
+                this.anotar("lo alcanzó un " + entidad.getTipo().toLowerCase());
                 entidad.alEncontrarseConHeroe(
                         this.heroe,
                         this.agenda
