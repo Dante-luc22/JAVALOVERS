@@ -17,7 +17,11 @@ import ar.uba.fi.cb100.tp2.generador.GeneradorDeLaberinto;
 
 import ar.uba.fi.cb100.tp2.modelo.cofres.CatalogoDeCofres;
 import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDePuntos;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeRepelente;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeSomnifero;
 import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeBotasIgnifugas;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeEscudo;
+import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDePico;
 import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDePocion;
 import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeTrampaDePinchos;
 import ar.uba.fi.cb100.tp2.modelo.cofres.CofreDeVeneno;
@@ -342,6 +346,10 @@ public class CreadorPartida {
                 p -> new CofreDeTrampaDePinchos(p, DANIO_DE_LOS_PINCHOS)
         );
         catalogo.registrar("VENENO", CofreDeVeneno::new);
+        catalogo.registrar("ESCUDO", CofreDeEscudo::new);
+        catalogo.registrar("PICO", CofreDePico::new);
+        catalogo.registrar("REPELENTE", CofreDeRepelente::new);
+        catalogo.registrar("SOMNIFERO", CofreDeSomnifero::new);
 
         return catalogo;
     }
