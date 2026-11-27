@@ -22,6 +22,7 @@ import ar.uba.fi.cb100.tp2.modelo.partida.EstadoPartida;
 import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 /**
  * Vista gráfica del juego.
@@ -57,11 +58,9 @@ public class VistaGrafica implements Vista, AutoCloseable {
     }
 
     public VistaGrafica(Path carpetaImagenes) {
-        if (carpetaImagenes == null ||
-                !Files.isRegularFile(carpetaImagenes.resolve("heroe.png"))) {
-            throw new IllegalArgumentException(
-                    "No se encontró la carpeta de imágenes: " + carpetaImagenes);
-        }
+        ValidacionesUtiles.validarFalso(carpetaImagenes == null ||
+                !Files.isRegularFile(carpetaImagenes.resolve("heroe.png")),
+                "No se encontró la carpeta de imágenes: " + carpetaImagenes);
 
         this.carpetaImagenes = carpetaImagenes;
     }
@@ -350,11 +349,8 @@ public class VistaGrafica implements Vista, AutoCloseable {
     @Override
     public Accion leerAccion() {
 
-        if (this.juego == null) {
-            throw new IllegalStateException(
-                    "La ventana gráfica todavía no fue inicializada"
-            );
-        }
+        ValidacionesUtiles.validarEstadoFalso(this.juego == null,
+                "La ventana gráfica todavía no fue inicializada");
 
         while (true) {
 
@@ -414,11 +410,8 @@ public class VistaGrafica implements Vista, AutoCloseable {
 
         Path ruta = this.carpetaImagenes.resolve(nombre);
 
-        if (!Files.isRegularFile(ruta)) {
-            throw new IllegalStateException(
-                    "No se encontró la imagen: " + ruta.toAbsolutePath()
-            );
-        }
+        ValidacionesUtiles.validarEstadoFalso(!Files.isRegularFile(ruta),
+                "No se encontró la imagen: " + ruta.toAbsolutePath());
 
         return ruta;
     }
@@ -439,15 +432,19 @@ public class VistaGrafica implements Vista, AutoCloseable {
                 )
         };
 
+        Path encontrada = null;
+
         for (Path candidata : candidatas) {
-            if (Files.isRegularFile(candidata.resolve("heroe.png"))) {
-                return candidata;
+            if (encontrada == null
+                    && Files.isRegularFile(candidata.resolve("heroe.png"))) {
+                encontrada = candidata;
             }
         }
 
-        throw new IllegalStateException(
-                "No se encontró la carpeta de imágenes de JuegoVisual"
-        );
+        ValidacionesUtiles.validarEstadoFalso(encontrada == null,
+                "No se encontró la carpeta de imágenes de JuegoVisual");
+
+        return encontrada;
     }
 
     /**

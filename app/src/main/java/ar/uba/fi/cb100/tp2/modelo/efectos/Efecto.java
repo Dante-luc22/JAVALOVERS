@@ -1,6 +1,7 @@
 package ar.uba.fi.cb100.tp2.modelo.efectos;
 
 import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 public abstract class Efecto {
 
@@ -13,9 +14,7 @@ public abstract class Efecto {
      * @throws IllegalArgumentException si la duracion es menor que cero.
      */
     protected Efecto(int duracion) {
-        if (duracion <= 0) {
-            throw new IllegalArgumentException("La duracion debe ser mayor que 0");
-        }
+        ValidacionesUtiles.esMayorQueCero(duracion, "duracion");
         this.pasosRestantes = duracion;
     }
 

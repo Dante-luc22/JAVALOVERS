@@ -7,6 +7,7 @@ import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 
 import java.util.List;
 import java.util.Random;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 /**
  * Clase de monstruo errante, se mueve al azar por el mapa.
@@ -24,9 +25,7 @@ public class Errante extends Monstruo {
      */
     public Errante(Posicion posicionInicial, int danio, Random azar) {
         super(posicionInicial, danio);
-        if (azar == null) {
-            throw new IllegalArgumentException("azar no puede ser nulo");
-        }
+        ValidacionesUtiles.validarDistintoDeNull(azar, "azar");
         this.azar = azar;
     }
 

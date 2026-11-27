@@ -3,6 +3,7 @@ package ar.uba.fi.cb100.tp2.modelo.cofres;
 import ar.uba.fi.cb100.tp2.modelo.eventos.Agenda;
 import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 /**
  * Clase CofreDePocion, al encontrarse con el heroe y ser abierto,
@@ -20,10 +21,7 @@ public class CofreDePocion extends Cofre{
      * @param cantidad de energia que le suma al heroe
      */
     public CofreDePocion(Posicion posicion, int cantidad) {
-        if (cantidad <= 0) {
-            throw new IllegalArgumentException(
-                    "La cantidad debe ser mayor a 0, se recibio: " + cantidad);
-        }
+        ValidacionesUtiles.esMayorQueCero(cantidad, "cantidad");
         super(posicion);
 
         this.cantidad = cantidad;

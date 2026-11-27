@@ -12,7 +12,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import java.util.Objects;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 import java.util.Random;
 
 /**
@@ -30,15 +30,12 @@ public class CargadorDePlano {
             CatalogoDeMonstruos catalogoDeMonstruos,
             Random azar
     ) {
-        this.catalogoDeCofres = Objects.requireNonNull(
-                catalogoDeCofres, "El catálogo de cofres no puede ser nulo"
-        );
-        this.catalogoDeMonstruos = Objects.requireNonNull(
-                catalogoDeMonstruos, "El catálogo de monstruos no puede ser nulo"
-        );
-        this.azar = Objects.requireNonNull(
-                azar, "El generador de azar no puede ser nulo"
-        );
+        ValidacionesUtiles.validarDistintoDeNull(catalogoDeCofres, "catálogo de cofres");
+        ValidacionesUtiles.validarDistintoDeNull(catalogoDeMonstruos, "catálogo de monstruos");
+        ValidacionesUtiles.validarDistintoDeNull(azar, "generador de azar");
+        this.catalogoDeCofres = catalogoDeCofres;
+        this.catalogoDeMonstruos = catalogoDeMonstruos;
+        this.azar = azar;
     }
 
     /**

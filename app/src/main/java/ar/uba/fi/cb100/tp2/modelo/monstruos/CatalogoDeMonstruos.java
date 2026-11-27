@@ -5,6 +5,7 @@ import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Random;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 /**
  * Clase que guarda una fabrica por cada tipo de monstruo y crea uno al azar.
@@ -30,18 +31,12 @@ public class CatalogoDeMonstruos{
      *                                  si el nombre ya esta registrado;
      */
     public void registrar(String nombre, FabricaDeMonstruo fabrica){
-        if (nombre == null || nombre.isBlank()){
-            throw new IllegalArgumentException(
-                    "El nombre no puede ser nulo ni un campo vacio.");
-        }
-        if (fabrica == null){
-            throw new IllegalArgumentException(
-                    "La fabrica dada no puede ser nula.");
-        }
-        if (estaRegistrado(nombre)){
-            throw new IllegalArgumentException(
-                    "El nombre ya se encuentra registrado.");
-        }
+        ValidacionesUtiles.validarDistintoDeNull(nombre, "nombre");
+        ValidacionesUtiles.validarFalso(nombre.isBlank(),
+                "El nombre no puede ser nulo ni un campo vacio.");
+        ValidacionesUtiles.validarDistintoDeNull(fabrica, "fabrica");
+        ValidacionesUtiles.validarFalso(estaRegistrado(nombre),
+                "El nombre ya se encuentra registrado.");
         fabricasDeMonstruos.put(nombre, fabrica);
     }
 
@@ -56,18 +51,10 @@ public class CatalogoDeMonstruos{
      * @throws IllegalStateException si el catalogo esta vacio;
      */
     public Monstruo crearAlAzar(Posicion p, Random azar){
-        if (p == null){
-            throw new IllegalArgumentException(
-                    "La posicion no puede ser nula.");
-        }
-        if (azar == null){
-            throw new IllegalArgumentException(
-                    "El azar no puede ser nulo.");
-        }
-        if (fabricasDeMonstruos.isEmpty()){
-            throw new IllegalStateException(
-                    "El catálogo no tiene tipos de monstruo registrados.");
-        }
+        ValidacionesUtiles.validarDistintoDeNull(p, "posicion");
+        ValidacionesUtiles.validarDistintoDeNull(azar, "azar");
+        ValidacionesUtiles.validarEstadoFalso(fabricasDeMonstruos.isEmpty(),
+                "El catálogo no tiene tipos de monstruo registrados.");
         ArrayList<FabricaDeMonstruo> fabricas = new ArrayList<>(fabricasDeMonstruos.values());
         int indice = azar.nextInt(fabricas.size());
         FabricaDeMonstruo fabricaElegida = fabricas.get(indice);
@@ -91,10 +78,9 @@ public class CatalogoDeMonstruos{
      * @throws IllegalArgumentException si el nombre es nulo o vacio;
      */
     public boolean estaRegistrado(String nombre){
-        if (nombre == null || nombre.isBlank()){
-            throw new IllegalArgumentException(
-                    "El nombre no puede ser nulo ni un campo vacio.");
-        }
+        ValidacionesUtiles.validarDistintoDeNull(nombre, "nombre");
+        ValidacionesUtiles.validarFalso(nombre.isBlank(),
+                "El nombre no puede ser nulo ni un campo vacio.");
 
         return fabricasDeMonstruos.containsKey(nombre);
     }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import ar.uba.fi.cb100.tp2.modelo.valores.Direccion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 /**
  * Una grilla de filas x columnas donde cada celda tiene un terreno.
@@ -26,9 +27,8 @@ public class Tablero {
      */
 
     public Tablero(int filas, int columnas) {
-        if (filas < 1 || columnas < 1) {
-            throw new IllegalArgumentException("Filas y columnas tienen que ser positivas");
-        }
+        ValidacionesUtiles.validarFalso(filas < 1 || columnas < 1,
+                "Filas y columnas tienen que ser positivas");
         this.filas = filas;
         this.columnas = columnas;
         this.celdas = new Terreno[filas][columnas];
@@ -102,9 +102,8 @@ public class Tablero {
      * @throws IllegalArgumentException si está fuera del tablero
      */
     private void validar(Posicion posicion) {
-        if (!estaDentro(posicion)) {
-            throw new IllegalArgumentException("Posición fuera del tablero: " + posicion);
-        }
+        ValidacionesUtiles.validarFalso(!estaDentro(posicion),
+                "Posición fuera del tablero: " + posicion);
     }
 
         /**

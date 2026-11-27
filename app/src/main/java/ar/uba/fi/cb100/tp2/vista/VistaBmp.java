@@ -19,6 +19,7 @@ import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
 import ar.uba.fi.cb100.tp2.modelo.partida.Accion;
 import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 /**
  * Vista obligatoria: después de cada paso escribe el plano actual en
@@ -41,9 +42,7 @@ public class VistaBmp implements Vista {
      * @param entrada       de dónde se leen las teclas (la misma que usa el Main)
      */
     public VistaBmp(Path carpeta, int energiaMaxima, EntradaConsola entrada) {
-        if (energiaMaxima < 1) {
-            throw new IllegalArgumentException("La energía máxima tiene que ser positiva");
-        }
+        ValidacionesUtiles.esMayorQueCero(energiaMaxima, "energiaMaxima");
         this.carpeta = carpeta;
         this.energiaMaxima = energiaMaxima;
         this.entrada = entrada;

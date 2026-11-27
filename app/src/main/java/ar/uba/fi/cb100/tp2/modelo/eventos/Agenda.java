@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.PriorityQueue;
 
 import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 /**
  * La agenda de cosas que pasan en un paso futuro (regla 7): efectos que
@@ -29,9 +30,7 @@ public class Agenda {
      * @throws IllegalArgumentException si dentroDePasos es menor que 1 o el evento es nulo
      */
     public void programar(int dentroDePasos, Evento evento) {
-        if (dentroDePasos < 1) {
-            throw new IllegalArgumentException("Un evento se programa para 1 paso o más adelante: " + dentroDePasos);
-        }
+        ValidacionesUtiles.esMayorQueCero(dentroDePasos, "dentroDePasos");
         this.pendientes.add(new EventoProgramado(this.pasoActual + dentroDePasos, this.siguienteOrden, evento));
         this.siguienteOrden++;
     }
@@ -45,9 +44,8 @@ public class Agenda {
      * @throws IllegalArgumentException si el paso es anterior al último ejecutado
      */
     public void ejecutarLosQueVencen(int paso, Partida partida) {
-        if (paso < this.pasoActual) {
-            throw new IllegalArgumentException("La agenda no vuelve atrás: estaba en " + this.pasoActual + " y llegó " + paso);
-        }
+        ValidacionesUtiles.validarFalso(paso < this.pasoActual,
+                "La agenda no vuelve atrás: estaba en " + this.pasoActual + " y llegó " + paso);
         this.pasoActual = paso;
         while (!this.pendientes.isEmpty() && this.pendientes.peek().paso() <= paso) {
             this.pendientes.poll().evento().ejecutar(partida);

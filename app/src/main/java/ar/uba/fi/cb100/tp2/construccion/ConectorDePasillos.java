@@ -7,6 +7,7 @@ import ar.uba.fi.cb100.tp2.modelo.valores.Direccion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
 
 import java.util.Random;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 /**
  * <hr><hr>
@@ -45,9 +46,8 @@ public class ConectorDePasillos {
             Ubicacion referenciaOrigen, Direccion ladoOrigen,
             Ubicacion referenciaDestino, Direccion ladoDestino) {
 
-        if (referenciaOrigen.tablero() == referenciaDestino.tablero()) {
-            throw new IllegalArgumentException("Un pasillo une tableros distintos");
-        }
+        ValidacionesUtiles.validarFalso(referenciaOrigen.tablero() == referenciaDestino.tablero(),
+                "Un pasillo une tableros distintos");
 
         Plano planoOrigen = mazmorra.getPlano(referenciaOrigen);
         Plano planoDestino = mazmorra.getPlano(referenciaDestino);

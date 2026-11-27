@@ -6,6 +6,7 @@ import ar.uba.fi.cb100.tp2.modelo.objetos.Inventario;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
 
 import java.util.ArrayList;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 public class Heroe {
 
@@ -27,14 +28,8 @@ public class Heroe {
      * Y si se recibe una ubicacion nula.
      */
     public Heroe(Ubicacion ubicacionInicial, int energiaInicial) {
-        if (energiaInicial <= 0) {
-            throw new IllegalArgumentException(
-                    "La energia inicial debe ser mayor a cero, se recibio: " + energiaInicial);
-        }
-        if (ubicacionInicial == null) {
-            throw new IllegalArgumentException(
-                    "La ubicacion del personaje no puede ser nula.");
-        }
+        ValidacionesUtiles.esMayorQueCero(energiaInicial, "energiaInicial");
+        ValidacionesUtiles.validarDistintoDeNull(ubicacionInicial, "ubicacionInicial");
         this.ubicacion = ubicacionInicial;
         this.energia = energiaInicial;
         this.energiaMaxima = energiaInicial;
@@ -50,10 +45,7 @@ public class Heroe {
      * @throws IllegalArgumentException si la ubicacion es nula
      */
     public void mover(Ubicacion destino) {
-        if (destino == null) {
-            throw new IllegalArgumentException(
-                    "La ubicacion donde mover el personaje no puede ser nula.");
-        }
+        ValidacionesUtiles.validarDistintoDeNull(destino, "destino");
 
         this.ubicacion = destino;
     }
@@ -66,10 +58,8 @@ public class Heroe {
      * @throws IllegalArgumentException si la cantidad dada es negativa
      */
     public void restarEnergia(int cantidad) {
-        if (cantidad < 0) {
-            throw new IllegalArgumentException(
-                    "La energia a restar no puede ser negativa, se recibio: " + cantidad);
-        }
+        ValidacionesUtiles.validarFalso(cantidad < 0,
+                "La energia a restar no puede ser negativa, se recibio: " + cantidad);
         this.energia -= cantidad;
         if (energia < 0) {
             this.energia = 0;
@@ -83,10 +73,8 @@ public class Heroe {
      * @throws IllegalArgumentException si la cantidad dada es negativa.
      */
     public void sumarEnergia(int cantidad) {
-        if (cantidad < 0) {
-            throw new IllegalArgumentException(
-                    "La energia a sumar no puede ser negativa, se recibio: " + cantidad);
-        }
+        ValidacionesUtiles.validarFalso(cantidad < 0,
+                "La energia a sumar no puede ser negativa, se recibio: " + cantidad);
         this.energia += cantidad;
         if (energia > energiaMaxima) {
             this.energia = energiaMaxima;
@@ -117,9 +105,7 @@ public class Heroe {
      * @throws IllegalArgumentException si el efeto es nulo.
      */
     public void agregarEfecto(Efecto efecto) {
-        if  (efecto == null) {
-            throw new IllegalArgumentException("El efecto no puede ser nulo.");
-        }
+        ValidacionesUtiles.validarDistintoDeNull(efecto, "efecto");
         this.efectosActivos.add(efecto);
     }
 

@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 /**
  * Genera laberintos mediante backtracking con una pila explícita.
@@ -115,16 +116,15 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
      * con un mensaje que describe el problema.
      */
     private JsonObject leerObjetoJson(String texto) {
-        if (texto == null || texto.isBlank()) {
-            throw new IllegalArgumentException("Los parámetros JSON no pueden estar vacíos");
-        }
+        ValidacionesUtiles.validarDistintoDeNull(texto, "texto");
+        ValidacionesUtiles.validarFalso(texto.isBlank(),
+                "Los parámetros JSON no pueden estar vacíos");
 
         try {
             JsonElement elemento = LECTOR_JSON.fromJson(texto, JsonElement.class);
 
-            if (!elemento.isJsonObject()) {
-                throw new IllegalArgumentException("Los parámetros deben ser un objeto JSON");
-            }
+            ValidacionesUtiles.validarFalso(!elemento.isJsonObject(),
+                    "Los parámetros deben ser un objeto JSON");
 
             return elemento.getAsJsonObject();
         } catch (JsonParseException e) {
@@ -133,9 +133,8 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
     }
 
     private JsonElement obtenerCampo(JsonObject json, String nombre) {
-        if (!json.has(nombre) || json.get(nombre).isJsonNull()) {
-            throw new IllegalArgumentException("Falta el parámetro obligatorio: " + nombre);
-        }
+        ValidacionesUtiles.validarFalso(!json.has(nombre) || json.get(nombre).isJsonNull(),
+                "Falta el parámetro obligatorio: " + nombre);
 
         return json.get(nombre);
     }
@@ -150,21 +149,17 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
         int monstruos = leerEntero(json, "monstruos");
         boolean conSalida = leerBooleano(json);
 
-        if (version != 1) {
-            throw new IllegalArgumentException("La versión del formato debe ser 1");
-        }
+        ValidacionesUtiles.validarFalso(version != 1,
+                "La versión del formato debe ser 1");
 
-        if (!dificultad.equals("FACIL") && !dificultad.equals("MEDIO") && !dificultad.equals("DIFICIL")) {
-            throw new IllegalArgumentException("La dificultad debe ser FACIL, MEDIO o DIFICIL");
-        }
+        ValidacionesUtiles.validarFalso(!dificultad.equals("FACIL") && !dificultad.equals("MEDIO") && !dificultad.equals("DIFICIL"),
+                "La dificultad debe ser FACIL, MEDIO o DIFICIL");
 
-        if (filas < 5 || columnas < 5) {
-            throw new IllegalArgumentException("Las filas y columnas deben ser al menos 5");
-        }
+        ValidacionesUtiles.validarFalso(filas < 5 || columnas < 5,
+                "Las filas y columnas deben ser al menos 5");
 
-        if (cofres < 0 || monstruos < 0) {
-            throw new IllegalArgumentException("Las cantidades de cofres y monstruos no pueden ser negativas");
-        }
+        ValidacionesUtiles.validarFalso(cofres < 0 || monstruos < 0,
+                "Las cantidades de cofres y monstruos no pueden ser negativas");
 
         long celdasInteriores = (long) (filas - 2) * (columnas - 2);
         long totalCeldas = (long) filas * columnas;
@@ -177,11 +172,8 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
 
         long entidadesSolicitadas = (long) cofres + monstruos;
 
-        if (entidadesSolicitadas > capacidadParaEntidades) {
-            throw new IllegalArgumentException(
-                    "La cantidad de cofres y monstruos supera la capacidad del plano"
-            );
-        }
+        ValidacionesUtiles.validarFalso(entidadesSolicitadas > capacidadParaEntidades,
+                "La cantidad de cofres y monstruos supera la capacidad del plano");
 
         return new Parametros(
                 version,
@@ -198,9 +190,8 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
     private int leerEntero(JsonObject json, String nombre) {
         JsonElement campo = obtenerCampo(json, nombre);
 
-        if (!campo.isJsonPrimitive() || !campo.getAsJsonPrimitive().isNumber()) {
-            throw new IllegalArgumentException("El parámetro " + nombre + " debe ser un número entero");
-        }
+        ValidacionesUtiles.validarFalso(!campo.isJsonPrimitive() || !campo.getAsJsonPrimitive().isNumber(),
+                "El parámetro " + nombre + " debe ser un número entero");
 
         try {
             return campo.getAsBigDecimal().intValueExact();
@@ -212,11 +203,10 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
     private long leerLong(JsonObject json) {
         JsonElement campo = obtenerCampo(json, "semilla");
 
-        if (!campo.getAsJsonPrimitive().isNumber()) {
-            throw new IllegalArgumentException("El parámetro " + "semilla" + " debe ser un número entero");
-        } else if (!campo.isJsonPrimitive()) {
-            throw new IllegalArgumentException("El parámetro " + "semilla" + " debe ser un número entero");
-        }
+        ValidacionesUtiles.validarFalso(!campo.getAsJsonPrimitive().isNumber(),
+                "El parámetro " + "semilla" + " debe ser un número entero");
+        ValidacionesUtiles.validarFalso(!campo.isJsonPrimitive(),
+                "El parámetro " + "semilla" + " debe ser un número entero");
 
         try {
             return campo.getAsBigDecimal().longValueExact();
@@ -228,9 +218,8 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
     private String leerTexto(JsonObject json) {
         JsonElement campo = obtenerCampo(json, "dificultad");
 
-        if (!campo.isJsonPrimitive() || !campo.getAsJsonPrimitive().isString()) {
-            throw new IllegalArgumentException("El parámetro " + "dificultad" + " debe ser texto");
-        }
+        ValidacionesUtiles.validarFalso(!campo.isJsonPrimitive() || !campo.getAsJsonPrimitive().isString(),
+                "El parámetro " + "dificultad" + " debe ser texto");
 
         return campo.getAsString();
     }
@@ -238,9 +227,8 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
     private boolean leerBooleano(JsonObject json) {
         JsonElement campo = obtenerCampo(json, "conSalida");
 
-        if (!campo.isJsonPrimitive() || !campo.getAsJsonPrimitive().isBoolean()) {
-            throw new IllegalArgumentException("El parámetro " + "conSalida" + " debe ser un booleano");
-        }
+        ValidacionesUtiles.validarFalso(!campo.isJsonPrimitive() || !campo.getAsJsonPrimitive().isBoolean(),
+                "El parámetro " + "conSalida" + " debe ser un booleano");
 
         return campo.getAsBoolean();
     }
@@ -597,12 +585,9 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
             }
         }
 
-        if (cantidad > disponibles.size()) {
-            throw new IllegalStateException(
-                    "No hay suficientes pisos disponibles "
-                            + "para colocar los monstruos lejos de la entrada"
-            );
-        }
+        ValidacionesUtiles.validarEstadoFalso(cantidad > disponibles.size(),
+                "No hay suficientes pisos disponibles "
+                + "para colocar los monstruos lejos de la entrada");
 
         for (int i = 0; i < cantidad; i++) {
             int indice = azar.nextInt(disponibles.size());
@@ -622,9 +607,8 @@ public class GeneradorGrupoNN implements GeneradorDeLaberinto {
             }
         }
 
-        if (cantidad > disponibles.size()) {
-            throw new IllegalStateException("No hay suficientes pisos libres para colocar los cofres");
-        }
+        ValidacionesUtiles.validarEstadoFalso(cantidad > disponibles.size(),
+                "No hay suficientes pisos libres para colocar los cofres");
 
         for (int i = 0; i < cantidad; i++) {
             int indice = azar.nextInt(disponibles.size());

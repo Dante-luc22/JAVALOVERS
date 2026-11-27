@@ -11,6 +11,7 @@ import com.google.gson.JsonParseException;
 
 import ar.uba.fi.cb100.tp2.modelo.partida.Configuracion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Dificultad;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 /**
  * Lee configuracion.json con Gson. Si el archivo falta o le falta algún dato,
@@ -30,10 +31,9 @@ public class LectorConfiguracion {
      *                               o le falta algún dato
      */
     public static Configuracion leer(Path ruta) {
-        if (!Files.exists(ruta)) {
-            throw new IllegalStateException("No se encontró el archivo de configuración: "
-                    + ruta.toAbsolutePath());
-        }
+        ValidacionesUtiles.validarEstadoFalso(!Files.exists(ruta),
+                "No se encontró el archivo de configuración: "
+                + ruta.toAbsolutePath());
         Configuracion configuracion;
         try (Reader lector = Files.newBufferedReader(ruta, StandardCharsets.UTF_8)) {
             configuracion = new Gson().fromJson(lector, Configuracion.class);
@@ -52,27 +52,21 @@ public class LectorConfiguracion {
      * @param ruta          para nombrar el archivo en el mensaje
      */
     private static void verificar(Configuracion configuracion, Path ruta) {
-        if (configuracion == null) {
-            throw new IllegalStateException(ruta + " está vacío");
-        }
-        if (configuracion.energiaInicial() <= 0) {
-            throw new IllegalStateException(ruta + ": falta energiaInicial o no es positiva");
-        }
-        if (configuracion.costos() == null) {
-            throw new IllegalStateException(ruta + ": faltan los costos");
-        }
+        ValidacionesUtiles.validarEstadoFalso(configuracion == null,
+                ruta + " está vacío");
+        ValidacionesUtiles.validarEstadoFalso(configuracion.energiaInicial() <= 0,
+                ruta + ": falta energiaInicial o no es positiva");
+        ValidacionesUtiles.validarEstadoFalso(configuracion.costos() == null,
+                ruta + ": faltan los costos");
         for (String terreno : TERRENOS_CON_COSTO) {
-            if (!configuracion.costos().containsKey(terreno)) {
-                throw new IllegalStateException(ruta + ": falta el costo de " + terreno);
-            }
+            ValidacionesUtiles.validarEstadoFalso(!configuracion.costos().containsKey(terreno),
+                    ruta + ": falta el costo de " + terreno);
         }
-        if (configuracion.dificultades() == null) {
-            throw new IllegalStateException(ruta + ": faltan las dificultades");
-        }
+        ValidacionesUtiles.validarEstadoFalso(configuracion.dificultades() == null,
+                ruta + ": faltan las dificultades");
         for (Dificultad dificultad : Dificultad.values()) {
-            if (!configuracion.dificultades().containsKey(dificultad)) {
-                throw new IllegalStateException(ruta + ": falta la dificultad " + dificultad);
-            }
+            ValidacionesUtiles.validarEstadoFalso(!configuracion.dificultades().containsKey(dificultad),
+                    ruta + ": falta la dificultad " + dificultad);
         }
     }
 }

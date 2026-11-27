@@ -6,6 +6,7 @@ import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Random;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 /**
  * Inventario del heroe. Se utilizaron tablas hash id -> cantidad, con un objeto
@@ -26,9 +27,7 @@ public class Inventario {
      * @throws IllegalArgumentException si el objeto es nulo.
      */
     public void agregar(Objeto objeto) {
-        if (objeto == null) {
-            throw new IllegalArgumentException("El objeto no puede ser nulo.");
-        }
+        ValidacionesUtiles.validarDistintoDeNull(objeto, "objeto");
         objetos.put(objeto.getId(), objeto);
         cantidades.put(objeto.getId(), cantidades.getOrDefault(objeto.getId(), 0) + 1);
     }
@@ -73,9 +72,8 @@ public class Inventario {
      */
     public Objeto quitar(String id){
         validarId(id);
-        if (!contiene(id)) {
-            throw new IllegalArgumentException("No hay " + id + " en el inventario.");
-        }
+        ValidacionesUtiles.validarFalso(!contiene(id),
+                "No hay " + id + " en el inventario.");
         Objeto actual = objetos.get(id);
         int nueva = cantidades.get(id) - 1;
         if (nueva == 0) {
@@ -98,12 +96,9 @@ public class Inventario {
      */
     public void usar(String id, Heroe heroe, Agenda agenda) {
         validarId(id);
-        if (!contiene(id)) {
-            throw new IllegalArgumentException("El id buscado no existe.");
-        }
-        if (heroe == null) {
-            throw new IllegalArgumentException("El heroe no puede ser nulo.");
-        }
+        ValidacionesUtiles.validarFalso(!contiene(id),
+                "El id buscado no existe.");
+        ValidacionesUtiles.validarDistintoDeNull(heroe, "heroe");
         Objeto objeto = quitar(id);
         objeto.usar(heroe, agenda);
     }
@@ -116,9 +111,7 @@ public class Inventario {
      * @throws IllegalArgumentException si el azar es nulo.
      */
     public Objeto quitarUnoAlAzar(Random azar){
-        if (azar == null) {
-            throw new IllegalArgumentException("El objeto random a sacar no puede ser nulo.");
-        }
+        ValidacionesUtiles.validarDistintoDeNull(azar, "azar");
         if (estaVacio()) {
             return null;
         }
@@ -133,11 +126,8 @@ public class Inventario {
      * @throws IllegalArgumentException si el id es nulo o esta vacio.
      */
     private void validarId(String id){
-        if (id == null){
-            throw new IllegalArgumentException("El id no puede ser nulo");
-        }
-        if (id.isBlank()) {
-            throw new IllegalArgumentException("El id no puede ser vacio.");
-        }
+        ValidacionesUtiles.validarDistintoDeNull(id, "id");
+        ValidacionesUtiles.validarFalso(id.isBlank(),
+                "El id no puede ser vacio.");
     }
 }

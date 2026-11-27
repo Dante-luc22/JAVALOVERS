@@ -1,5 +1,7 @@
 package ar.uba.fi.cb100.tp2.modelo.eventos;
 
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
+
 /**
  * Un evento con el paso en que vence. El orden desempata los que vencen en el
  * mismo paso: se ejecutan en el orden en que se programaron.
@@ -15,12 +17,9 @@ public record EventoProgramado(int paso, long orden, Evento evento)
      * @throws IllegalArgumentException si el paso o el orden son negativos o el evento es nulo
      */
     public EventoProgramado {
-        if (paso < 0 || orden < 0) {
-            throw new IllegalArgumentException("Paso y orden no pueden ser negativos");
-        }
-        if (evento == null) {
-            throw new IllegalArgumentException("El evento no puede ser nulo");
-        }
+        ValidacionesUtiles.validarFalso(paso < 0 || orden < 0,
+                "Paso y orden no pueden ser negativos");
+        ValidacionesUtiles.validarDistintoDeNull(evento, "evento");
     }
 
     /**

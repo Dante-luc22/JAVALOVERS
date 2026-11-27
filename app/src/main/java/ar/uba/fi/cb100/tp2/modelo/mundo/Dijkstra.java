@@ -8,6 +8,7 @@ import java.util.PriorityQueue;
 
 import ar.uba.fi.cb100.material.i11_grafos.Grafo;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 /**
  * Caminos de costo mínimo dentro de un tablero, con el costo de cada terreno.
@@ -131,9 +132,7 @@ public final class Dijkstra {
      */
     public static List<Posicion> caminoMinimo(
             Tablero tablero, Map<Terreno, Integer> costos, Posicion origen, Posicion destino) {
-        if (origen == null) {
-            throw new IllegalArgumentException("El origen no puede ser nulo.");
-        }
+        ValidacionesUtiles.validarDistintoDeNull(origen, "origen");
         Map<Posicion, Integer> hastaElDestino = costosHacia(tablero, costos, destino);
         List<Posicion> camino = new ArrayList<>();
         if (!hastaElDestino.containsKey(origen)) {
@@ -175,9 +174,7 @@ public final class Dijkstra {
      */
     public static int costoMinimo(
             Tablero tablero, Map<Terreno, Integer> costos, Posicion origen, Posicion destino) {
-        if (origen == null) {
-            throw new IllegalArgumentException("El origen no puede ser nulo.");
-        }
+        ValidacionesUtiles.validarDistintoDeNull(origen, "origen");
         Integer costo = costosHacia(tablero, costos, destino).get(origen);
         return costo == null ? -1 : costo;
     }
@@ -186,22 +183,16 @@ public final class Dijkstra {
      * Verifica los argumentos comunes.
      */
     private static void validar(Tablero tablero, Map<Terreno, Integer> costos, Posicion destino) {
-        if (tablero == null || costos == null || destino == null) {
-            throw new IllegalArgumentException("El tablero, los costos y el destino no pueden ser nulos.");
-        }
+        ValidacionesUtiles.validarDistintoDeNull(tablero, "tablero");
+        ValidacionesUtiles.validarDistintoDeNull(costos, "costos");
+        ValidacionesUtiles.validarDistintoDeNull(destino, "destino");
         for (Terreno terreno : new Terreno[]{Terreno.PISO, Terreno.AGUA, Terreno.LAVA}) {
             Integer costo = costos.get(terreno);
-            if (costo == null) {
-                throw new IllegalArgumentException("Falta el costo del terreno " + terreno + ".");
-            }
-            if (costo < 1) {
-                // con costo 0 habría celdas "gratis" y el camino podría dar vueltas sin avanzar
-                throw new IllegalArgumentException(
-                        "El costo de " + terreno + " tiene que ser positivo, se recibió: " + costo);
-            }
+            ValidacionesUtiles.validarDistintoDeNull(costo, "costo del terreno", terreno.toString());
+            // con costo 0 habría celdas "gratis" y el camino podría dar vueltas sin avanzar
+            ValidacionesUtiles.esMayorQueCero(costo, "costo del terreno", terreno.toString());
         }
-        if (!tablero.esTransitable(destino)) {
-            throw new IllegalArgumentException("El destino no es una celda transitable: " + destino);
-        }
+        ValidacionesUtiles.validarFalso(!tablero.esTransitable(destino),
+                "El destino no es una celda transitable: " + destino);
     }
 }

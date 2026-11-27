@@ -3,6 +3,7 @@ package ar.uba.fi.cb100.tp2.modelo.cofres;
 import ar.uba.fi.cb100.tp2.modelo.eventos.Agenda;
 import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 /**
  * Clase CofreDeTrampaDePinchos, al encontrarse con el heroe y ser abierto,
@@ -21,10 +22,7 @@ public class CofreDeTrampaDePinchos extends Cofre{
      * @throws IllegalArgumentException si el danio dado no es mayor a 0
      */
     public CofreDeTrampaDePinchos(Posicion posicion, int danio) {
-        if (danio <= 0) {
-            throw new IllegalArgumentException(
-                    "El danio que realiza debe ser mayor que 0, se recibio: " + danio);
-        }
+        ValidacionesUtiles.esMayorQueCero(danio, "danio");
         super(posicion);
         this.danio = danio;
     }

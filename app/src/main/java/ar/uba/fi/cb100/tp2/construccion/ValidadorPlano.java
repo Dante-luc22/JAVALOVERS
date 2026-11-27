@@ -8,6 +8,7 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import java.util.ArrayDeque;
 import java.util.Queue;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 /**
  * Valida un plano en el formato JSON del Anexo B.3 con las once reglas de B.4.
@@ -99,10 +100,9 @@ public class ValidadorPlano {
         }
 
         int transitables = contarTransitables();
-        if (alcanzadas != transitables) {
-            throw new IllegalArgumentException("R5: desde la entrada se alcanzan " + alcanzadas
-                    + " de " + transitables + " celdas transitables");
-        }
+        ValidacionesUtiles.validarFalso(alcanzadas != transitables,
+                "R5: desde la entrada se alcanzan " + alcanzadas
+                + " de " + transitables + " celdas transitables");
     }
 
     /**
@@ -121,10 +121,9 @@ public class ValidadorPlano {
         }
 
         int transitables = contarTransitables();
-        if (conBifurcacion * 100 < transitables * 10) {
-            throw new IllegalArgumentException("R6: sólo " + conBifurcacion + " de " + transitables
-                    + " celdas transitables tienen 3 o más vecinos, y tiene que ser al menos el 10 %");
-        }
+        ValidacionesUtiles.validarFalso(conBifurcacion * 100 < transitables * 10,
+                "R6: sólo " + conBifurcacion + " de " + transitables
+                + " celdas transitables tienen 3 o más vecinos, y tiene que ser al menos el 10 %");
     }
 
     /**
@@ -143,10 +142,9 @@ public class ValidadorPlano {
         }
 
         int distanciaDeLaSalida = distancias[salida.fila()][salida.columna()];
-        if (distanciaDeLaSalida != maxima) {
-            throw new IllegalArgumentException("R9: la salida está a distancia " + distanciaDeLaSalida
-                    + " y la celda más lejana está a " + maxima);
-        }
+        ValidacionesUtiles.validarFalso(distanciaDeLaSalida != maxima,
+                "R9: la salida está a distancia " + distanciaDeLaSalida
+                + " y la celda más lejana está a " + maxima);
     }
 
     private boolean esTransitable(int fila, int columna) {
@@ -169,20 +167,16 @@ public class ValidadorPlano {
      * caracteres, y ambas medidas son al menos 5.
      */
     private void validarDimensiones() {
-        if (filas < 5 || columnas < 5) {
-            throw new IllegalArgumentException("R1: filas y columnas deben ser al menos 5");
-        }
+        ValidacionesUtiles.validarFalso(filas < 5 || columnas < 5,
+                "R1: filas y columnas deben ser al menos 5");
 
-        if (plano.length != filas) {
-            throw new IllegalArgumentException(
-                    "R1: el plano tiene " + plano.length + " filas y se esperaban " + filas);
-        }
+        ValidacionesUtiles.validarFalso(plano.length != filas,
+                "R1: el plano tiene " + plano.length + " filas y se esperaban " + filas);
 
         for (int fila = 0; fila < filas; fila++) {
-            if (plano[fila].length != columnas) {
-                throw new IllegalArgumentException("R1: la fila " + (fila + 1) + " tiene "
-                        + plano[fila].length + " columnas y se esperaban " + columnas);
-            }
+            ValidacionesUtiles.validarFalso(plano[fila].length != columnas,
+                    "R1: la fila " + (fila + 1) + " tiene "
+                    + plano[fila].length + " columnas y se esperaban " + columnas);
         }
     }
 
@@ -194,10 +188,9 @@ public class ValidadorPlano {
             for (int columna = 0; columna < columnas; columna++) {
                 char simbolo = plano[fila][columna];
 
-                if (SIMBOLOS_VALIDOS.indexOf(simbolo) == -1) {
-                    throw new IllegalArgumentException("R2: símbolo inválido '" + simbolo
-                            + "' en (" + (fila + 1) + ", " + (columna + 1) + ")");
-                }
+                ValidacionesUtiles.validarFalso(SIMBOLOS_VALIDOS.indexOf(simbolo) == -1,
+                        "R2: símbolo inválido '" + simbolo
+                        + "' en (" + (fila + 1) + ", " + (columna + 1) + ")");
             }
         }
     }
@@ -212,10 +205,9 @@ public class ValidadorPlano {
                 boolean esBorde = fila == 0 || fila == filas - 1
                         || columna == 0 || columna == columnas - 1;
 
-                if (esBorde && plano[fila][columna] != '#') {
-                    throw new IllegalArgumentException("R3: el borde debe ser pared y ("
-                            + (fila + 1) + ", " + (columna + 1) + ") no lo es");
-                }
+                ValidacionesUtiles.validarFalso(esBorde && plano[fila][columna] != '#',
+                        "R3: el borde debe ser pared y ("
+                        + (fila + 1) + ", " + (columna + 1) + ") no lo es");
             }
         }
     }
@@ -226,27 +218,24 @@ public class ValidadorPlano {
      */
     private void validarEntradaYSalida() {
         int cantidadDeE = contar('E');
-        if (cantidadDeE != 1) {
-            throw new IllegalArgumentException("R4: debe haber exactamente una E y hay " + cantidadDeE);
-        }
+        ValidacionesUtiles.validarFalso(cantidadDeE != 1,
+                "R4: debe haber exactamente una E y hay " + cantidadDeE);
 
         int cantidadDeS = contar('S');
         int esperadasDeS = conSalida ? 1 : 0;
-        if (cantidadDeS != esperadasDeS) {
-            throw new IllegalArgumentException("R4: con conSalida " + conSalida + " se esperaban "
-                    + esperadasDeS + " S y hay " + cantidadDeS);
-        }
+        ValidacionesUtiles.validarFalso(cantidadDeS != esperadasDeS,
+                "R4: con conSalida " + conSalida + " se esperaban "
+                + esperadasDeS + " S y hay " + cantidadDeS);
 
-        if (!hay(entrada, 'E')) {
-            throw new IllegalArgumentException("R4: el campo entrada no coincide con la E del plano");
-        }
+        ValidacionesUtiles.validarFalso(!hay(entrada, 'E'),
+                "R4: el campo entrada no coincide con la E del plano");
 
         if (conSalida) {
-            if (salida == null || !hay(salida, 'S')) {
-                throw new IllegalArgumentException("R4: el campo salida no coincide con la S del plano");
-            }
-        } else if (salida != null) {
-            throw new IllegalArgumentException("R4: conSalida es false pero el campo salida no es null");
+            ValidacionesUtiles.validarFalso(salida == null || !hay(salida, 'S'),
+                    "R4: el campo salida no coincide con la S del plano");
+        } else {
+            ValidacionesUtiles.validarFalso(salida != null,
+                    "R4: conSalida es false pero el campo salida no es null");
         }
     }
 
@@ -258,10 +247,9 @@ public class ValidadorPlano {
         int total = filas * columnas;
 
         // transitables / total entre 30 % y 60 %, multiplicando para no usar decimales
-        if (transitables * 100 < total * 30 || transitables * 100 > total * 60) {
-            throw new IllegalArgumentException("R7: hay " + transitables + " celdas transitables de "
-                    + total + ", y tienen que ser entre el 30 % y el 60 %");
-        }
+        ValidacionesUtiles.validarFalso(transitables * 100 < total * 30 || transitables * 100 > total * 60,
+                "R7: hay " + transitables + " celdas transitables de "
+                + total + ", y tienen que ser entre el 30 % y el 60 %");
     }
 
     /**
@@ -269,14 +257,12 @@ public class ValidadorPlano {
      */
     private void validarCantidades() {
         int cantidadDeC = contar('C');
-        if (cantidadDeC != cofres) {
-            throw new IllegalArgumentException("R8: hay " + cantidadDeC + " C y se esperaban " + cofres);
-        }
+        ValidacionesUtiles.validarFalso(cantidadDeC != cofres,
+                "R8: hay " + cantidadDeC + " C y se esperaban " + cofres);
 
         int cantidadDeM = contar('M');
-        if (cantidadDeM != monstruos) {
-            throw new IllegalArgumentException("R8: hay " + cantidadDeM + " M y se esperaban " + monstruos);
-        }
+        ValidacionesUtiles.validarFalso(cantidadDeM != monstruos,
+                "R8: hay " + cantidadDeM + " M y se esperaban " + monstruos);
     }
 
     /**
@@ -286,10 +272,9 @@ public class ValidadorPlano {
         int aguaYLava = contar('~') + contar('^');
         int transitables = contarTransitables();
 
-        if (aguaYLava * 100 > transitables * 25) {
-            throw new IllegalArgumentException("R10: hay " + aguaYLava + " celdas de agua y lava de "
-                    + transitables + " transitables, y el máximo es el 25 %");
-        }
+        ValidacionesUtiles.validarFalso(aguaYLava * 100 > transitables * 25,
+                "R10: hay " + aguaYLava + " celdas de agua y lava de "
+                + transitables + " transitables, y el máximo es el 25 %");
     }
 
     /**
@@ -301,11 +286,10 @@ public class ValidadorPlano {
                 if (plano[fila][columna] == 'M') {
                     int distancia = Math.abs(fila - entrada.fila()) + Math.abs(columna - entrada.columna());
 
-                    if (distancia < 3) {
-                        throw new IllegalArgumentException("R11: el monstruo en (" + (fila + 1) + ", "
-                                + (columna + 1) + ") está a distancia " + distancia
-                                + " de la entrada, y el mínimo es 3");
-                    }
+                    ValidacionesUtiles.validarFalso(distancia < 3,
+                            "R11: el monstruo en (" + (fila + 1) + ", "
+                            + (columna + 1) + ") está a distancia " + distancia
+                            + " de la entrada, y el mínimo es 3");
                 }
             }
         }
@@ -395,9 +379,8 @@ public class ValidadorPlano {
      */
     private JsonElement obtener(JsonObject objeto, String nombre) {
         JsonElement campo = objeto.get(nombre);
-        if (campo == null || campo.isJsonNull()) {
-            throw new IllegalArgumentException("Falta el campo: " + nombre);
-        }
+        ValidacionesUtiles.validarFalso(campo == null || campo.isJsonNull(),
+                "Falta el campo: " + nombre);
         return campo;
     }
 

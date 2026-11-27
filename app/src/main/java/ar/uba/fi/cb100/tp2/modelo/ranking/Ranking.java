@@ -7,6 +7,7 @@ import java.util.TreeSet;
 import java.time.LocalDateTime;
 
 import ar.uba.fi.cb100.tp2.modelo.valores.Dificultad;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 /**
  * El ranking de puntajes, con un árbol binario de búsqueda por dificultad.
@@ -45,9 +46,7 @@ public class Ranking {
      * @throws IllegalArgumentException si la entrada es nula
      */
     public void registrar(EntradaDeRanking entrada) {
-        if (entrada == null) {
-            throw new IllegalArgumentException("La entrada no puede ser nula.");
-        }
+        ValidacionesUtiles.validarDistintoDeNull(entrada, "entrada");
         this.arbolesPorDificultad.get(entrada.dificultad()).add(entrada);
     }
 
@@ -67,9 +66,7 @@ public class Ranking {
      * @throws IllegalArgumentException si la dificultad es nula
      */
     public List<EntradaDeRanking> obtenerTop10(Dificultad dificultad) {
-        if (dificultad == null) {
-            throw new IllegalArgumentException("La dificultad no puede ser nula.");
-        }
+        ValidacionesUtiles.validarDistintoDeNull(dificultad, "dificultad");
         List<EntradaDeRanking> top = new ArrayList<>();
         for (EntradaDeRanking entrada : this.arbolesPorDificultad.get(dificultad)) {
             if (top.size() == TAMANIO_DEL_TOP) {

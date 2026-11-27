@@ -12,6 +12,7 @@ import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
 import ar.uba.fi.cb100.tp2.modelo.valores.Direccion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 /**
  * Una partida en curso: junta la mazmorra, el héroe y la cuenta de pasos, y
@@ -65,9 +66,7 @@ public class Partida {
      */
     public int costoDe(Terreno terreno) {
         Integer costo = this.costos.get(terreno);
-        if (costo == null) {
-            throw new IllegalArgumentException("El terreno " + terreno + " no tiene costo");
-        }
+        ValidacionesUtiles.validarDistintoDeNull(costo, "costo");
         return costo;
     }
 
