@@ -3,6 +3,7 @@ package ar.uba.fi.cb100.tp2.modelo.ranking;
 import java.time.LocalDateTime;
 
 import ar.uba.fi.cb100.tp2.modelo.valores.Dificultad;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 /**
  * Una partida terminada, tal como entra al ranking: quién la jugó, cuántos
@@ -50,23 +51,14 @@ public record EntradaDeRanking(String nombre, int puntaje, Dificultad dificultad
      *                                  o si la dificultad o la fecha son nulas
      */
     public EntradaDeRanking {
-        if (nombre == null) {
-            throw new IllegalArgumentException("El nombre no puede ser nulo.");
-        }
-        if (!esNombreValido(nombre)) {
-            throw new IllegalArgumentException("El nombre son exactamente " + LARGO_DEL_NOMBRE
-                    + " caracteres sin espacios, como en un arcade, se recibió: \"" + nombre + "\"");
-        }
-        if (puntaje < 0) {
-            throw new IllegalArgumentException(
-                    "El puntaje no puede ser negativo, se recibió: " + puntaje);
-        }
-        if (dificultad == null) {
-            throw new IllegalArgumentException("La dificultad no puede ser nula.");
-        }
-        if (fecha == null) {
-            throw new IllegalArgumentException("La fecha no puede ser nula.");
-        }
+        ValidacionesUtiles.validarDistintoDeNull(nombre, "nombre");
+        ValidacionesUtiles.validarFalso(!esNombreValido(nombre),
+                "El nombre son exactamente " + LARGO_DEL_NOMBRE
+                + " caracteres sin espacios, como en un arcade, se recibió: \"" + nombre + "\"");
+        ValidacionesUtiles.validarFalso(puntaje < 0,
+                "El puntaje no puede ser negativo, se recibió: " + puntaje);
+        ValidacionesUtiles.validarDistintoDeNull(dificultad, "dificultad");
+        ValidacionesUtiles.validarDistintoDeNull(fecha, "fecha");
     }
     
     /**

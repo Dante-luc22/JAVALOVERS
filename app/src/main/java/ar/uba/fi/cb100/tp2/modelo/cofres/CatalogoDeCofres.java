@@ -5,6 +5,7 @@ import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Random;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 /**
  * Clase que guarda una fabrica por cada tipo de cofre y crea uno al azar.
@@ -31,18 +32,12 @@ public class CatalogoDeCofres {
      *                                  si el nombre ya esta registrado;
      */
     public void registrar(String nombre, FabricaDeCofre fabrica) {
-        if (nombre == null || nombre.isBlank()) {
-            throw new IllegalArgumentException(
-                    "El nombre no puede ser nulo ni un campo vacio");
-        }
-        if (fabrica == null) {
-            throw new IllegalArgumentException(
-                    "La fabrica dada no puede ser nula.");
-        }
-        if (estaRegistrado(nombre)){
-            throw new IllegalArgumentException(
-                    "El nombre ya se encuentra registrado.");
-        }
+        ValidacionesUtiles.validarDistintoDeNull(nombre, "nombre");
+        ValidacionesUtiles.validarFalso(nombre.isBlank(),
+                "El nombre no puede ser nulo ni un campo vacio");
+        ValidacionesUtiles.validarDistintoDeNull(fabrica, "fabrica");
+        ValidacionesUtiles.validarFalso(estaRegistrado(nombre),
+                "El nombre ya se encuentra registrado.");
         fabricasDeCofres.put(nombre, fabrica);
     }
 
@@ -58,18 +53,10 @@ public class CatalogoDeCofres {
      * @throws IllegalStateException si el catalogo esta vacio;
      */
     public Cofre crearAlAzar(Posicion p, Random azar) {
-        if (p == null) {
-            throw new IllegalArgumentException(
-                    "La posicion no puede ser nula.");
-        }
-        if (azar == null) {
-            throw new IllegalArgumentException(
-                    "El azar no puede ser nulo.");
-        }
-        if (fabricasDeCofres.isEmpty()) {
-            throw new IllegalStateException(
-                    "El catalogo no tiene tipos de cofre registrados.");
-        }
+        ValidacionesUtiles.validarDistintoDeNull(p, "posicion");
+        ValidacionesUtiles.validarDistintoDeNull(azar, "azar");
+        ValidacionesUtiles.validarEstadoFalso(fabricasDeCofres.isEmpty(),
+                "El catalogo no tiene tipos de cofre registrados.");
         ArrayList<FabricaDeCofre> fabricas = new ArrayList<>(fabricasDeCofres.values());
         int indice = azar.nextInt(fabricas.size());
         FabricaDeCofre fabricaElegida = fabricas.get(indice);
@@ -95,10 +82,9 @@ public class CatalogoDeCofres {
      * @throws IllegalArgumentException si el nombre es nulo o vacio.
      */
     public boolean estaRegistrado(String nombre){
-        if (nombre == null || nombre.isBlank()) {
-            throw new IllegalArgumentException(
-                    "El nombre no puede ser nulo ni vacio.");
-        }
+        ValidacionesUtiles.validarDistintoDeNull(nombre, "nombre");
+        ValidacionesUtiles.validarFalso(nombre.isBlank(),
+                "El nombre no puede ser nulo ni vacio.");
         return fabricasDeCofres.containsKey(nombre);
     }
 }

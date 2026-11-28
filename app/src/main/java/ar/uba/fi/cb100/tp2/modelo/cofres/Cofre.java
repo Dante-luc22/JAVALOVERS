@@ -5,6 +5,7 @@ import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Entidad;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Plano;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 public abstract class Cofre extends Entidad {
 
@@ -18,10 +19,7 @@ public abstract class Cofre extends Entidad {
      * @throws IllegalArgumentException si la posicion es nula;
      */
     protected Cofre(Posicion posicion) {
-        if (posicion == null) {
-            throw new IllegalArgumentException(
-                    "No se puede recibir una posicion nula.");
-        }
+        ValidacionesUtiles.validarDistintoDeNull(posicion, "posicion");
         super(posicion);
     }
 
@@ -58,10 +56,7 @@ public abstract class Cofre extends Entidad {
      */
     @Override
     public final void alEncontrarseConHeroe(Heroe heroe, Agenda agenda){
-        if (heroe == null) {
-            throw new IllegalArgumentException(
-                    "El heroe no puede ser nulo.");
-        }
+        ValidacionesUtiles.validarDistintoDeNull(heroe, "heroe");
         if (this.abierto) {
             return;
         }

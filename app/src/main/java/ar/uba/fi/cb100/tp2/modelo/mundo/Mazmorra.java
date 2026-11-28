@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 /**
  * Todos los planos del juego. En Fácil es uno solo, en Medio un tablero de
@@ -33,21 +34,16 @@ public class Mazmorra {
      *                                  una cantidad exacta de tableros
      */
     public Mazmorra(List<Plano> planos, int pisosPorTablero) {
-        if (planos.isEmpty()) {
-            throw new IllegalArgumentException("La mazmorra necesita al menos un plano");
-        }
-        if (pisosPorTablero < 1) {
-            throw new IllegalArgumentException("Los pisos por tablero tienen que ser positivos");
-        }
-        if (planos.size() % pisosPorTablero != 0) {
-            throw new IllegalArgumentException(
-                    "Con " + pisosPorTablero + " pisos por tablero no entran " + planos.size() + " planos");
-        }
+        ValidacionesUtiles.validarFalso(planos.isEmpty(),
+                "La mazmorra necesita al menos un plano");
+        ValidacionesUtiles.esMayorQueCero(pisosPorTablero, "pisosPorTablero");
+        ValidacionesUtiles.validarFalso(planos.size() % pisosPorTablero != 0,
+                "Con " + pisosPorTablero + " pisos por tablero no entran " + planos.size() + " planos");
         this.planos = new ArrayList<>(planos);
         this.pisosPorTablero = pisosPorTablero;
     }
 
-     /**
+    /**
      * @param ubicacion tablero y piso (desde 1) del plano buscado; la posición no se usa
      * @return el plano que está en esa ubicación
      * @throws IllegalArgumentException si el tablero o el piso no existen
@@ -63,13 +59,11 @@ public class Mazmorra {
      * @throws IllegalArgumentException si el tablero o el piso no existen
      */
     public Plano getPlano(int tablero, int piso) {
-        if (tablero < 1 || piso < 1 || piso > this.pisosPorTablero) {
-            throw new IllegalArgumentException("No existe el plano del tablero " + tablero + ", piso " + piso);
-        }
+        ValidacionesUtiles.validarFalso(tablero < 1 || piso < 1 || piso > this.pisosPorTablero,
+                "No existe el plano del tablero " + tablero + ", piso " + piso);
         int indice = (tablero - 1) * this.pisosPorTablero + (piso - 1);
-        if (indice >= this.planos.size()) {
-            throw new IllegalArgumentException("No existe el plano del tablero " + tablero + ", piso " + piso);
-        }
+        ValidacionesUtiles.validarFalso(indice >= this.planos.size(),
+                "No existe el plano del tablero " + tablero + ", piso " + piso);
         return this.planos.get(indice);
     }
 
@@ -87,13 +81,15 @@ public class Mazmorra {
      * @throws IllegalStateException si ningún plano tiene salida
      */
     public Ubicacion getSalida() {
-        for (int i = 0; i < this.planos.size(); i++) {
+        Ubicacion salida = null;
+        for (int i = 0; i < this.planos.size() && salida == null; i++) {
             Plano plano = this.planos.get(i);
             if (plano.getSalida() != null) {
-                return new Ubicacion(i / this.pisosPorTablero + 1, i % this.pisosPorTablero + 1, plano.getSalida());
+                salida = new Ubicacion(i / this.pisosPorTablero + 1, i % this.pisosPorTablero + 1, plano.getSalida());
             }
         }
-        throw new IllegalStateException("La mazmorra no tiene salida");
+        ValidacionesUtiles.validarEstadoFalso(salida == null, "La mazmorra no tiene salida");
+        return salida;
     }
 
     /**
@@ -110,7 +106,7 @@ public class Mazmorra {
         return this.pisosPorTablero;
     }
 
-        /**
+    /**
      * Une dos celdas de planos distintos con una escalera o un pasillo, en los
      * dos sentidos: pisar cualquiera de las dos lleva a la otra.
      *
@@ -163,12 +159,10 @@ public class Mazmorra {
 
     private void validarPunta(Ubicacion punta) {
         Plano plano = getPlano(punta);
-        if (!plano.getTablero().esTransitable(punta.posicion())) {
-            throw new IllegalArgumentException("Una escalera o pasillo no puede estar en una pared: " + punta);
-        }
-        if (this.destinos.containsKey(punta)) {
-            throw new IllegalArgumentException("Esa celda ya tiene una conexión: " + punta);
-        }
+        ValidacionesUtiles.validarFalso(!plano.getTablero().esTransitable(punta.posicion()),
+                "Una escalera o pasillo no puede estar en una pared: " + punta);
+        ValidacionesUtiles.validarFalso(this.destinos.containsKey(punta),
+                "Esa celda ya tiene una conexión: " + punta);
     }
 
     /**

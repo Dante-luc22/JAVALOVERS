@@ -5,6 +5,7 @@ import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Entidad;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Plano;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 public abstract class Monstruo extends Entidad {
 
@@ -37,11 +38,7 @@ public abstract class Monstruo extends Entidad {
 
         super(posicionActual);
 
-        if (posicionInicial == null) {
-            throw new IllegalArgumentException(
-                    "La posición inicial no puede ser nula."
-            );
-        }
+        ValidacionesUtiles.validarDistintoDeNull(posicionInicial, "posicionInicial");
 
         if (posicionActual == null) {
             throw new IllegalArgumentException(
@@ -49,11 +46,7 @@ public abstract class Monstruo extends Entidad {
             );
         }
 
-        if (danio <= 0) {
-            throw new IllegalArgumentException(
-                    "El daño debe ser mayor que cero."
-            );
-        }
+        ValidacionesUtiles.esMayorQueCero(danio, "danio");
 
         this.posicionInicial = posicionInicial;
         this.danio = danio;
@@ -91,11 +84,7 @@ public abstract class Monstruo extends Entidad {
      * @throws IllegalArgumentException si el héroe dado es nulo
      */
     protected void atacarYVolver(Heroe heroe) {
-        if (heroe == null) {
-            throw new IllegalArgumentException(
-                    "El heroe no puede ser nulo"
-            );
-        }
+        ValidacionesUtiles.validarDistintoDeNull(heroe, "heroe");
 
         heroe.restarEnergia(this.danio);
         volverAlInicio();
@@ -110,17 +99,9 @@ public abstract class Monstruo extends Entidad {
      */
     @Override
     public final void actuar(Plano plano, Heroe heroe) {
-        if (plano == null) {
-            throw new IllegalArgumentException(
-                    "El plano no puede ser nulo"
-            );
-        }
+        ValidacionesUtiles.validarDistintoDeNull(plano, "plano");
 
-        if (heroe == null) {
-            throw new IllegalArgumentException(
-                    "El heroe no puede ser nulo"
-            );
-        }
+        ValidacionesUtiles.validarDistintoDeNull(heroe, "heroe");
 
         if (estaAdormecido()) {
             return;
@@ -129,12 +110,8 @@ public abstract class Monstruo extends Entidad {
         Posicion posicionHeroe = heroe.getUbicacion().posicion();
         Posicion nuevaPosicion = decidirMovimiento(plano, posicionHeroe);
 
-        if (nuevaPosicion == null) {
-            throw new IllegalStateException(
-                    "Se recibio una posicion nula de: "
-                            + getClass().getSimpleName()
-            );
-        }
+        ValidacionesUtiles.validarEstadoFalso(nuevaPosicion == null,
+                "Se recibio una posicion nula de: " + getClass().getSimpleName());
 
         setPosicion(nuevaPosicion);
     }
@@ -150,11 +127,7 @@ public abstract class Monstruo extends Entidad {
      */
     @Override
     public final void alEncontrarseConHeroe(Heroe heroe, Agenda agenda) {
-        if (heroe == null) {
-            throw new IllegalArgumentException(
-                    "El heroe recibido no puede ser nulo"
-            );
-        }
+        ValidacionesUtiles.validarDistintoDeNull(heroe, "heroe");
 
         if (estaAdormecido()) {
             despertarDelTodo();

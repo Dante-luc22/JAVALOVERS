@@ -21,6 +21,7 @@ import ar.uba.fi.cb100.tp2.modelo.partida.Accion;
 import ar.uba.fi.cb100.tp2.modelo.partida.EntradaDelLog;
 import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 /**
  * Vista obligatoria: después de cada paso escribe el plano actual en
@@ -32,7 +33,7 @@ public class VistaBmp implements Vista {
 
     /** Lado en píxeles de cada celda. */
     public static final int TAMANIO_CELDA = 16;
-    
+
     private final EntradaConsola entrada;
     private final Path carpeta;
     private final int energiaMaxima;
@@ -43,9 +44,7 @@ public class VistaBmp implements Vista {
      * @param entrada       de dónde se leen las teclas (la misma que usa el Main)
      */
     public VistaBmp(Path carpeta, int energiaMaxima, EntradaConsola entrada) {
-        if (energiaMaxima < 1) {
-            throw new IllegalArgumentException("La energía máxima tiene que ser positiva");
-        }
+        ValidacionesUtiles.esMayorQueCero(energiaMaxima, "energiaMaxima");
         this.carpeta = carpeta;
         this.energiaMaxima = energiaMaxima;
         this.entrada = entrada;
@@ -76,21 +75,19 @@ public class VistaBmp implements Vista {
         guardar(imagen, partida.getPasos());
         var ubicacion = heroe.getUbicacion();
 
-        var ubicacion = heroe.getUbicacion();
-
         System.out.println("Paso " + partida.getPasos()
                 + " | tablero " + ubicacion.tablero()
                 + " | piso " + ubicacion.piso()
                 + " | energía " + heroe.getEnergia()
                 + " | cofres " + heroe.getCofresAbiertos()
                 + " | exploradas " + partida.getCeldasVisitadas().cantidadEn(
-                        ubicacion.tablero(), ubicacion.piso())
+                ubicacion.tablero(), ubicacion.piso())
                 + VistaGrafica.avisoDeInteraccion(partida.interaccionDisponible()));
 
         for (EntradaDelLog entrada : partida.getLog().entradasDelPaso(partida.getPasos())) {
             System.out.println("  · " + entrada.texto());
         }
-    
+
     }
 
     @Override
@@ -106,7 +103,7 @@ public class VistaBmp implements Vista {
         }
     }
 
-        @Override
+    @Override
     public void avisar(String mensaje) {
         System.out.println(mensaje);
     }
@@ -268,7 +265,7 @@ public class VistaBmp implements Vista {
         }
     }
 
-        /**
+    /**
      * Borra los pasos.bmp de una partida anterior, para que la película de
      * esta partida no quede mezclada con la otra. No toca ningún otro archivo.
      */

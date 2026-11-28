@@ -17,6 +17,7 @@ import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
 import ar.uba.fi.cb100.tp2.modelo.valores.Direccion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 import ar.uba.fi.cb100.tp2.modelo.valores.Dificultad;
 
 /**
@@ -229,14 +230,14 @@ public class Partida {
         return this.agenda;
     }
 
-        /**
+    /**
      * @return el log de lo que fue pasando en la partida
      */
     public LogDePartida getLog() {
         return this.log;
     }
 
-        /**
+    /**
      * @return las celdas que fue pisando el héroe, por plano
      */
     public CeldasVisitadas getCeldasVisitadas() {
@@ -294,11 +295,8 @@ public class Partida {
     public int costoDe(Terreno terreno) {
         Integer costo = this.costos.get(terreno);
 
-        if (costo == null) {
-            throw new IllegalArgumentException(
-                    "El terreno " + terreno + " no tiene costo"
-            );
-        }
+        ValidacionesUtiles.validarFalso(costo == null,
+                "El terreno " + terreno + " no tiene costo");
 
         return costo;
     }
@@ -378,7 +376,7 @@ public class Partida {
             this.activarAlInteractuar(plano, actual.posicion());
         } else {
             this.heroe.mover(destino.get());
-            this.anotar("pasó al tablero " + destino.get().tablero() + ", piso " + destino.get().piso());   
+            this.anotar("pasó al tablero " + destino.get().tablero() + ", piso " + destino.get().piso());
             this.encontrarEntidades(this.getPlanoActual(), destino.get().posicion());
         }
         return this.cerrarTurno();
@@ -491,7 +489,7 @@ public class Partida {
     private void encontrarEntidades(Plano plano, Posicion posicion) {
         for (Entidad entidad : plano.obtenerEntidades(posicion)) {
             if (!entidad.seActivaAlInteractuar()) {
-                this.anotar("chocó con un " + entidad.getTipo().toLowerCase());   
+                this.anotar("chocó con un " + entidad.getTipo().toLowerCase());
                 this.activar(plano, entidad);
             }
         }
@@ -504,7 +502,7 @@ public class Partida {
     private void activarAlInteractuar(Plano plano, Posicion posicion) {
         for (Entidad entidad : plano.obtenerEntidades(posicion)) {
             if (entidad.seActivaAlInteractuar()) {
-                 this.anotar("abrió un cofre");   
+                this.anotar("abrió un cofre");
                 this.activar(plano, entidad);
             }
         }
@@ -538,16 +536,16 @@ public class Partida {
      * Si el héroe ganó o perdió en este paso, los monstruos no juegan.
      */
     private ResultadoTurno cerrarTurno() {
-        
+
         this.visitadas.visitar(this.heroe.getUbicacion());
 
         if (this.estadoActual() == EstadoPartida.EN_CURSO) {
             this.moverMonstruos(this.getPlanoActual());
         }
-         if (this.estadoActual() == EstadoPartida.GANADA) {          
-            this.anotar("encontró la salida");                    
-        } else if (this.estadoActual() == EstadoPartida.PERDIDA) {  
-            this.anotar("se quedó sin energía");                  
+        if (this.estadoActual() == EstadoPartida.GANADA) {
+            this.anotar("encontró la salida");
+        } else if (this.estadoActual() == EstadoPartida.PERDIDA) {
+            this.anotar("se quedó sin energía");
         }
 
         return new ResultadoTurno(true, this.estadoActual());

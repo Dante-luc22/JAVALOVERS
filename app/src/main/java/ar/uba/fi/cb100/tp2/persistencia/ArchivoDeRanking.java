@@ -18,6 +18,7 @@ import ar.uba.fi.cb100.tp2.modelo.ranking.EntradaDeRanking;
 import ar.uba.fi.cb100.tp2.modelo.ranking.Ranking;
 import ar.uba.fi.cb100.tp2.modelo.valores.Dificultad;
 import ar.uba.fi.cb100.tp2.persistencia.dto.EntradaDeRankingDto;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 /**
  * Lee y escribe ranking.json con Gson. El archivo es una lista con todas las
@@ -41,9 +42,7 @@ public class ArchivoDeRanking {
      *                                  entrada incompleta o inválida
      */
     public static Ranking cargar(Path ruta) {
-        if (ruta == null) {
-            throw new IllegalArgumentException("La ruta no puede ser nula.");
-        }
+        ValidacionesUtiles.validarDistintoDeNull(ruta, "ruta");
         Ranking ranking = new Ranking();
         if (!Files.exists(ruta)) {
             return ranking;
@@ -75,12 +74,8 @@ public class ArchivoDeRanking {
      * @throws IllegalStateException    si no se puede escribir el archivo
      */
     public static void guardar(Ranking ranking, Path ruta) {
-        if (ranking == null) {
-            throw new IllegalArgumentException("El ranking no puede ser nulo.");
-        }
-        if (ruta == null) {
-            throw new IllegalArgumentException("La ruta no puede ser nula.");
-        }
+        ValidacionesUtiles.validarDistintoDeNull(ranking, "ranking");
+        ValidacionesUtiles.validarDistintoDeNull(ruta, "ruta");
         List<EntradaDeRanking> todas = ranking.obtenerTodas();
         EntradaDeRankingDto[] entradas = new EntradaDeRankingDto[todas.size()];
         for (int i = 0; i < todas.size(); i++) {
@@ -118,18 +113,14 @@ public class ArchivoDeRanking {
      */
     private static EntradaDeRanking aEntrada(EntradaDeRankingDto dto, int numero, Path ruta) {
         String donde = ruta + ", entrada " + numero + ": ";
-        if (dto == null) {
-            throw new IllegalStateException(donde + "está vacía");
-        }
-        if (dto.puntaje() == null) {
-            throw new IllegalStateException(donde + "falta el puntaje");
-        }
-        if (dto.dificultad() == null) {
-            throw new IllegalStateException(donde + "falta la dificultad");
-        }
-        if (dto.fecha() == null) {
-            throw new IllegalStateException(donde + "falta la fecha");
-        }
+        ValidacionesUtiles.validarEstadoFalso(dto == null,
+                donde + "está vacía");
+        ValidacionesUtiles.validarEstadoFalso(dto.puntaje() == null,
+                donde + "falta el puntaje");
+        ValidacionesUtiles.validarEstadoFalso(dto.dificultad() == null,
+                donde + "falta la dificultad");
+        ValidacionesUtiles.validarEstadoFalso(dto.fecha() == null,
+                donde + "falta la fecha");
         Dificultad dificultad;
         try {
             dificultad = Dificultad.valueOf(dto.dificultad());

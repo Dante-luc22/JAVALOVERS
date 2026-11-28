@@ -8,6 +8,7 @@ import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
 import java.util.List;
 import java.util.Set;
 import java.util.Random;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 /**
  * <hr><hr>
@@ -48,11 +49,8 @@ public class ConectorDeEscaleras {
             Plano superior = planos.get(piso);
 
             var posicion = ubicador.prepararPosicionComun(inferior, superior, reservadas);
-            if (posicion.isEmpty()) {
-                throw new IllegalStateException(
-                        "No se pudo conectar el piso " + piso + " con el piso " + (piso + 1)
-                );
-            }
+            ValidacionesUtiles.validarEstadoFalso(posicion.isEmpty(),
+                    "No se pudo conectar el piso " + piso + " con el piso " + (piso + 1));
 
             Posicion celda = posicion.get();
             mazmorra.conectar(

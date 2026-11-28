@@ -4,6 +4,7 @@ package ar.uba.fi.cb100.tp2.modelo.partida;
 import java.util.Map;
 
 import ar.uba.fi.cb100.tp2.modelo.valores.Dificultad;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 /**
  * La configuración leída de configuracion.json. Es un record porque es un
@@ -25,10 +26,7 @@ public record Configuracion(int energiaInicial, Map<String, Integer> costos, Lon
      */
     public ParametrosDeDificultad parametrosDe(Dificultad dificultad) {
         ParametrosDeDificultad parametros = this.dificultades.get(dificultad);
-        if (parametros == null) {
-            throw new IllegalArgumentException(
-                    "configuracion.json no tiene la dificultad " + dificultad);
-        }
+        ValidacionesUtiles.validarDistintoDeNull(parametros, "parametros");
         return parametros;
     }
 }

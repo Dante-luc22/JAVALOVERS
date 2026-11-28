@@ -1,6 +1,7 @@
 package ar.uba.fi.cb100.tp2.modelo.mundo;
 
 import ar.uba.fi.cb100.tp2.modelo.valores.Ubicacion;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 /**
  * Una escalera o un pasillo: lleva de una celda de un plano a una celda de otro.
@@ -16,12 +17,10 @@ public record Conexion(Ubicacion origen, Ubicacion destino) {
      *                                  están en el mismo plano
      */
     public Conexion {
-        if (origen == null || destino == null) {
-            throw new IllegalArgumentException("Una conexión necesita origen y destino");
-        }
-        if (origen.tablero() == destino.tablero() && origen.piso() == destino.piso()) {
-            throw new IllegalArgumentException("Una conexión une dos planos distintos: " + origen + " y " + destino);
-        }
+        ValidacionesUtiles.validarDistintoDeNull(origen, "origen");
+        ValidacionesUtiles.validarDistintoDeNull(destino, "destino");
+        ValidacionesUtiles.validarFalso(origen.tablero() == destino.tablero() && origen.piso() == destino.piso(),
+                "Una conexión une dos planos distintos: " + origen + " y " + destino);
     }
 
     /**

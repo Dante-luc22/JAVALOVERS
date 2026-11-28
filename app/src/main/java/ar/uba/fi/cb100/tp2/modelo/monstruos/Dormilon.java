@@ -4,6 +4,7 @@ import ar.uba.fi.cb100.tp2.modelo.mundo.Plano;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 
 import java.util.HashMap;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 /**
  * Clase Dormilon, es un cazador que a veces no caza, se queda quieto mientras el
@@ -23,10 +24,7 @@ public class Dormilon extends Cazador{
      * @throws IllegalArgumentException si el radio dado es menor o igual a 0.
      */
     public Dormilon(Posicion posicionInicial, int danio, int radio) {
-        if (radio <= 0) {
-            throw new IllegalArgumentException(
-                    "El radio debe ser mayor que 0.");
-        }
+        ValidacionesUtiles.esMayorQueCero(radio, "radio");
         super(posicionInicial, danio);
         this.radio = radio;
     }

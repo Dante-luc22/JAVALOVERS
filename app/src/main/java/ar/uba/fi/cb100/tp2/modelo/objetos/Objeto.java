@@ -2,6 +2,7 @@ package ar.uba.fi.cb100.tp2.modelo.objetos;
 
 import ar.uba.fi.cb100.tp2.modelo.eventos.Agenda;
 import ar.uba.fi.cb100.tp2.modelo.heroe.Heroe;
+import ar.uba.fi.cb100.material.ValidacionesUtiles;
 
 /**
  * Clase abstracta objeto. Algo que el heroe guarda en el inventario y usa
@@ -19,12 +20,9 @@ public abstract class Objeto {
      * @throws IllegalArgumentException si el id es nulo o esta vacio.
      */
     protected Objeto(String id) {
-        if (id == null) {
-            throw new IllegalArgumentException("El id no puede ser nulo.");
-        }
-        if (id.isBlank()) {
-            throw new IllegalArgumentException("El id no puede estar vacio.");
-        }
+        ValidacionesUtiles.validarDistintoDeNull(id, "id");
+        ValidacionesUtiles.validarFalso(id.isBlank(),
+                "El id no puede estar vacio.");
         this.id = id;
     }
 
