@@ -37,4 +37,9 @@ public class CofreDeTrampaDePinchos extends Cofre{
     protected void abrir(Heroe heroe, Agenda agenda){
         heroe.restarEnergia(danio);
     }
+    //-----GETTERS SIMPLES-----
+    public int getDanio() {
+        return this.danio;
+    }
+
 }

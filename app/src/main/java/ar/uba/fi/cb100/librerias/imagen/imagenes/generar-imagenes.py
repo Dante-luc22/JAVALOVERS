@@ -277,6 +277,25 @@ SPRITES = {
         ".kvvk.kvvk......",
         ".kkkk.kkkk......",
     ],
+
+    'ladron': [
+        "................",
+        "......kkkk......",
+        ".....kggGGk.....",
+        "....kgGGGggk....",
+        "...kgGpppGgk....",
+        "...kgpkpkpgk....",
+        "...kggpppggk....",
+        "....kkgggkk.....",
+        "...kgGgkgbkk....",
+        "..kggGgbkbyyk...",
+        "..kgggbkkbyYyk..",
+        "...kggggkkbyyk..",
+        "....kgggkkkkk...",
+        "....kgk.kgk.....",
+        "...kkkk.kkkk....",
+        "................",
+    ]
 }
 
 

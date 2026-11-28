@@ -32,6 +32,16 @@ public abstract class Cofre extends Entidad {
     protected abstract void abrir(Heroe heroe, Agenda agenda);
 
     /**
+     * Un cofre no se abre al pisarlo: el jugador elige abrirlo con la tecla E.
+     *
+     * @return siempre true
+     */
+    @Override
+    public final boolean seActivaAlInteractuar() {
+        return true;
+    }
+
+    /**
      * Cuerpo vacio ya que un cofre no se mueve
      */
     @Override

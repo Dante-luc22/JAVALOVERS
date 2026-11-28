@@ -44,20 +44,29 @@ public class Mazmorra {
     }
 
     /**
-     * @param ubicacion tablero y piso (desde 1) del plano buscado
+     * @param ubicacion tablero y piso (desde 1) del plano buscado; la posición no se usa
      * @return el plano que está en esa ubicación
      * @throws IllegalArgumentException si el tablero o el piso no existen
      */
     public Plano getPlano(Ubicacion ubicacion) {
-        int tablero = ubicacion.tablero();
-        int piso = ubicacion.piso();
+        return getPlano(ubicacion.tablero(), ubicacion.piso());
+    }
+
+    /**
+     * @param tablero desde 1
+     * @param piso    desde 1
+     * @return el plano de ese tablero y piso
+     * @throws IllegalArgumentException si el tablero o el piso no existen
+     */
+    public Plano getPlano(int tablero, int piso) {
         ValidacionesUtiles.validarFalso(tablero < 1 || piso < 1 || piso > this.pisosPorTablero,
-                "No existe el plano de: " + ubicacion);
+                "No existe el plano del tablero " + tablero + ", piso " + piso);
         int indice = (tablero - 1) * this.pisosPorTablero + (piso - 1);
         ValidacionesUtiles.validarFalso(indice >= this.planos.size(),
-                "No existe el plano de: " + ubicacion);
+                "No existe el plano del tablero " + tablero + ", piso " + piso);
         return this.planos.get(indice);
     }
+
 
     /**
      * El héroe siempre empieza en el primer plano: tablero 1, piso 1.
@@ -97,7 +106,7 @@ public class Mazmorra {
         return this.pisosPorTablero;
     }
 
-        /**
+    /**
      * Une dos celdas de planos distintos con una escalera o un pasillo, en los
      * dos sentidos: pisar cualquiera de las dos lleva a la otra.
      *
@@ -154,5 +163,15 @@ public class Mazmorra {
                 "Una escalera o pasillo no puede estar en una pared: " + punta);
         ValidacionesUtiles.validarFalso(this.destinos.containsKey(punta),
                 "Esa celda ya tiene una conexión: " + punta);
+    }
+
+    /**
+     * Devuelve una copia de la lista de planos,
+     * conservando el orden original.
+     *
+     * @return planos ordenados por tablero y piso
+     */
+    public List<Plano> getPlanos() {
+        return new ArrayList<>(this.planos);
     }
 }

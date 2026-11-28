@@ -8,6 +8,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.DirectoryStream;
+import java.awt.Font;
 
 import javax.imageio.ImageIO;
 
@@ -17,6 +18,7 @@ import ar.uba.fi.cb100.tp2.modelo.mundo.Plano;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Tablero;
 import ar.uba.fi.cb100.tp2.modelo.mundo.Terreno;
 import ar.uba.fi.cb100.tp2.modelo.partida.Accion;
+import ar.uba.fi.cb100.tp2.modelo.partida.EntradaDelLog;
 import ar.uba.fi.cb100.tp2.modelo.partida.Partida;
 import ar.uba.fi.cb100.tp2.modelo.valores.Posicion;
 import ar.uba.fi.cb100.material.ValidacionesUtiles;
@@ -31,7 +33,7 @@ public class VistaBmp implements Vista {
 
     /** Lado en píxeles de cada celda. */
     public static final int TAMANIO_CELDA = 16;
-    
+
     private final EntradaConsola entrada;
     private final Path carpeta;
     private final int energiaMaxima;
@@ -62,24 +64,37 @@ public class VistaBmp implements Vista {
 
         dibujarTerreno(lapiz, tablero);
         dibujarSalida(lapiz, plano);
+        dibujarEscaleras(lapiz, partida);
+        dibujarPasillos(lapiz, partida);
         dibujarEntidades(lapiz, plano);
         dibujarHeroe(lapiz, heroe);
         dibujarEnergia(lapiz, heroe, ancho, tablero.getFilas());
+        dibujarIdentificacion(lapiz, heroe, tablero.getFilas());
 
         lapiz.dispose();
         guardar(imagen, partida.getPasos());
+        var ubicacion = heroe.getUbicacion();
 
         System.out.println("Paso " + partida.getPasos()
+                + " | tablero " + ubicacion.tablero()
+                + " | piso " + ubicacion.piso()
                 + " | energía " + heroe.getEnergia()
-                + " | cofres " + heroe.getCofresAbiertos());
-    
+                + " | cofres " + heroe.getCofresAbiertos()
+                + " | exploradas " + partida.getCeldasVisitadas().cantidadEn(
+                ubicacion.tablero(), ubicacion.piso())
+                + VistaGrafica.avisoDeInteraccion(partida.interaccionDisponible()));
+
+        for (EntradaDelLog entrada : partida.getLog().entradasDelPaso(partida.getPasos())) {
+            System.out.println("  · " + entrada.texto());
+        }
+
     }
 
     @Override
     public Accion leerAccion() {
         while (true) {
             String texto = this.entrada.leerTexto(
-                    "Acción (w a s d mover, e esperar, u usar, g guardar, q salir):");
+                    "Acción (w a s d mover, e interactuar, x esperar, u usar, g guardar, q salir):");
             Accion accion = accionDe(texto);
             if (accion != null) {
                 return accion;
@@ -88,7 +103,7 @@ public class VistaBmp implements Vista {
         }
     }
 
-        @Override
+    @Override
     public void avisar(String mensaje) {
         System.out.println(mensaje);
     }
@@ -105,7 +120,8 @@ public class VistaBmp implements Vista {
             case 'a' -> Accion.MOVER_IZQUIERDA;
             case 's' -> Accion.MOVER_ABAJO;
             case 'd' -> Accion.MOVER_DERECHA;
-            case 'e' -> Accion.ESPERAR;
+            case 'e' -> Accion.INTERACTUAR;
+            case 'x' -> Accion.ESPERAR;
             case 'u' -> Accion.USAR;
             case 'g' -> Accion.GUARDAR;
             case 'q' -> Accion.SALIR;
@@ -167,6 +183,49 @@ public class VistaBmp implements Vista {
         lapiz.fillRect(0, y + 2, lleno, TAMANIO_CELDA - 4);
     }
 
+    private void dibujarIdentificacion(Graphics2D lapiz, Heroe heroe, int filas) {
+        var ubicacion = heroe.getUbicacion();
+        String texto = "Tablero " + ubicacion.tablero() + " | Piso " + ubicacion.piso();
+        int y = filas * TAMANIO_CELDA;
+        lapiz.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 9));
+        lapiz.setColor(Color.BLACK);
+        lapiz.drawString(texto, 4, y + 12);
+        lapiz.setColor(Color.WHITE);
+        lapiz.drawString(texto, 3, y + 11);
+    }
+
+    private void dibujarEscaleras(Graphics2D lapiz, Partida partida) {
+        var ubicacion = partida.getHeroe().getUbicacion();
+
+        for (var conexion : partida.getMazmorra().conexionesDelPlano(
+                ubicacion.tablero(), ubicacion.piso())) {
+
+            if (conexion.origen().tablero() == conexion.destino().tablero()) {
+                Posicion posicion = conexion.origen().posicion();
+
+                lapiz.setColor(Color.CYAN);
+                lapiz.fillRect(x(posicion) + 4, y(posicion) + 3, 2, TAMANIO_CELDA - 6);
+                lapiz.fillRect(x(posicion) + 10, y(posicion) + 3, 2, TAMANIO_CELDA - 6);
+                lapiz.fillRect(x(posicion) + 4, y(posicion) + 7, 8, 2);
+            }
+        }
+    }
+
+    private void dibujarPasillos(Graphics2D lapiz, Partida partida) {
+        var ubicacion = partida.getHeroe().getUbicacion();
+
+        for (var conexion : partida.getMazmorra().conexionesDelPlano(
+                ubicacion.tablero(), ubicacion.piso())) {
+
+            if (conexion.origen().tablero() != conexion.destino().tablero()) {
+                Posicion posicion = conexion.origen().posicion();
+
+                lapiz.setColor(Color.PINK);
+                lapiz.fillOval(x(posicion) + 4, y(posicion) + 4, 8, 8);
+            }
+        }
+    }
+
     // ---------- colores ----------
 
     private Color colorDe(Terreno terreno) {
@@ -185,14 +244,12 @@ public class VistaBmp implements Vista {
             default -> Color.WHITE;
         };
     }
-
     // ---------- coordenadas y archivo ----------
 
     /** Columna 1 empieza en el píxel 0. */
     private int x(Posicion posicion) {
         return (posicion.columna() - 1) * TAMANIO_CELDA;
     }
-
     /** Fila 1 empieza en el píxel 0. */
     private int y(Posicion posicion) {
         return (posicion.fila() - 1) * TAMANIO_CELDA;
@@ -208,7 +265,7 @@ public class VistaBmp implements Vista {
         }
     }
 
-        /**
+    /**
      * Borra los pasos.bmp de una partida anterior, para que la película de
      * esta partida no quede mezclada con la otra. No toca ningún otro archivo.
      */

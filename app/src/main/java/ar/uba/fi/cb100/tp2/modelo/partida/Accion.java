@@ -11,6 +11,7 @@ public enum Accion {
     MOVER_IZQUIERDA,
     MOVER_DERECHA,
     USAR,
+    INTERACTUAR,
     ESPERAR,
     GUARDAR,
     SALIR
